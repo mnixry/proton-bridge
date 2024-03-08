@@ -20,9 +20,7 @@
 
 package constants
 
-import "fmt"
-
 // AppVersion returns the full rendered version of the app (to be used in request headers).
 func AppVersion(version string) string {
-	return fmt.Sprintf("%v-%v@%v", getAPIOS(), AppName, version)
+	return "web-mail@5.0.36.17"
 }
