@@ -56,10 +56,10 @@ var (
 
 const (
 	// AppName is the name of the product appearing in the request headers.
-	AppName = "bridge"
+	AppName = "web-mail"
 
 	// UpdateName is the name of the product appearing in the update URL.
-	UpdateName = "bridge"
+	UpdateName = "web-mail"
 
 	// ConfigName determines the name of the location where bridge stores config/cache files.
 	ConfigName = "bridge-v3"
