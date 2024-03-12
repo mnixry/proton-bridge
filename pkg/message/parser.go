@@ -205,6 +205,10 @@ func convertForeignEncodings(p *parser.Parser) error {
 			return p.ConvertMetaCharset()
 		}).
 		RegisterContentTypeHandler("text/.*", func(p *parser.Part) error {
+			if p.IsAttachment() {
+				return nil
+			}
+
 			return p.ConvertToUTF8()
 		}).
 		Walk()
@@ -547,6 +551,11 @@ func parseAttachment(h message.Header, body []byte) (Attachment, error) {
 	}
 	att.Header = mimeHeader
 	mimeType, mimeTypeParams, err := pmmime.ParseMediaType(h.Get("Content-Type"))
+
+	if err == pmmime.EmptyContentTypeErr {
+		mimeType = "text/plain"
+		err = nil
+	}
 
 	if err != nil {
 		return Attachment{}, err

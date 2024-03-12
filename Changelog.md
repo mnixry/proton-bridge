@@ -3,6 +3,23 @@
 Changelog [format](http://keepachangelog.com/en/1.0.0/)
 
 
+## Zaehringen Bridge 3.10.0
+
+### Added
+* GODT-3199: Add package log field.
+* GODT-3220: Add more test scenarios.
+
+### Changed
+* GODT-3193: Preserve attachment encoding.
+* GODT-3214: Encrypt only with primary key.
+* GODT-2662: Use tart runner for darwin jobs.
+* GODT-1602: Test: run integration tests against black 🖤.
+* GODT-3257: Test: quad9 provider test not working on CI.
+
+### Fixed
+* GODT-3290: Fix test failing because of leap day.
+
+
 ## Ypsilon Bridge 3.9.1
 
 ### Fixed
@@ -41,6 +58,12 @@ Changelog [format](http://keepachangelog.com/en/1.0.0/)
 * GODT-3183: Fix database indices.
 * GODT-3187: Fix numberOfDay computation when changing year and day.
 * GODT-3188: Happy new year.
+
+
+## Xikou Bridge 3.8.2
+
+### Fixed
+* GODT-3235: Update bridge update key.
 
 
 ## Xikou Bridge 3.8.1

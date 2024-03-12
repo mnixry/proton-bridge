@@ -91,12 +91,6 @@ func (user *testUser) addAddress(addrID, email string) {
 	user.addresses = append(user.addresses, newTestAddr(addrID, email))
 }
 
-func (user *testUser) remAddress(addrID string) {
-	user.addresses = xslices.Filter(user.addresses, func(addr *testAddr) bool {
-		return addr.addrID != addrID
-	})
-}
-
 func (user *testUser) getUserPass() string {
 	return user.userPass
 }
@@ -229,7 +223,13 @@ func (t *testCtx) replace(value string) string {
 
 		// Create a new user if it doesn't exist yet.
 		if _, ok := t.userUUIDByName[name]; !ok {
-			t.userUUIDByName[name] = uuid.NewString()
+			val := uuid.NewString()
+
+			if name != strings.ToLower(name) {
+				val = "Mixed-Caps-" + val
+			}
+
+			t.userUUIDByName[name] = val
 		}
 
 		return t.userUUIDByName[name]
@@ -288,6 +288,18 @@ func (t *testCtx) getUserByName(name string) *testUser {
 
 func (t *testCtx) getUserByID(userID string) *testUser {
 	return t.userByID[userID]
+}
+
+func (t *testCtx) getUserByAddress(email string) *testUser {
+	for _, user := range t.userByID {
+		for _, addr := range user.addresses {
+			if addr.email == email {
+				return user
+			}
+		}
+	}
+
+	panic(fmt.Sprintf("unknown email %q", email))
 }
 
 func (t *testCtx) getMBoxID(userID string, name string) string {
