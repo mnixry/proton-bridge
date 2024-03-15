@@ -20,4 +20,4 @@
 package constants
 
 // APIHost is our API address.
-const APIHost = "https://mail-api.proton.me"
+const APIHost = "https://mail.proton.me/api"
