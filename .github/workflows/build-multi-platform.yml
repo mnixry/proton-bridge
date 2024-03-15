@@ -3,6 +3,8 @@ name: Build on multiple platforms
 on:
   push:
   pull_request:
+  schedule:
+    - cron: "0 0 * * *"
 
 jobs:
   build:
