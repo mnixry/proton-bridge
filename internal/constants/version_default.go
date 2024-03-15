@@ -20,7 +20,49 @@
 
 package constants
 
+import (
+	"errors"
+	"fmt"
+	"io"
+	"net/http"
+	"regexp"
+
+	"github.com/sirupsen/logrus"
+)
+
+var versionCache string
+
+// Get newest app version from proton web mail
+func getNewestAppVersion() (string, error) {
+	resp, err := http.Get("https://mail.proton.me/")
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+
+	versionRegexp := regexp.MustCompile(`\?v=([0-9\.]+)`)
+	versionMatches := versionRegexp.FindStringSubmatch(string(body))
+	if len(versionMatches) < 2 {
+		return "", errors.New("failed to find version")
+	}
+	return versionMatches[1], nil
+}
+
 // AppVersion returns the full rendered version of the app (to be used in request headers).
 func AppVersion(version string) string {
-	return "web-mail@5.0.36.17"
+	if versionCache == "" {
+		newestVersion, err := getNewestAppVersion()
+		if err != nil {
+			logrus.WithError(err).Warn("Failed to get newest app version")
+		} else {
+			versionCache = newestVersion
+		}
+	}
+	logrus.WithField("version", versionCache).Debug("App version")
+	return fmt.Sprintf("%v@%v", AppName, versionCache)
 }
