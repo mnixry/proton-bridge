@@ -23,6 +23,8 @@ jobs:
           version: 6.4.3
           cache: true
 
+      - uses: jwlawson/actions-setup-cmake@v2
+
       - uses: actions/setup-go@v5
         with:
           go-version: 1.21.6
