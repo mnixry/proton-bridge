@@ -27,6 +27,7 @@ Item {
         Onboarding,
         Login,
         ClientConfigSelector,
+        ClientConfigCertInstall,
         ClientConfigAppleMail
     }
     enum RootStack {
@@ -95,8 +96,9 @@ Item {
     function showAppleMailAutoConfig() {
         backAction = _showClientConfig;
         rootStackLayout.currentIndex = SetupWizard.RootStack.TwoPanesView;
+        clientConfigAppleMail.reset()
         rightContent.currentIndex = SetupWizard.ContentStack.ClientConfigAppleMail;
-        clientConfigAppleMail.showAutoconfig(); // This will trigger signals that will display the appropriate left content.
+        leftContent.showAppleMailAutoconfigProfileInstall();
     }
     function showBugReport() {
         closeWizard();
@@ -118,6 +120,15 @@ Item {
         backAction = _showClientConfig;
         rootStackLayout.currentIndex = SetupWizard.RootStack.ClientConfigParameters;
     }
+
+    function showCertInstall() {
+        backAction = _showClientConfig;
+        clientConfigCertInstall.reset();
+        rootStackLayout.currentIndex = SetupWizard.RootStack.TwoPanesView;
+        leftContent.showCertificateInstall()
+        rightContent.currentIndex = SetupWizard.ContentStack.ClientConfigCertInstall;
+    }
+
     function showLogin(username = "") {
         backAction = null;
         rootStackLayout.currentIndex = SetupWizard.RootStack.TwoPanesView;
@@ -146,7 +157,13 @@ Item {
             let address = user ? user.addresses[0] : "";
             showClientConfig(user, address, true);
         }
-
+        function onCertificateInstallSuccess() {
+            if (client === SetupWizard.Client.MicrosoftOutlook) {
+                showClientParams()
+            } else {
+                showAppleMailAutoConfig()
+            }
+        }
         target: Backend
     }
     StackLayout {
@@ -175,17 +192,6 @@ Item {
                     clip: true
                     width: ProtonStyle.wizard_pane_width
                     wizard: root
-
-                    Connections {
-                        function onAppleMailAutoconfigCertificateInstallPageShown() {
-                            leftContent.showAppleMailAutoconfigCertificateInstall();
-                        }
-                        function onAppleMailAutoconfigProfileInstallPageShow() {
-                            leftContent.showAppleMailAutoconfigProfileInstall();
-                        }
-
-                        target: clientConfigAppleMail
-                    }
 
                     Connections {
                         function onLogin2FARequested() {
@@ -247,7 +253,14 @@ Item {
                         id: clientConfigSelector
                         wizard: root
                     }
+
                     // rightContent stack index 3
+                    ClientConfigCertInstall {
+                        id: clientConfigCertInstall
+                        wizard: root
+                    }
+
+                    // rightContent stack index 4
                     ClientConfigAppleMail {
                         id: clientConfigAppleMail
                         wizard: root

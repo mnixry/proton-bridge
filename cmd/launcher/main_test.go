@@ -20,61 +20,62 @@ package main
 import (
 	"testing"
 
-	"github.com/bradenaw/juniper/xslices"
+	"github.com/ProtonMail/proton-bridge/v3/internal/logging"
 	"github.com/stretchr/testify/assert"
 )
-
-func TestSliceContains(t *testing.T) {
-	assert.True(t, sliceContains([]string{"a", "b", "c"}, "a"))
-	assert.True(t, sliceContains([]int{1, 2, 3}, 2))
-	assert.False(t, sliceContains([]string{"a", "b", "c"}, "A"))
-	assert.False(t, sliceContains([]int{1, 2, 3}, 4))
-	assert.False(t, sliceContains([]string{}, "a"))
-	assert.True(t, sliceContains([]string{"a", "a"}, "a"))
-}
 
 func TestFindAndStrip(t *testing.T) {
 	list := []string{"a", "b", "c", "c", "b", "c"}
 
 	result, found := findAndStrip(list, "a")
 	assert.True(t, found)
-	assert.True(t, xslices.Equal(result, []string{"b", "c", "c", "b", "c"}))
+	assert.Equal(t, result, []string{"b", "c", "c", "b", "c"})
 
 	result, found = findAndStrip(list, "c")
 	assert.True(t, found)
-	assert.True(t, xslices.Equal(result, []string{"a", "b", "b"}))
+	assert.Equal(t, result, []string{"a", "b", "b"})
 
 	result, found = findAndStrip([]string{"c", "c", "c"}, "c")
 	assert.True(t, found)
-	assert.True(t, xslices.Equal(result, []string{}))
+	assert.Equal(t, result, []string{})
 
 	result, found = findAndStrip(list, "A")
 	assert.False(t, found)
-	assert.True(t, xslices.Equal(result, list))
+	assert.Equal(t, result, list)
 
 	result, found = findAndStrip([]string{}, "a")
 	assert.False(t, found)
-	assert.True(t, xslices.Equal(result, []string{}))
+	assert.Equal(t, result, []string{})
 }
 
 func TestFindAndStripWait(t *testing.T) {
 	result, found, values := findAndStripWait([]string{"a", "b", "c"})
 	assert.False(t, found)
-	assert.True(t, xslices.Equal(result, []string{"a", "b", "c"}))
-	assert.True(t, xslices.Equal(values, []string{}))
+	assert.Equal(t, result, []string{"a", "b", "c"})
+	assert.Equal(t, values, []string{})
 
 	result, found, values = findAndStripWait([]string{"a", "--wait", "b"})
 	assert.True(t, found)
-	assert.True(t, xslices.Equal(result, []string{"a"}))
-	assert.True(t, xslices.Equal(values, []string{"b"}))
+	assert.Equal(t, result, []string{"a"})
+	assert.Equal(t, values, []string{"b"})
 
 	result, found, values = findAndStripWait([]string{"a", "--wait", "b", "--wait", "c"})
 	assert.True(t, found)
-	assert.True(t, xslices.Equal(result, []string{"a"}))
-	assert.True(t, xslices.Equal(values, []string{"b", "c"}))
+	assert.Equal(t, result, []string{"a"})
+	assert.Equal(t, values, []string{"b", "c"})
 
 	result, found, values = findAndStripWait([]string{"a", "--wait", "b", "--wait", "c", "--wait", "d"})
 	assert.True(t, found)
-	assert.True(t, xslices.Equal(result, []string{"a"}))
-	assert.True(t, xslices.Equal(values, []string{"b", "c", "d"}))
+	assert.Equal(t, result, []string{"a"})
+	assert.Equal(t, values, []string{"b", "c", "d"})
+}
+
+func TestAppendOrModifySessionID(t *testing.T) {
+	sessionID := string(logging.NewSessionID())
+	assert.Equal(t, appendOrModifySessionID(nil, sessionID), []string{"--session-id", sessionID})
+	assert.Equal(t, appendOrModifySessionID([]string{}, sessionID), []string{"--session-id", sessionID})
+	assert.Equal(t, appendOrModifySessionID([]string{"--cli"}, sessionID), []string{"--cli", "--session-id", sessionID})
+	assert.Equal(t, appendOrModifySessionID([]string{"--cli", "--session-id"}, sessionID), []string{"--cli", "--session-id", sessionID})
+	assert.Equal(t, appendOrModifySessionID([]string{"--cli", "--session-id"}, sessionID), []string{"--cli", "--session-id", sessionID})
+	assert.Equal(t, appendOrModifySessionID([]string{"--session-id", "<oldID>", "--cli"}, sessionID), []string{"--session-id", sessionID, "--cli"})
 }

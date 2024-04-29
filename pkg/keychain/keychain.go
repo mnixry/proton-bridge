@@ -22,9 +22,11 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"runtime"
 	"sync"
 	"time"
 
+	"github.com/ProtonMail/proton-bridge/v3/internal/constants"
 	"github.com/docker/docker-credential-helpers/credentials"
 	"github.com/sirupsen/logrus"
 )
@@ -216,11 +218,7 @@ func isUsable(helper credentials.Helper, err error) bool {
 		return false
 	}
 
-	creds := &credentials.Credentials{
-		ServerURL: "bridge/check",
-		Username:  "check",
-		Secret:    "check",
-	}
+	creds := getTestCredentials()
 
 	if err := retry(func() error {
 		return helper.Add(creds)
@@ -240,6 +238,23 @@ func isUsable(helper credentials.Helper, err error) bool {
 	}
 
 	return true
+}
+
+func getTestCredentials() *credentials.Credentials {
+	// On macOS, a handful of users experience failures of the test credentials.
+	if runtime.GOOS == "darwin" {
+		return &credentials.Credentials{
+			ServerURL: hostURL(constants.KeyChainName) + fmt.Sprintf("/check_%v", time.Now().UTC().UnixMicro()),
+			Username:  "", // username is ignored on macOS, it's extracted from splitting the server URL
+			Secret:    "check",
+		}
+	}
+
+	return &credentials.Credentials{
+		ServerURL: "bridge/check",
+		Username:  "check",
+		Secret:    "check",
+	}
 }
 
 func retry(condition func() error) error {

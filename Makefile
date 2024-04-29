@@ -1,17 +1,18 @@
 export GO111MODULE=on
+export CGO_ENABLED=1
 
 # By default, the target OS is the same as the host OS,
 # but this can be overridden by setting TARGET_OS to "windows"/"darwin"/"linux".
 GOOS:=$(shell go env GOOS)
 TARGET_CMD?=Desktop-Bridge
 TARGET_OS?=${GOOS}
-ROOT_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
+ROOT_DIR:=$(realpath .)
 
 ## Build
 .PHONY: build build-gui build-nogui build-launcher versioner hasher
 
 # Keep version hardcoded so app build works also without Git repository.
-BRIDGE_APP_VERSION?=3.10.0+git
+BRIDGE_APP_VERSION?=3.11.0+git
 APP_VERSION:=${BRIDGE_APP_VERSION}
 APP_FULL_NAME:=Proton Mail Bridge
 APP_VENDOR:=Proton AG
@@ -19,8 +20,8 @@ SRC_ICO:=bridge.ico
 SRC_ICNS:=Bridge.icns
 SRC_SVG:=bridge.svg
 EXE_NAME:=proton-bridge
-REVISION:=$(shell ./utils/get_revision.sh)
-TAG:=$(shell ./utils/get_revision.sh tag)
+REVISION:=$(shell "${ROOT_DIR}/utils/get_revision.sh" rev)
+TAG:=$(shell "${ROOT_DIR}/utils/get_revision.sh" tag)
 BUILD_TIME:=$(shell date +%FT%T%z)
 MACOS_MIN_VERSION_ARM64=11.0
 MACOS_MIN_VERSION_AMD64=10.15
@@ -101,9 +102,9 @@ endif
 
 ifeq "${GOOS}" "windows"
 	go-build-finalize= \
-		$(if $(4),powershell Copy-Item ${ROOT_DIR}/${RESOURCE_FILE} ${4}  &&,) \
+		$(if $(4),cp "${ROOT_DIR}/${RESOURCE_FILE}" ${4}  &&,) \
 		$(call go-build,$(1),$(2),$(3)) \
-		$(if $(4), && powershell Remove-Item ${4} -Force,)
+		$(if $(4), && rm -f ${4},)
 endif
 
 ${EXE_NAME}: gofiles  ${RESOURCE_FILE}
@@ -117,7 +118,10 @@ versioner:
 	go build ${BUILD_FLAGS} -o versioner utils/versioner/main.go
 
 vault-editor:
-	$(call go-build-finalize,"-tags=debug","vault-editor","./utils/vault-editor/main.go")
+	$(call go-build-finalize,-tags=debug,"vault-editor","./utils/vault-editor/main.go")
+
+bridge-rollout:
+	$(call go-build-finalize,, "bridge-rollout","./utils/bridge-rollout/bridge-rollout.go")
 
 hasher:
 	go build -o hasher utils/hasher/main.go
@@ -164,7 +168,7 @@ ${EXE_TARGET}: check-build-essentials ${EXE_NAME}
  		BRIDGE_BUILD_TIME=${BUILD_TIME} \
 		BRIDGE_GUI_BUILD_CONFIG=Release \
 		BRIDGE_BUILD_ENV=${BUILD_ENV} \
-		BRIDGE_INSTALL_PATH=${ROOT_DIR}/${DEPLOY_DIR}/${GOOS} \
+		BRIDGE_INSTALL_PATH="${ROOT_DIR}/${DEPLOY_DIR}/${GOOS}" \
 		./build.sh install
 	mv "${ROOT_DIR}/${BRIDGE_EXE}" "$(ROOT_DIR)/${EXE_TARGET}"
 

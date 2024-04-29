@@ -26,10 +26,14 @@ lint-bug-report-preview:
   extends:
     - .rules-branch-manual-MR-and-devel-always
   script:
+    - which go && go version
+    - which gcc && gcc --version
     - make test
   artifacts:
     paths:
       - coverage/**
+
+
 
 test-linux:
   extends:
@@ -70,6 +74,9 @@ test-integration:
     - test-linux
   script:
     - make test-integration | tee -a integration-job.log
+  after_script:
+    - |
+      grep "Error: " integration-job.log
   artifacts:
     when: always
     paths:
@@ -95,6 +102,9 @@ test-integration-nightly:
     - test-integration
   script:
     - make test-integration-nightly | tee -a nightly-job.log
+  after_script:
+    - |
+      grep "Error: " nightly-job.log
   artifacts:
     when: always
     paths:
