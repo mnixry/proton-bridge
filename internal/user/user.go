@@ -717,3 +717,28 @@ func (user *User) protonAddresses() []proton.Address {
 
 	return addresses
 }
+
+func (user *User) VerifyResyncAndExecute() {
+	user.log.Info("Checking whether logged in user should re-sync. UserID:", user.ID())
+	if user.vault.GetShouldResync() {
+		user.log.Info("User should re-sync, starting re-sync process. UserID:", user.ID())
+
+		if err := user.vault.SetShouldSync(false); err != nil {
+			user.log.WithError(err).Error("Failed to disable re-sync flag in user vault. UserID:", user.ID())
+		}
+
+		user.SendRepairDeferredTrigger(context.Background())
+		if err := user.resyncIMAP(); err != nil {
+			user.log.WithError(err).Error("Failed re-syncing IMAP for userID", user.ID())
+		}
+	}
+}
+
+func (user *User) TriggerRepair() error {
+	user.SendRepairTrigger(context.Background())
+	return user.resyncIMAP()
+}
+
+func (user *User) resyncIMAP() error {
+	return user.imapService.Resync(context.Background())
+}
