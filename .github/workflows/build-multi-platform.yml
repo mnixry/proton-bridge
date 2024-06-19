@@ -10,6 +10,10 @@ jobs:
   build:
     runs-on: ${{ matrix.os }}
 
+    permissions:
+      id-token: write
+      attestations: write
+
     strategy:
       fail-fast: false
       matrix:
@@ -40,7 +44,7 @@ jobs:
 
       - name: Install Windows dependencies
         if: startsWith( matrix.os, 'windows' )
-        run: choco install -y 7zip zip ninja
+        run: choco install -y zip ninja
 
       - name: Install macOS dependencies
         if: startsWith( matrix.os, 'macos' )
@@ -59,7 +63,11 @@ jobs:
           MSYSTEM: ""
         run: make build
 
+      - uses: actions/attest-build-provenance@v1
+        with:
+          subject-path: 'bridge*.tgz'
+
       - uses: actions/upload-artifact@v4
         with:
-          path: bridge*.tgz
+          path: 'bridge*.tgz'
           name: build-${{ matrix.os }}
