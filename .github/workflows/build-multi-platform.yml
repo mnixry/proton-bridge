@@ -58,16 +58,27 @@ jobs:
             core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
 
       - name: Build
+        id: build
         env:
           VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
           MSYSTEM: ""
         run: make build
 
+      - name: Report build failure
+        if: failure()
+        shell: bash
+        run: |
+          if [ -f './extern/vcpkg/installed/vcpkg/issue_body.md' ]; then
+            cat './extern/vcpkg/installed/vcpkg/issue_body.md' >> $GITHUB_STEP_SUMMARY
+          else
+            echo "::error:: Build failed without any error message"
+          fi
+
       - uses: actions/attest-build-provenance@v1
         with:
-          subject-path: 'bridge*.tgz'
+          subject-path: "bridge*.tgz"
 
       - uses: actions/upload-artifact@v4
         with:
-          path: 'bridge*.tgz'
+          path: "bridge*.tgz"
           name: build-${{ matrix.os }}
