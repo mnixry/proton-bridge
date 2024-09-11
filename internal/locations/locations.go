@@ -206,6 +206,16 @@ func (l *Locations) ProvideIMAPSyncConfigPath() (string, error) {
 	return l.getIMAPSyncConfigPath(), nil
 }
 
+// ProvideUnleashCachePath returns a location for the unleash cache data (e.g. ~/.cache/protonmail/bridge-v3).
+// It creates it if it doesn't already exist.
+func (l *Locations) ProvideUnleashCachePath() (string, error) {
+	if err := os.MkdirAll(l.getUnleashCachePath(), 0o700); err != nil {
+		return "", err
+	}
+
+	return l.getUnleashCachePath(), nil
+}
+
 func (l *Locations) getGluonCachePath() string {
 	return filepath.Join(l.userData, "gluon")
 }
@@ -238,9 +248,15 @@ func (l *Locations) getUpdatesPath() string {
 	return filepath.Join(l.userData, "updates")
 }
 
+func (l *Locations) getNotificationsCachePath() string {
+	return filepath.Join(l.userCache, "notifications")
+}
+
 func (l *Locations) getStatsPath() string {
 	return filepath.Join(l.userData, "stats")
 }
+
+func (l *Locations) getUnleashCachePath() string { return filepath.Join(l.userCache, "unleash_cache") }
 
 // Clear removes everything except the lock and update files.
 func (l *Locations) Clear(except ...string) error {
@@ -263,4 +279,14 @@ func (l *Locations) ClearUpdates() error {
 // CleanGoIMAPCache removes all cache data from the go-imap implementation.
 func (l *Locations) CleanGoIMAPCache() error {
 	return files.Remove(l.getGoIMAPCachePath()).Do()
+}
+
+// ProvideNotificationsCachePath returns a location for notification deduplication data.
+// It creates it if it doesn't already exist.
+func (l *Locations) ProvideNotificationsCachePath() (string, error) {
+	if err := os.MkdirAll(l.getNotificationsCachePath(), 0o700); err != nil {
+		return "", err
+	}
+
+	return l.getNotificationsCachePath(), nil
 }

@@ -12,7 +12,7 @@ ROOT_DIR:=$(realpath .)
 .PHONY: build build-gui build-nogui build-launcher versioner hasher
 
 # Keep version hardcoded so app build works also without Git repository.
-BRIDGE_APP_VERSION?=3.12.0+git
+BRIDGE_APP_VERSION?=3.13.0+git
 APP_VERSION:=${BRIDGE_APP_VERSION}
 APP_FULL_NAME:=Proton Mail Bridge
 APP_VENDOR:=Proton AG
@@ -189,7 +189,7 @@ ${RESOURCE_FILE}: ./dist/info.rc ./dist/${SRC_ICO} .FORCE
 
 ## Dev dependencies
 .PHONY: install-devel-tools install-linter install-go-mod-outdated install-git-hooks
-LINTVER:="v1.55.2"
+LINTVER:="v1.59.1"
 LINTSRC:="https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh"
 
 install-dev-dependencies: install-devel-tools install-linter install-go-mod-outdated
@@ -264,7 +264,8 @@ test-integration-race: gofiles
 
 test-integration-nightly: gofiles
 	mkdir -p coverage/integration
-	go test \
+	gotestsum \
+		--junitfile tests/result/feature-tests.xml -- \
 		-v -timeout=90m -p=1 -count=1 -tags=test_integration \
 		${GOCOVERAGE} \
 		github.com/ProtonMail/proton-bridge/v3/tests \

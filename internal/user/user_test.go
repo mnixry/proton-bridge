@@ -29,6 +29,8 @@ import (
 	"github.com/ProtonMail/proton-bridge/v3/internal/certs"
 	"github.com/ProtonMail/proton-bridge/v3/internal/events"
 	"github.com/ProtonMail/proton-bridge/v3/internal/services/imapservice"
+	"github.com/ProtonMail/proton-bridge/v3/internal/services/notifications"
+	"github.com/ProtonMail/proton-bridge/v3/internal/services/observability"
 	"github.com/ProtonMail/proton-bridge/v3/internal/services/smtp"
 	"github.com/ProtonMail/proton-bridge/v3/internal/telemetry/mocks"
 	"github.com/ProtonMail/proton-bridge/v3/internal/vault"
@@ -164,8 +166,16 @@ func withUser(tb testing.TB, ctx context.Context, _ *server.Server, m *proton.Ma
 		nullSMTPServerManager,
 		nullEventSubscription,
 		nil,
+		observability.NewService(context.Background(), nil),
 		"",
 		true,
+		notifications.NewStore(func() (string, error) {
+			return "", nil
+		}),
+		func(_ string) bool {
+			return false
+		},
+		func(_ proton.ObservabilityMetric) {},
 	)
 	require.NoError(tb, err)
 	defer user.Close()

@@ -25,7 +25,7 @@ import (
 
 const WindowsCredentials = "windows-credentials"
 
-func listHelpers() (Helpers, string) {
+func listHelpers(_ bool) (Helpers, string) {
 	helpers := make(Helpers)
 	// Windows always provides a keychain.
 	if isUsable(newWinCredHelper("")) {

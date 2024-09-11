@@ -26,6 +26,7 @@
 #include <QtWidgets>
 #include <QtQuickControls2>
 #include <QtSvg>
+#include <QtGui>
 #include <AppController.h>
 
 

@@ -566,8 +566,12 @@ func (bridge *Bridge) addUserWithVault(
 		bridge.serverManager,
 		&bridgeEventSubscription{b: bridge},
 		bridge.syncService,
+		bridge.observabilityService,
 		syncSettingsPath,
 		isNew,
+		bridge.notificationStore,
+		bridge.unleashService.GetFlagValue,
+		bridge.observabilityService.AddMetric,
 	)
 	if err != nil {
 		return fmt.Errorf("failed to create user: %w", err)
