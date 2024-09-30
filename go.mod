@@ -7,9 +7,9 @@ toolchain go1.21.9
 require (
 	github.com/0xAX/notificator v0.0.0-20220220101646-ee9b8921e557
 	github.com/Masterminds/semver/v3 v3.2.0
-	github.com/ProtonMail/gluon v0.17.1-0.20240514133734-79cdd0fec41c
+	github.com/ProtonMail/gluon v0.17.1-0.20240923151549-d23b4bec3602
 	github.com/ProtonMail/go-autostart v0.0.0-20210130080809-00ed301c8e9a
-	github.com/ProtonMail/go-proton-api v0.4.1-0.20240829112804-d663a2ef90c2
+	github.com/ProtonMail/go-proton-api v0.4.1-0.20240918100656-b4860af56d47
 	github.com/ProtonMail/gopenpgp/v2 v2.7.4-proton
 	github.com/PuerkitoBio/goquery v1.8.1
 	github.com/abiosoft/ishell v2.0.0+incompatible
@@ -122,7 +122,7 @@ require (
 )
 
 replace (
-	github.com/emersion/go-message => github.com/ProtonMail/go-message v0.13.1-0.20230526094639-b62c999c85b7
+	github.com/emersion/go-message => github.com/ProtonMail/go-message v0.13.1-0.20240919135104-3bc88e6a9423
 	github.com/emersion/go-smtp => github.com/ProtonMail/go-smtp v0.0.0-20231109081432-2b3d50599865
 	github.com/go-resty/resty/v2 => github.com/LBeernaertProton/resty/v2 v2.0.0-20231129100320-dddf8030d93a
 	github.com/keybase/go-keychain => github.com/cuthix/go-keychain v0.0.0-20240103134243-0b6a41580b77
