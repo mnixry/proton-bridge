@@ -36,6 +36,7 @@ import (
 	"github.com/ProtonMail/proton-bridge/v3/internal/constants"
 	"github.com/ProtonMail/proton-bridge/v3/internal/files"
 	"github.com/ProtonMail/proton-bridge/v3/internal/logging"
+	"github.com/ProtonMail/proton-bridge/v3/internal/services/observability"
 	"github.com/sirupsen/logrus"
 )
 
@@ -77,6 +78,7 @@ func newIMAPServer(
 	tasks *async.Group,
 	uidValidityGenerator imap.UIDValidityGenerator,
 	panicHandler async.PanicHandler,
+	observabilitySender observability.Sender,
 ) (*gluon.Server, error) {
 	gluonCacheDir = ApplyGluonCachePathSuffix(gluonCacheDir)
 	gluonConfigDir = ApplyGluonConfigPathSuffix(gluonConfigDir)
@@ -121,6 +123,7 @@ func newIMAPServer(
 		gluon.WithReporter(reporter),
 		gluon.WithUIDValidityGenerator(uidValidityGenerator),
 		gluon.WithPanicHandler(panicHandler),
+		gluon.WithObservabilitySender(observability.NewAdapter(observabilitySender), int(observability.GluonImapError), int(observability.GluonMessageError), int(observability.GluonOtherError)),
 	)
 	if err != nil {
 		return nil, err
@@ -153,9 +156,9 @@ func newIMAPServer(
 
 func getGluonVersionInfo(version *semver.Version) gluon.Option {
 	return gluon.WithVersionInfo(
-		int(version.Major()),
-		int(version.Minor()),
-		int(version.Patch()),
+		int(version.Major()), //nolint:gosec // disable G115
+		int(version.Minor()), //nolint:gosec // disable G115
+		int(version.Patch()), //nolint:gosec // disable G115
 		constants.FullAppName,
 		"TODO",
 		"TODO",

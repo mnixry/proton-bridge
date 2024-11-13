@@ -39,6 +39,8 @@ func (s *scenario) steps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^bridge IMAP port is (\d+)`, s.bridgeIMAPPortIs)
 	ctx.Step(`^bridge SMTP port is (\d+)`, s.bridgeSMTPPortIs)
 	ctx.Step(`^the message used "([^"]*)" key for sending$`, s.theMessageUsedKeyForSending)
+	ctx.Step(`^the key for address "([^"]*)" was used to import`, s.theKeyForAddressWasUsedToImport)
+	ctx.Step(`^the key for address "([^"]*)" was used to create draft`, s.theKeyForAddressWasUsedToCreateDraft)
 
 	// ==== SETUP ====
 	ctx.Step(`^there exists an account with username "([^"]*)" and password "([^"]*)"$`, s.thereExistsAnAccountWithUsernameAndPassword)
@@ -190,6 +192,12 @@ func (s *scenario) steps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^SMTP client "([^"]*)" sends the following EML "([^"]*)" from "([^"]*)" to "([^"]*)"$`, s.smtpClientSendsTheFollowingEmlFromTo)
 	ctx.Step(`^SMTP client "([^"]*)" logs out$`, s.smtpClientLogsOut)
 
+	// ==== EXTERNAL ====
+	ctx.Step(`^external client deletes all messages`, s.externalClientDeletesAllMessages)
+	ctx.Step(`^external client sends the following message from "([^"]*)" to "([^"]*)":$`, s.externalClientSendsTheFollowingMessageFromTo)
+	ctx.Step(`^external client fetches the following message with subject "([^"]*)" and sender "([^"]*)" and state "([^"]*)"$`, s.externalClientFetchesTheFollowingMessage)
+	ctx.Step(`^external client fetches the following message with subject "([^"]*)" and sender "([^"]*)" and state "([^"]*)" with this structure:$`, s.externalClientSeesMessageWithStructure)
+
 	// ==== TELEMETRY ====
 	ctx.Step(`^bridge eventually sends the following heartbeat:$`, s.bridgeEventuallySendsTheFollowingHeartbeat)
 	ctx.Step(`^bridge needs to send heartbeat`, s.bridgeNeedsToSendHeartbeat)
@@ -226,4 +234,10 @@ func (s *scenario) steps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^the user with username "([^"]*)" sends all possible event loop message events observability metrics$`, s.eventLoopFailureMessageEventsObservability)
 	ctx.Step(`^the user with username "([^"]*)" sends all possible sync message building failure observability metrics$`, s.syncFailureMessageBuiltObservability)
 	ctx.Step(`^the user with username "([^"]*)" sends all possible sync message building success observability metrics$`, s.syncSuccessMessageBuiltObservability)
+	// SMTP metrics
+	ctx.Step(`^the user with username "([^"]*)" sends all possible SMTP error observability metrics$`, s.SMTPErrorObservabilityMetrics)
+	ctx.Step(`^the user with username "([^"]*)" sends SMTP send success observability metric$`, s.SMTPSendSuccessObservabilityMetric)
+
+	// Gluon related metrics
+	ctx.Step(`^the user with username "([^"]*)" sends all possible gluon error observability metrics$`, s.testGluonErrorObservabilityMetrics)
 }

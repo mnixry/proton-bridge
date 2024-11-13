@@ -14,6 +14,7 @@ import QtQml
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
+import QtQuick.Controls.impl
 
 Rectangle {
     id: root
@@ -37,6 +38,8 @@ Rectangle {
     }
     height: 68
     radius: ProtonStyle.banner_radius
+    Accessible.role: Accessible.Button
+    Accessible.name: root.text
 
     RowLayout {
         anchors.fill: parent
