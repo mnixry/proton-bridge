@@ -18,8 +18,12 @@
 package kb
 
 import (
+	"net/http"
+	"net/url"
+	"os"
 	"testing"
 
+	"github.com/go-resty/resty/v2"
 	"github.com/stretchr/testify/require"
 )
 
@@ -88,4 +92,33 @@ func Test_GetArticleIndex(t *testing.T) {
 
 func Test_simplifyUserInput(t *testing.T) {
 	require.Equal(t, "word1 ñóÄ don't déjà 33 pizza", simplifyUserInput("  \nword1    \n\tñóÄ   don't\n\n\ndéjà, 33    pizza=🍕\n,\n"))
+}
+
+func Test_ArticleURLValidity(t *testing.T) {
+	t.Parallel()
+
+	httpTransport := &http.Transport{
+		DisableKeepAlives: true,
+	}
+
+	if httpsProxy := os.Getenv("HTTPS_PROXY"); httpsProxy != "" {
+		proxyURL, err := url.Parse(httpsProxy)
+		require.NoError(t, err)
+
+		httpTransport.Proxy = http.ProxyURL(proxyURL)
+	}
+
+	articleList, err := GetArticleList()
+	require.NoError(t, err, "could not get kb article list: %s", err)
+
+	client := resty.New().SetTransport(httpTransport)
+
+	for _, article := range articleList {
+		t.Run(article.URL, func(t *testing.T) {
+			t.Parallel()
+			res, err := client.R().Get(article.URL)
+			require.NoError(t, err, "kb article request failed: %s", err)
+			require.True(t, res.IsSuccess(), "kb article request failed: %s", res.Status())
+		})
+	}
 }
