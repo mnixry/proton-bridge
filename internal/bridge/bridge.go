@@ -723,3 +723,18 @@ func (bridge *Bridge) PushDistinctObservabilityMetrics(errType observability.Dis
 func (bridge *Bridge) ModifyObservabilityHeartbeatInterval(duration time.Duration) {
 	bridge.observabilityService.ModifyHeartbeatInterval(duration)
 }
+
+func (bridge *Bridge) ReportMessageWithContext(message string, messageCtx reporter.Context) {
+	if err := bridge.reporter.ReportMessageWithContext(message, messageCtx); err != nil {
+		logPkg.WithFields(logrus.Fields{
+			"err":           err,
+			"sentryMessage": message,
+			"messageCtx":    messageCtx,
+		}).Info("Error occurred when sending Report to Sentry")
+	}
+}
+
+// GetUsers is only used for testing purposes.
+func (bridge *Bridge) GetUsers() map[string]*user.User {
+	return bridge.users
+}
