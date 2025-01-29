@@ -1,4 +1,4 @@
-// Copyright (c) 2024 Proton AG
+// Copyright (c) 2025 Proton AG
 //
 // This file is part of Proton Mail Bridge.
 //
@@ -31,8 +31,8 @@ type CoolDownProvider interface {
 	Reset()
 }
 
-func jitter(max int) time.Duration { //nolint:predeclared
-	return time.Duration(rand.Intn(max)) * time.Second //nolint:gosec
+func jitter(maxValue int) time.Duration {
+	return time.Duration(rand.Intn(maxValue)) * time.Second //nolint:gosec
 }
 
 type ExpCoolDown struct {
