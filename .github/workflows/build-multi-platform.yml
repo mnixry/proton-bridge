@@ -74,7 +74,7 @@ jobs:
             echo "::error:: Build failed without any error message"
           fi
 
-      - uses: actions/attest-build-provenance@v1
+      - uses: actions/attest-build-provenance@v2
         with:
           subject-path: "bridge*.tgz"
 
