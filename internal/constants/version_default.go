@@ -23,7 +23,6 @@ package constants
 import (
 	"errors"
 	"fmt"
-	"io"
 	"net/http"
 	"regexp"
 
@@ -34,23 +33,28 @@ var versionCache string
 
 // Get newest app version from proton web mail
 func getNewestAppVersion() (string, error) {
-	resp, err := http.Get("https://mail.proton.me/")
+	resp, err := http.Get("https://github.com/ProtonMail/android-mail/releases/latest")
 	if err != nil {
 		return "", err
 	}
 	defer resp.Body.Close()
 
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return "", err
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("failed to get latest version: %s", resp.Status)
 	}
 
-	versionRegexp := regexp.MustCompile(`\?v=([0-9\.]+)`)
-	versionMatches := versionRegexp.FindStringSubmatch(string(body))
-	if len(versionMatches) < 2 {
-		return "", errors.New("failed to find version")
+	finalURL := resp.Request.URL.String()
+	re := regexp.MustCompile(`tag\/(\d+\.\d+\.\d+)`)
+	matches := re.FindStringSubmatch(finalURL)
+	if len(matches) < 2 {
+		return "", errors.New("no version found in redirect URL")
 	}
-	return versionMatches[1], nil
+	newestVersion := matches[1]
+	if newestVersion == "" {
+		return "", errors.New("no version found")
+	}
+	logrus.WithField("newestVersion", newestVersion).Debug("Newest app version")
+	return newestVersion, nil
 }
 
 // AppVersion returns the full rendered version of the app (to be used in request headers).
