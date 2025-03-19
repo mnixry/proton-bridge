@@ -143,6 +143,10 @@ if (WIN32) # on Windows, we add a (non-Qt) resource file that contains the appli
     endif()
     configure_file("${CMAKE_CURRENT_SOURCE_DIR}/Resources.rc.in" "${CMAKE_CURRENT_SOURCE_DIR}/Resources.rc")
     target_sources(bridge-gui PRIVATE Resources.rc)
+    # fix for gRPC definition conflicts for min and max
+    # https://github.com/grpc/grpc/blob/b2d091655c61b34b245fd32da0f47800235485ad/include/grpc/event_engine/memory_request.h#L45-L46
+    target_compile_definitions(bridge-gui PRIVATE NOMINMAX)
+    target_compile_definitions(bridge-gui PRIVATE WIN32_LEAN_AND_MEAN)
 endif()
 
 target_precompile_headers(bridge-gui PRIVATE Pch.h)
