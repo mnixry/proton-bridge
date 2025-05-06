@@ -257,7 +257,7 @@ func (s *Connector) DeleteMailbox(ctx context.Context, _ connector.IMAPStateWrit
 	wLabels := s.labels.Write()
 	defer wLabels.Close()
 
-	wLabels.Delete(string(mboxID))
+	wLabels.Delete(string(mboxID), "connectorDeleteMailbox")
 
 	return nil
 }
@@ -555,7 +555,7 @@ func (s *Connector) createLabel(ctx context.Context, name []string) (imap.Mailbo
 	wLabels := s.labels.Write()
 	defer wLabels.Close()
 
-	wLabels.SetLabel(label.ID, label)
+	wLabels.SetLabel(label.ID, label, "connectorCreateLabel")
 
 	return toIMAPMailbox(label, s.flags, s.permFlags, s.attrs), nil
 }
@@ -593,7 +593,7 @@ func (s *Connector) createFolder(ctx context.Context, name []string) (imap.Mailb
 	}
 
 	// Add label to list so subsequent sub folder create requests work correct.
-	wLabels.SetLabel(label.ID, label)
+	wLabels.SetLabel(label.ID, label, "connectorCreateFolder")
 
 	return toIMAPMailbox(label, s.flags, s.permFlags, s.attrs), nil
 }
@@ -619,7 +619,7 @@ func (s *Connector) updateLabel(ctx context.Context, labelID imap.MailboxID, nam
 	wLabels := s.labels.Write()
 	defer wLabels.Close()
 
-	wLabels.SetLabel(label.ID, update)
+	wLabels.SetLabel(label.ID, update, "connectorUpdateLabel")
 
 	return nil
 }
@@ -660,7 +660,7 @@ func (s *Connector) updateFolder(ctx context.Context, labelID imap.MailboxID, na
 		return err
 	}
 
-	wLabels.SetLabel(label.ID, update)
+	wLabels.SetLabel(label.ID, update, "connectorUpdateFolder")
 
 	return nil
 }
@@ -680,7 +680,7 @@ func (s *Connector) importMessage(
 	}
 
 	isDraft := slices.Contains(labelIDs, proton.DraftsLabel)
-	addr, err := s.getImportAddress(p, isDraft)
+	addr, err := getImportAddress(p, isDraft, s.addrID, s)
 	if err != nil {
 		return imap.Message{}, nil, err
 	}
@@ -869,45 +869,6 @@ func stripPlusAlias(a string) string {
 
 func equalAddresses(a, b string) bool {
 	return strings.EqualFold(stripPlusAlias(a), stripPlusAlias(b))
-}
-
-func (s *Connector) getImportAddress(p *parser.Parser, isDraft bool) (proton.Address, error) {
-	// addr is primary for combined mode or active for split mode
-	address, ok := s.identityState.GetAddress(s.addrID)
-	if !ok {
-		return proton.Address{}, errors.New("could not find account address")
-	}
-
-	inCombinedMode := s.addressMode == usertypes.AddressModeCombined
-	if !inCombinedMode {
-		return address, nil
-	}
-
-	senderAddr, err := s.getSenderProtonAddress(p)
-	if err != nil {
-		if !errors.Is(err, errNoSenderAddressMatch) {
-			s.log.WithError(err).Warn("Could not get import address")
-		}
-
-		// We did not find a match, so we use the default address.
-		return address, nil
-	}
-
-	if senderAddr.ID == address.ID {
-		return address, nil
-	}
-
-	// GODT-3185 / BRIDGE-120 In combined mode, in certain cases we adapt the address used for encryption.
-	// - draft with non-default address in combined mode: using sender address
-	// - import with non-default address in combined mode: using sender address
-	// - import with non-default disabled address in combined mode: using sender address
-
-	isSenderAddressDisabled := (!bool(senderAddr.Send)) || (senderAddr.Status != proton.AddressStatusEnabled)
-	if isDraft && isSenderAddressDisabled {
-		return address, nil
-	}
-
-	return senderAddr, nil
 }
 
 func (s *Connector) getSenderProtonAddress(p *parser.Parser) (proton.Address, error) {
