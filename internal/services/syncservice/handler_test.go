@@ -25,6 +25,7 @@ import (
 
 	"github.com/ProtonMail/gluon/async"
 	"github.com/ProtonMail/go-proton-api"
+	"github.com/ProtonMail/proton-bridge/v3/internal/sentry"
 	"github.com/bradenaw/juniper/xmaps"
 	"github.com/golang/mock/gomock"
 	"github.com/sirupsen/logrus"
@@ -208,6 +209,13 @@ func TestTask_StateHasSyncedState(t *testing.T) {
 	require.NoError(t, err)
 }
 
+type mockLabelConflictChecker struct {
+}
+
+func (m *mockLabelConflictChecker) CheckAndReportConflicts(_ context.Context, _ map[string]proton.Label) error {
+	return nil
+}
+
 func TestTask_RepeatsOnSyncFailure(t *testing.T) {
 	const MessageTotal int64 = 50
 	const MessageID string = "foo"
@@ -271,7 +279,7 @@ func TestTask_RepeatsOnSyncFailure(t *testing.T) {
 	tt.syncReporter.EXPECT().OnFinished(gomock.Any())
 	tt.syncReporter.EXPECT().OnProgress(gomock.Any(), gomock.Eq(MessageDelta))
 
-	tt.task.Execute(tt.syncReporter, labels, tt.updateApplier, tt.messageBuilder, time.Microsecond)
+	tt.task.Execute(tt.syncReporter, labels, tt.updateApplier, tt.messageBuilder, time.Microsecond, &mockLabelConflictChecker{})
 	require.NoError(t, <-tt.task.OnSyncFinishedCH())
 }
 
@@ -342,7 +350,7 @@ func newTestHandler(mockCtrl *gomock.Controller, userID string) thandler { // no
 	client := NewMockAPIClient(mockCtrl)
 	messageBuilder := NewMockMessageBuilder(mockCtrl)
 	syncReporter := NewMockReporter(mockCtrl)
-	task := NewHandler(regulator, client, userID, syncState, logrus.WithField("test", "test"), &async.NoopPanicHandler{})
+	task := NewHandler(regulator, client, userID, syncState, logrus.WithField("test", "test"), &async.NoopPanicHandler{}, sentry.NullSentryReporter{})
 
 	return thandler{
 		task:           task,

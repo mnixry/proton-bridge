@@ -94,6 +94,7 @@ type Service struct {
 
 	observabilitySender  observability.Sender
 	labelConflictManager *LabelConflictManager
+	LabelConflictChecker *LabelConflictChecker
 }
 
 func NewService(
@@ -114,7 +115,7 @@ func NewService(
 	maxSyncMemory uint64,
 	showAllMail bool,
 	observabilitySender observability.Sender,
-	getFeatureFlagValueFn unleash.GetFlagValueFn,
+	featureFlagProvider unleash.FeatureFlagValueProvider,
 ) *Service {
 	subscriberName := fmt.Sprintf("imap-%v", identityState.User.ID)
 
@@ -124,12 +125,12 @@ func NewService(
 	})
 	rwIdentity := newRWIdentity(identityState, bridgePassProvider, keyPassProvider)
 
-	labelConflictManager := NewLabelConflictManager(serverManager, gluonIDProvider, client, reporter, getFeatureFlagValueFn)
+	labelConflictManager := NewLabelConflictManager(serverManager, gluonIDProvider, client, reporter, featureFlagProvider)
 	syncUpdateApplier := NewSyncUpdateApplier(labelConflictManager)
 	syncMessageBuilder := NewSyncMessageBuilder(rwIdentity)
 	syncReporter := newSyncReporter(identityState.User.ID, eventPublisher, time.Second)
 
-	return &Service{
+	service := &Service{
 		cpc:           cpc.NewCPC(),
 		client:        client,
 		log:           log,
@@ -163,6 +164,9 @@ func NewService(
 		observabilitySender:  observabilitySender,
 		labelConflictManager: labelConflictManager,
 	}
+
+	service.LabelConflictChecker = NewConflictChecker(service, reporter, gluonIDProvider, serverManager)
+	return service
 }
 
 func (s *Service) Start(
@@ -181,7 +185,14 @@ func (s *Service) Start(
 		s.syncStateProvider = syncStateProvider
 	}
 
-	s.syncHandler = syncservice.NewHandler(syncRegulator, s.client, s.identityState.UserID(), s.syncStateProvider, s.log, s.panicHandler)
+	s.syncHandler = syncservice.NewHandler(
+		syncRegulator,
+		s.client,
+		s.identityState.UserID(),
+		s.syncStateProvider,
+		s.log,
+		s.panicHandler,
+		s.reporter)
 
 	// Get user labels
 	apiLabels, err := s.client.GetLabels(ctx, proton.LabelTypeSystem, proton.LabelTypeFolder, proton.LabelTypeLabel)
@@ -656,12 +667,16 @@ func (s *Service) setShowAllMail(v bool) {
 
 func (s *Service) startSyncing() {
 	s.isSyncing.Store(true)
-	s.syncHandler.Execute(s.syncReporter, s.labels.GetLabelMap(), s.syncUpdateApplier, s.syncMessageBuilder, syncservice.DefaultRetryCoolDown)
+	s.syncHandler.Execute(s.syncReporter, s.labels.GetLabelMap(), s.syncUpdateApplier, s.syncMessageBuilder, syncservice.DefaultRetryCoolDown, s.LabelConflictChecker)
 }
 
 func (s *Service) cancelSync() {
 	s.syncHandler.CancelAndWait()
 	s.isSyncing.Store(false)
+}
+
+func (s *Service) getConnectors() []*Connector {
+	return maps.Values(s.connectors)
 }
 
 type resyncReq struct{}

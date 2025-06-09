@@ -39,6 +39,9 @@ type IMAPServerManager interface {
 	LogRemoteLabelIDs(ctx context.Context, provider GluonIDProvider, addrID ...string) error
 
 	GetUserMailboxByName(ctx context.Context, addrID string, mailboxName []string) (imap.MailboxData, error)
+
+	GetOpenIMAPSessionCount() int
+	GetRollingIMAPConnectionCount() int
 }
 
 type NullIMAPServerManager struct{}
@@ -72,6 +75,14 @@ func (n NullIMAPServerManager) LogRemoteLabelIDs(
 
 func (n NullIMAPServerManager) GetUserMailboxByName(_ context.Context, _ string, _ []string) (imap.MailboxData, error) {
 	return imap.MailboxData{}, nil
+}
+
+func (n NullIMAPServerManager) GetOpenIMAPSessionCount() int {
+	return 0
+}
+
+func (n NullIMAPServerManager) GetRollingIMAPConnectionCount() int {
+	return 0
 }
 
 func NewNullIMAPServerManager() *NullIMAPServerManager {

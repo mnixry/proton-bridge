@@ -19,10 +19,13 @@ package syncservice
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/ProtonMail/gluon/async"
+	"github.com/ProtonMail/gluon/db"
+	"github.com/ProtonMail/gluon/reporter"
 	"github.com/ProtonMail/go-proton-api"
 	"github.com/ProtonMail/proton-bridge/v3/internal/network"
 	"github.com/sirupsen/logrus"
@@ -32,6 +35,10 @@ const DefaultRetryCoolDown = 20 * time.Second
 const NumSyncStages = 4
 
 type LabelMap = map[string]proton.Label
+
+type labelConflictChecker interface {
+	CheckAndReportConflicts(ctx context.Context, labels map[string]proton.Label) error
+}
 
 // Handler is the interface from which we control the syncing of the IMAP data. One instance should be created for each
 // user and used for every subsequent sync request.
@@ -45,6 +52,7 @@ type Handler struct {
 	syncFinishedCh chan error
 	panicHandler   async.PanicHandler
 	downloadCache  *DownloadCache
+	sentryReporter reporter.Reporter
 }
 
 func NewHandler(
@@ -54,6 +62,7 @@ func NewHandler(
 	state StateProvider,
 	log *logrus.Entry,
 	panicHandler async.PanicHandler,
+	sentryReporter reporter.Reporter,
 ) *Handler {
 	return &Handler{
 		client:         client,
@@ -65,6 +74,7 @@ func NewHandler(
 		regulator:      regulator,
 		panicHandler:   panicHandler,
 		downloadCache:  newDownloadCache(),
+		sentryReporter: sentryReporter,
 	}
 }
 
@@ -91,11 +101,16 @@ func (t *Handler) Execute(
 	updateApplier UpdateApplier,
 	messageBuilder MessageBuilder,
 	coolDown time.Duration,
+	labelConflictChecker labelConflictChecker,
 ) {
 	t.log.Info("Sync triggered")
 	t.group.Once(func(ctx context.Context) {
 		start := time.Now()
 		t.log.WithField("start", start).Info("Beginning user sync")
+
+		if err := labelConflictChecker.CheckAndReportConflicts(ctx, labels); err != nil {
+			t.log.WithError(err).Error("Failed to check and report label conflicts")
+		}
 
 		syncReporter.OnStart(ctx)
 		var err error
@@ -104,6 +119,20 @@ func (t *Handler) Execute(
 				t.log.WithError(err).Error("Sync aborted")
 				break
 			} else if err = t.run(ctx, syncReporter, labels, updateApplier, messageBuilder); err != nil {
+				if db.IsUniqueLabelConstraintError(err) {
+					if sentryErr := t.sentryReporter.ReportMessageWithContext("Failed to sync due to label unique constraint conflict",
+						reporter.Context{"err": err}); sentryErr != nil {
+						t.log.WithError(sentryErr).Error("Failed to report label unique constraint conflict error to Sentry")
+					}
+				} else if !(errors.Is(err, context.Canceled)) {
+					if sentryErr := t.sentryReporter.ReportMessageWithContext("Failed to sync, will retry later", reporter.Context{
+						"err":     err.Error(),
+						"user_id": t.userID,
+					}); sentryErr != nil {
+						t.log.WithError(sentryErr).Error("Failed to report sentry message")
+					}
+				}
+
 				t.log.WithError(err).Error("Failed to sync, will retry later")
 				sleepCtx(ctx, coolDown)
 			} else {

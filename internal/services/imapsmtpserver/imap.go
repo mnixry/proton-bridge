@@ -24,6 +24,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/Masterminds/semver/v3"
 	"github.com/ProtonMail/gluon"
@@ -37,7 +38,14 @@ import (
 	"github.com/ProtonMail/proton-bridge/v3/internal/files"
 	"github.com/ProtonMail/proton-bridge/v3/internal/logging"
 	"github.com/ProtonMail/proton-bridge/v3/internal/services/observability"
+	"github.com/ProtonMail/proton-bridge/v3/internal/unleash"
 	"github.com/sirupsen/logrus"
+)
+
+const (
+	rollingCounterNewConnectionThreshold = 300
+	rollingCounterNumberOfBuckets        = 6
+	rollingCounterBucketRotationInterval = time.Second * 10
 )
 
 var logIMAP = logrus.WithField("pkg", "server/imap") //nolint:gochecknoglobals
@@ -81,6 +89,7 @@ func newIMAPServer(
 	uidValidityGenerator imap.UIDValidityGenerator,
 	panicHandler async.PanicHandler,
 	observabilitySender observability.Sender,
+	featureFlagProvider unleash.FeatureFlagValueProvider,
 ) (*gluon.Server, error) {
 	gluonCacheDir = ApplyGluonCachePathSuffix(gluonCacheDir)
 	gluonConfigDir = ApplyGluonConfigPathSuffix(gluonConfigDir)
@@ -126,6 +135,8 @@ func newIMAPServer(
 		gluon.WithUIDValidityGenerator(uidValidityGenerator),
 		gluon.WithPanicHandler(panicHandler),
 		gluon.WithObservabilitySender(observability.NewAdapter(observabilitySender), int(observability.GluonImapError), int(observability.GluonMessageError), int(observability.GluonOtherError)),
+		gluon.WithConnectionRollingCounter(rollingCounterNewConnectionThreshold, rollingCounterNumberOfBuckets, rollingCounterBucketRotationInterval),
+		gluon.WithFeatureFlagProvider(featureFlagProvider),
 	}
 
 	if disableIMAPAuthenticate {
