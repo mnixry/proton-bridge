@@ -73,6 +73,7 @@ type Connector struct {
 	syncState   *SyncState
 
 	mailboxCountProvider mailboxCountProvider
+	gluonIDProvider      gluonIDProvider
 }
 
 var errNoSenderAddressMatch = errors.New("no matching sender found in address list")
@@ -89,6 +90,7 @@ func NewConnector(
 	showAllMail bool,
 	syncState *SyncState,
 	mailboxCountProvider mailboxCountProvider,
+	gluonIDProvider gluonIDProvider,
 ) *Connector {
 	userID := identityState.UserID()
 
@@ -124,6 +126,7 @@ func NewConnector(
 		syncState:   syncState,
 
 		mailboxCountProvider: mailboxCountProvider,
+		gluonIDProvider:      gluonIDProvider,
 	}
 }
 
@@ -920,7 +923,16 @@ func (s *Connector) SetAddrIDTest(addrID string) {
 }
 
 func (s *Connector) GetMailboxMessageCount(ctx context.Context, mailboxInternalID imap.InternalMailboxID) (int, error) {
-	return s.mailboxCountProvider.GetUserMailboxCountByInternalID(ctx, s.addrID, mailboxInternalID)
+	gluonID, ok := s.gluonIDProvider.GetGluonID(s.addrID)
+	if !ok {
+		return 0, errors.New("could not retrieve Gluon ID for connector address ID")
+	}
+	return s.mailboxCountProvider.GetUserMailboxCountByInternalID(ctx, gluonID, mailboxInternalID)
+}
+
+// SetGluonIDProviderTest - sets the relevant gluon ID provider. Should only be used for testing.
+func (s *Connector) SetGluonIDProviderTest(provider gluonIDProvider) {
+	s.gluonIDProvider = provider
 }
 
 // SetMailboxCountProviderTest - sets the relevant provider. Should only be used for testing.

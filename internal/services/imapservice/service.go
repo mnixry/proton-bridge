@@ -541,6 +541,7 @@ func (s *Service) buildConnectors() (map[string]*Connector, error) {
 			s.showAllMail,
 			s.syncStateProvider,
 			s.serverManager,
+			s.gluonIDProvider,
 		)
 
 		return connectors, nil
@@ -559,6 +560,7 @@ func (s *Service) buildConnectors() (map[string]*Connector, error) {
 			s.showAllMail,
 			s.syncStateProvider,
 			s.serverManager,
+			s.gluonIDProvider,
 		)
 	}
 

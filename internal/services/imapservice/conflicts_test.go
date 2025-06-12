@@ -763,11 +763,11 @@ func TestInternalLabelConflictResolver_ConflictingNonAPILabel_ZeroCount(t *testi
 
 	mockLabelProvider := new(mockLabelNameProvider)
 	mockClient := new(mockAPIClient)
-	mockIDProvider := new(mockIDProvider)
+	mockGluonIDProvider := new(mockIDProvider)
 	mockReporter := new(mockReporter)
 	mockCountProvider := new(mockMailboxCountProvider)
 
-	mockIDProvider.On("GetGluonID", "addr-1").Return("gluon-id-1", true)
+	mockGluonIDProvider.On("GetGluonID", "addr-1").Return("gluon-id-1", true)
 
 	// Mock mailbox fetch to return conflicting mailbox
 	mockLabelProvider.On("GetUserMailboxByName", mock.Anything, "gluon-id-1", []string{"Folders"}).
@@ -783,14 +783,15 @@ func TestInternalLabelConflictResolver_ConflictingNonAPILabel_ZeroCount(t *testi
 	connector.SetAddrIDTest("addr-1")
 	mockCountProvider.On("GetUserMailboxCountByInternalID",
 		mock.Anything,
-		"addr-1",
+		"gluon-id-1",
 		imap.InternalMailboxID(123)).
 		Return(0, nil)
 
 	connector.SetMailboxCountProviderTest(mockCountProvider)
+	connector.SetGluonIDProviderTest(mockGluonIDProvider)
 	connectors := []*imapservice.Connector{connector}
 
-	manager := imapservice.NewLabelConflictManager(mockLabelProvider, mockIDProvider, mockClient, mockReporter, ffProviderFalse{})
+	manager := imapservice.NewLabelConflictManager(mockLabelProvider, mockGluonIDProvider, mockClient, mockReporter, ffProviderFalse{})
 	resolver := manager.NewInternalLabelConflictResolver(connectors)
 
 	// API labels don't contain the conflicting label ID
@@ -834,10 +835,11 @@ func TestInternalLabelConflictResolver_ConflictingNonAPILabel_PositiveCount(t *t
 	connector.SetAddrIDTest("addr-1")
 	mockCountProvider.On("GetUserMailboxCountByInternalID",
 		mock.Anything,
-		"addr-1",
+		"gluon-id-1",
 		imap.InternalMailboxID(123)).
 		Return(10, nil)
 
+	connector.SetGluonIDProviderTest(mockIDProvider)
 	connector.SetMailboxCountProviderTest(mockCountProvider)
 	connectors := []*imapservice.Connector{connector}
 
@@ -874,6 +876,7 @@ func TestInternalLabelConflictResolver_ConflictingAPILabelSameName(t *testing.T)
 
 	connector := &imapservice.Connector{}
 	connector.SetAddrIDTest("addr-1")
+	connector.SetGluonIDProviderTest(mockIDProvider)
 	connector.SetMailboxCountProviderTest(mockCountProvider)
 	connectors := []*imapservice.Connector{connector}
 
@@ -939,6 +942,7 @@ func TestNewInternalLabelConflictResolver_KillSwitchEnabled(t *testing.T) {
 
 	connector := &imapservice.Connector{}
 	connector.SetAddrIDTest("addr-1")
+	connector.SetGluonIDProviderTest(mockIDProvider)
 	connectors := []*imapservice.Connector{connector}
 
 	manager := imapservice.NewLabelConflictManager(mockLabelProvider, mockIDProvider, mockClient, mockReporter, ffProviderTrue{})
