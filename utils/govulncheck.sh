@@ -29,6 +29,11 @@ main(){
 
     ignore GO-2023-2328 "GODT-3124 RESTY race condition"
     ignore GO-2025-3563 "BRIDGE-346 net/http request smuggling"
+    ignore GO-2025-3749 "BRIDGE-388 affects github.com/cloudflare/circl, not used"
+    ignore GO-2025-3750 "BRIDGE-388 net/http Proxy-Authorization and Proxy-Authenticate headers persisted on cross-origin redirects"
+    ignore GO-2025-3751 "BRIDGE-388 affects syscall and os for symlink files"
+    ignore GO-2025-3754 "BRIDGE-388 crypto/x509 policy graphs"
+
 
     has_vulns
 
