@@ -330,59 +330,23 @@ func (r *internalLabelConflictResolverImpl) ResolveConflict(ctx context.Context,
 		logger.Info("Encountered conflict, resolving.")
 
 		// There is a discrepancy, let's see if it comes from API.
-		apiLabel, ok := apiLabels[mbox.RemoteID]
-		if !ok {
-			// Label does not come from API, we should delete it.
-			// Due diligence, check if there are any messages associated with the mailbox.
-			msgCount, _ := r.mailboxMessageCountFetch(ctx, mbox.InternalID)
-			if msgCount != 0 {
-				logger.WithField("conflictingLabelMessageCount", msgCount).Info("Non-API conflicting label has associated messages")
-
-				reporterContext["conflictingLabelMessageCount"] = msgCount
-				if rerr := r.reporter.ReportWarningWithContext("Internal mailbox name conflict. Conflicting non-API label has messages.",
-					reporterContext); rerr != nil {
-					logger.WithError(rerr).Error("Failed to send report to sentry")
-				}
-
-				if !r.allowNonEmptyMailboxDeletion {
-					return combineIMAPUpdateFns(updateFns), fmt.Errorf("internal mailbox conflicting non-api label has associated messages")
-				}
+		_, ok := apiLabels[mbox.RemoteID]
+		if ok {
+			// This is a critical issue, we shouldn't have conflicting mailboxes coming from API (system + user labels/folders)
+			logger.Error("API defined mailbox name conflicts with internal")
+			if rerr := r.reporter.ReportMessageWithContext("Internal mailbox name conflict. Conflicting with API label.",
+				reporterContext); rerr != nil {
+				logger.WithError(rerr).Error("Failed to send report to Sentry")
 			}
 
-			fn := func() []imap.Update {
-				return []imap.Update{imap.NewMailboxDeletedSilent(imap.MailboxID(mbox.RemoteID))}
-			}
-			updateFns = append(updateFns, fn)
-			continue
+			return combineIMAPUpdateFns(updateFns), fmt.Errorf("internal mailbox conflicting with API label")
 		}
 
-		reporterContext["conflictingLabelType"] = apiLabel.Type
-
-		// Label is indeed from API let's see if it's name has changed.
-		if compareLabelNames(GetMailboxName(apiLabel), internalLabel.Path) {
-			logger.Error("Conflict, same-name mailbox is returned by API")
-
-			if err := r.reporter.ReportMessageWithContext("Internal mailbox name conflict. Same-name mailbox is returned by API", reporterContext); err != nil {
-				logger.WithError(err).Error("Could not send report to sentry")
-			}
-
-			return combineIMAPUpdateFns(updateFns), fmt.Errorf("API label %s conflicts with internal label %s",
-				GetMailboxName(apiLabel),
-				strings.Join(mbox.BridgeName, "/"),
-			)
+		fn := func() []imap.Update {
+			return []imap.Update{imap.NewMailboxDeletedSilent(imap.MailboxID(mbox.RemoteID))}
 		}
-
-		// If it's name has changed then we ought to rename it while still taking care of potential conflicts.
-		labelRenameUpdates, err := r.userLabelConflictResolver.ResolveConflict(ctx, apiLabel, make(map[string]bool))
-		if err != nil {
-			reporterContext["err"] = err.Error()
-			if rerr := r.reporter.ReportMessageWithContext("Failed to resolve internal mailbox conflict", reporterContext); rerr != nil {
-				logger.WithError(rerr).Error("Could not send report to sentry")
-			}
-			return combineIMAPUpdateFns(updateFns),
-				fmt.Errorf("failed to resolve user label conflict for '%s': %w", apiLabel.Name, err)
-		}
-		updateFns = append(updateFns, labelRenameUpdates)
+		updateFns = append(updateFns, fn)
 	}
+
 	return combineIMAPUpdateFns(updateFns), nil
 }

@@ -807,54 +807,6 @@ func TestInternalLabelConflictResolver_ConflictingNonAPILabel_ZeroCount(t *testi
 	assert.Equal(t, imap.MailboxID("wrong-id"), deleted.MailboxID)
 }
 
-func TestInternalLabelConflictResolver_ConflictingNonAPILabel_PositiveCount(t *testing.T) {
-	ctx := context.Background()
-
-	mockLabelProvider := new(mockLabelNameProvider)
-	mockClient := new(mockAPIClient)
-	mockIDProvider := new(mockIDProvider)
-	mockReporter := new(mockReporter)
-	mockCountProvider := new(mockMailboxCountProvider)
-
-	mockIDProvider.On("GetGluonID", "addr-1").Return("gluon-id-1", true)
-
-	mockReporter.On("ReportWarningWithContext", mock.Anything, mock.Anything).
-		Return(nil)
-
-	// Mock mailbox fetch to return conflicting mailbox
-	mockLabelProvider.On("GetUserMailboxByName", mock.Anything, "gluon-id-1", []string{"Folders"}).
-		Return(imap.MailboxData{RemoteID: "wrong-id", BridgeName: []string{"Folders"}, InternalID: imap.InternalMailboxID(123)}, nil)
-	mockLabelProvider.On("GetUserMailboxByName", mock.Anything, "gluon-id-1", []string{"Labels"}).
-		Return(imap.MailboxData{}, db.ErrNotFound)
-
-	// Mock message count fetch to return 0 messages.
-	mockLabelProvider.On("GetMailboxMessageCount", mock.Anything, "gluon-id-1", imap.InternalMailboxID(123)).
-		Return(0, nil)
-
-	connector := &imapservice.Connector{}
-	connector.SetAddrIDTest("addr-1")
-	mockCountProvider.On("GetUserMailboxCountByInternalID",
-		mock.Anything,
-		"gluon-id-1",
-		imap.InternalMailboxID(123)).
-		Return(10, nil)
-
-	connector.SetGluonIDProviderTest(mockIDProvider)
-	connector.SetMailboxCountProviderTest(mockCountProvider)
-	connectors := []*imapservice.Connector{connector}
-
-	manager := imapservice.NewLabelConflictManager(mockLabelProvider, mockIDProvider, mockClient, mockReporter, ffProviderFalse{})
-	resolver := manager.NewInternalLabelConflictResolver(connectors)
-
-	// API labels don't contain the conflicting label ID
-	apiLabels := make(map[string]proton.Label)
-	fn, err := resolver.ResolveConflict(ctx, apiLabels)
-	assert.EqualError(t, err, "internal mailbox conflicting non-api label has associated messages")
-
-	updates := fn()
-	assert.Empty(t, updates, 0)
-}
-
 func TestInternalLabelConflictResolver_ConflictingAPILabelSameName(t *testing.T) {
 	ctx := context.Background()
 
@@ -871,7 +823,7 @@ func TestInternalLabelConflictResolver_ConflictingAPILabelSameName(t *testing.T)
 	mockLabelProvider.On("GetUserMailboxByName", mock.Anything, "gluon-id-1", []string{"Labels"}).
 		Return(imap.MailboxData{}, db.ErrNotFound)
 
-	mockReporter.On("ReportMessageWithContext", "Internal mailbox name conflict. Same-name mailbox is returned by API", mock.Anything).
+	mockReporter.On("ReportMessageWithContext", "Internal mailbox name conflict. Conflicting with API label.", mock.Anything).
 		Return(nil)
 
 	connector := &imapservice.Connector{}
@@ -894,9 +846,7 @@ func TestInternalLabelConflictResolver_ConflictingAPILabelSameName(t *testing.T)
 	}
 
 	_, err := resolver.ResolveConflict(ctx, apiLabels)
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "API label")
-	assert.Contains(t, err.Error(), "conflicts with internal label")
+	assert.Error(t, err, "internal mailbox conflicting with API label")
 }
 
 func TestInternalLabelConflictResolver_MailboxFetchError(t *testing.T) {
