@@ -1,5 +1,4 @@
 ---
-
 .script-build:
   stage: build
   needs: ["lint"]
@@ -22,6 +21,7 @@
       - bridge_*.tgz
       - vault-editor
       - bridge-rollout
+
 build-linux:
   extends:
     - .script-build

@@ -15,14 +15,32 @@
 # You should have received a copy of the GNU General Public License
 # along with Proton Mail Bridge. If not, see <https://www.gnu.org/licenses/>.
 
-#!/bin/bash
-
 $scriptpath = $MyInvocation.MyCommand.Path
 $scriptDir = Split-Path $scriptpath
 $bridgeRepoRootDir = Join-Path $scriptDir "../../../.." -Resolve
 Write-host "Bridge-gui directory is $scriptDir"
 Write-host "Bridge repos root dir $bridgeRepoRootDir"
 Push-Location $scriptDir
+
+# There is bug in CI caused by defining the lower case and upper case
+# vars for proxy. For pure bash (case sensitive - creating
+# two env items) or pure powershell (case insensitive - by default writes any
+# changes into first defined env instance) it is transparent. But during bridge gui
+# build we are populating case sensitive env vars from bash to powershell which
+# then cause error when trying to list env vars. This is causing an error
+# during CMake lookup for CXX and build fails. Therefore we need unset the
+# lower case version if present.
+Write-Host "Checking for duplicate proxy variables..."
+@("HTTP_PROXY", "HTTPS_PROXY", "NO_PROXY") | ForEach-Object {
+  $upper = $_
+  $lower = $_.ToLower()
+      
+  if ((Test-Path "Env:$upper") -and (Test-Path "Env:$lower")) {
+    Write-Host "Removing duplicate lowercase variable: $lower"
+    Remove-Item "Env:$lower" -ErrorAction SilentlyContinue
+  }
+}
+
 
 $ErrorActionPreference = "Stop"
 
