@@ -21,19 +21,19 @@
 set -eo pipefail
 
 main(){
-    go install golang.org/x/vuln/cmd/govulncheck@latest
+    echo "Using Go version:"
+    go version
+    echo
+
+    ## go install golang.org/x/vuln/cmd/govulncheck@latest
     make gofiles
-    govulncheck -json ./... > vulns.json
+    GOTOOLCHAIN=auto go run golang.org/x/vuln/cmd/govulncheck@latest -json ./... > vulns.json
 
     jq -r '.finding | select( (.osv != null) and (.trace[0].function != null) ) | .osv ' < vulns.json > vulns_osv_ids.txt
 
     ignore GO-2023-2328 "GODT-3124 RESTY race condition"
     ignore GO-2025-3563 "BRIDGE-346 net/http request smuggling"
-    ignore GO-2025-3749 "BRIDGE-388 affects github.com/cloudflare/circl, not used"
-    ignore GO-2025-3750 "BRIDGE-388 net/http Proxy-Authorization and Proxy-Authenticate headers persisted on cross-origin redirects"
-    ignore GO-2025-3751 "BRIDGE-388 affects syscall and os for symlink files"
-    ignore GO-2025-3754 "BRIDGE-388 crypto/x509 policy graphs"
-
+    ignore GO-2025-3754 "BRIDGE-388 github.com/cloudflare/circl indirect import from gopenpgp; need to wait for upstream to patch"
 
     has_vulns
 
