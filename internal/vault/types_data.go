@@ -17,17 +17,22 @@
 
 package vault
 
+import "github.com/google/uuid"
+
 type Data struct {
 	Settings Settings
 	Users    []UserData
 	Cookies  []byte
 	Certs    Certs
 	Migrated bool
+	// FeatureFlagStickyKey a utility value for ensuring rollout feature flags "stick" to a particular Bridge client.
+	FeatureFlagStickyKey uuid.UUID
 }
 
 func newDefaultData(gluonDir string) Data {
 	return Data{
-		Settings: newDefaultSettings(gluonDir),
-		Certs:    newDefaultCerts(),
+		Settings:             newDefaultSettings(gluonDir),
+		Certs:                newDefaultCerts(),
+		FeatureFlagStickyKey: uuid.New(),
 	}
 }

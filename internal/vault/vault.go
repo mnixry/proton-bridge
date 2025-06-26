@@ -32,6 +32,7 @@ import (
 	"github.com/ProtonMail/gluon/async"
 	"github.com/bradenaw/juniper/parallel"
 	"github.com/bradenaw/juniper/xslices"
+	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 )
 
@@ -76,6 +77,10 @@ func New(vaultDir, gluonCacheDir string, key []byte, panicHandler async.PanicHan
 		return nil, corrupt, err
 	}
 
+	if err := vault.setFeatureFlagStickyKeyIfEmpty(); err != nil {
+		return vault, corrupt, err
+	}
+
 	vault.panicHandler = panicHandler
 
 	return vault, corrupt, nil
@@ -88,6 +93,22 @@ func (vault *Vault) GetUserIDs() []string {
 
 	return xslices.Map(vault.getUnsafe().Users, func(user UserData) string {
 		return user.UserID
+	})
+}
+
+// GetFeatureFlagStickyKey - the sticky key is  a utility value for ensuring rollout feature flags "stick" to a particular Bridge client.
+func (vault *Vault) GetFeatureFlagStickyKey() uuid.UUID {
+	return vault.getSafe().FeatureFlagStickyKey
+}
+
+// setFeatureFlagStickyKeyIfEmpty - checks if the sticky key is nil in the vault and if so generates a new one.
+func (vault *Vault) setFeatureFlagStickyKeyIfEmpty() error {
+	if vault.getSafe().FeatureFlagStickyKey != uuid.Nil {
+		return nil
+	}
+
+	return vault.modSafe(func(data *Data) {
+		data.FeatureFlagStickyKey = uuid.New()
 	})
 }
 

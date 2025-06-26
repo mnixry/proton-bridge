@@ -56,6 +56,7 @@ import (
 	imapid "github.com/emersion/go-imap-id"
 	"github.com/emersion/go-sasl"
 	"github.com/emersion/go-smtp"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/goleak"
 )
@@ -774,6 +775,30 @@ func TestBridge_ChangeCacheDirectory(t *testing.T) {
 			status, err := client.Select(`Folders/folder`, false)
 			require.NoError(t, err)
 			require.Equal(t, uint32(10), status.Messages)
+		})
+	})
+}
+
+func TestBridge_FeatureFlagStickyKey_Persistence(t *testing.T) {
+	var uuidOne uuid.UUID
+	var uuidTwo uuid.UUID
+
+	withEnv(t, func(ctx context.Context, s *server.Server, netCtl *proton.NetCtl, locator bridge.Locator, vaultKey []byte) {
+		withBridge(ctx, t, s.GetHostURL(), netCtl, locator, vaultKey, func(b *bridge.Bridge, _ *bridge.Mocks) {
+			uuidOne = b.GetFeatureFlagStickyKey()
+		})
+		withBridge(ctx, t, s.GetHostURL(), netCtl, locator, vaultKey, func(b *bridge.Bridge, _ *bridge.Mocks) {
+			require.Equal(t, uuidOne, b.GetFeatureFlagStickyKey())
+		})
+	})
+
+	withEnv(t, func(ctx context.Context, s *server.Server, netCtl *proton.NetCtl, locator bridge.Locator, vaultKey []byte) {
+		withBridge(ctx, t, s.GetHostURL(), netCtl, locator, vaultKey, func(b *bridge.Bridge, _ *bridge.Mocks) {
+			uuidTwo = b.GetFeatureFlagStickyKey()
+			require.NotEqual(t, uuidOne, uuidTwo)
+		})
+		withBridge(ctx, t, s.GetHostURL(), netCtl, locator, vaultKey, func(b *bridge.Bridge, _ *bridge.Mocks) {
+			require.Equal(t, uuidTwo, b.GetFeatureFlagStickyKey())
 		})
 	})
 }

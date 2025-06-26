@@ -57,6 +57,7 @@ import (
 	"github.com/bradenaw/juniper/xslices"
 	"github.com/elastic/go-sysinfo/types"
 	"github.com/go-resty/resty/v2"
+	uuid "github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 )
 
@@ -271,7 +272,7 @@ func newBridge(
 		return nil, fmt.Errorf("failed to create focus service: %w", err)
 	}
 
-	unleashService := unleash.NewBridgeService(ctx, api, locator, panicHandler)
+	unleashService := unleash.NewBridgeService(ctx, api, locator, panicHandler, vault.GetFeatureFlagStickyKey())
 
 	observabilityService := observability.NewService(ctx, panicHandler)
 
@@ -784,4 +785,8 @@ func (bridge *Bridge) SetHostVersionGetterTest(fn func(host types.Host) string) 
 // SetRolloutPercentageTest - sets the rollout percentage; should only be used for testing.
 func (bridge *Bridge) SetRolloutPercentageTest(rollout float64) error {
 	return bridge.vault.SetUpdateRollout(rollout)
+}
+
+func (bridge *Bridge) GetFeatureFlagStickyKey() uuid.UUID {
+	return bridge.vault.GetFeatureFlagStickyKey()
 }

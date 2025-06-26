@@ -28,6 +28,7 @@ import (
 	"github.com/ProtonMail/gluon/async"
 	"github.com/ProtonMail/go-proton-api"
 	"github.com/ProtonMail/proton-bridge/v3/internal/service"
+	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 )
 
@@ -83,7 +84,13 @@ type Service struct {
 	getFeaturesFn func(ctx context.Context) (proton.FeatureFlagResult, error)
 }
 
-func NewBridgeService(ctx context.Context, api *proton.Manager, locator service.Locator, panicHandler async.PanicHandler) *Service {
+func NewBridgeService(
+	ctx context.Context,
+	api *proton.Manager,
+	locator service.Locator,
+	panicHandler async.PanicHandler,
+	featureFlagUUID uuid.UUID,
+) *Service {
 	log := logrus.WithField("service", "unleash")
 	cacheDir, err := locator.ProvideUnleashCachePath()
 	if err != nil {
@@ -92,7 +99,7 @@ func NewBridgeService(ctx context.Context, api *proton.Manager, locator service.
 	cachePath := filepath.Clean(filepath.Join(cacheDir, filename))
 
 	return newService(ctx, func(ctx context.Context) (proton.FeatureFlagResult, error) {
-		return api.GetFeatures(ctx)
+		return api.GetFeatures(ctx, featureFlagUUID)
 	}, log, cachePath, panicHandler)
 }
 
