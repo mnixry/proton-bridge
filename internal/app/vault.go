@@ -22,6 +22,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"path"
+	"runtime"
 
 	"github.com/ProtonMail/gluon/async"
 	"github.com/ProtonMail/proton-bridge/v3/internal/certs"
@@ -106,9 +107,11 @@ func newVault(reporter *sentry.Reporter, locations *locations.Locations, keychai
 		return nil, false, corrupt, fmt.Errorf("could not create vault: %w", err)
 	}
 
-	// Remember the last successfully used keychain and store that as the user preference.
-	if err := vault.SetHelper(vaultDir, lastUsedHelper); err != nil {
-		logrus.WithError(err).Error("Could not store last used keychain helper")
+	// Remember the last successfully used keychain on Linux and store that as the user preference.
+	if runtime.GOOS == "linux" {
+		if err := vault.SetHelper(vaultDir, lastUsedHelper); err != nil {
+			logrus.WithError(err).Error("Could not store last used keychain helper")
+		}
 	}
 
 	return userVault, insecure, corrupt, nil
