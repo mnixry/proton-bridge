@@ -36,8 +36,8 @@ github.com/OneOfOne/xxhash v1.2.2/go.mod h1:HSdplMjZKSmBqAxg5vPj2TmRDmfkzw+cTzAE
 github.com/ProtonMail/bcrypt v0.0.0-20210511135022-227b4adcab57/go.mod h1:HecWFHognK8GfRDGnFQbW/LiV7A3MX3gZVs45vk5h8I=
 github.com/ProtonMail/bcrypt v0.0.0-20211005172633-e235017c1baf h1:yc9daCCYUefEs69zUkSzubzjBbL+cmOXgnmt9Fyd9ug=
 github.com/ProtonMail/bcrypt v0.0.0-20211005172633-e235017c1baf/go.mod h1:o0ESU9p83twszAU8LBeJKFAAMX14tISa0yk4Oo5TOqo=
-github.com/ProtonMail/gluon v0.17.1-0.20250623154646-37666f3f37a5 h1:opkO7CG/1HgBXw+nrzp6oIyh+bT6LvG1UH+wOh8hn+A=
-github.com/ProtonMail/gluon v0.17.1-0.20250623154646-37666f3f37a5/go.mod h1:OMwmLjgk6yJHX/P5KPck9WOcBVWIJLvuGZjj/8Ts/cw=
+github.com/ProtonMail/gluon v0.17.1-0.20250627102828-b014b7cc8132 h1:2HA7IRoYUA1Lm7yFl1JGskGotNnqIqKJJB/ZxYhoJ6w=
+github.com/ProtonMail/gluon v0.17.1-0.20250627102828-b014b7cc8132/go.mod h1:OMwmLjgk6yJHX/P5KPck9WOcBVWIJLvuGZjj/8Ts/cw=
 github.com/ProtonMail/go-crypto v0.0.0-20230321155629-9a39f2531310/go.mod h1:8TI4H3IbrackdNgv+92dI+rhpCaLqM0IfpgCgenFvRE=
 github.com/ProtonMail/go-crypto v1.3.0-proton h1:tAQKQRZX/73VmzK6yHSCaRUOvS/3OYSQzhXQsrR7yUM=
 github.com/ProtonMail/go-crypto v1.3.0-proton/go.mod h1:9whxjD8Rbs29b4XWbB8irEcE8KHMqaR2e7GWU1R+/PE=
