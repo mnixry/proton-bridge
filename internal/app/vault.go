@@ -129,6 +129,8 @@ func loadVaultKey(vaultDir string, keychains *keychain.List) (key []byte, keycha
 		return nil, keychainHelper, fmt.Errorf("could not create keychain: %w", err)
 	}
 
+	logrus.WithField("keychainHelper", keychainHelper).Info("Initialized keychain helper")
+
 	key, err = vault.GetVaultKey(kc)
 	if err != nil {
 		if keychain.IsErrKeychainNoItem(err) {
