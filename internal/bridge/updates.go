@@ -344,7 +344,12 @@ func (bridge *Bridge) installUpdate(ctx context.Context, job installJob) {
 
 		case err != nil:
 			log.WithError(err).Error("The update could not be installed")
-
+			if reporterErr := bridge.reporter.ReportMessageWithContext(
+				"Cannot install update",
+				reporter.Context{"error": err},
+			); reporterErr != nil {
+				log.WithError(reporterErr).Error("Failed to report update error")
+			}
 			bridge.publish(events.UpdateFailed{
 				Release: job.Release,
 				Silent:  job.Silent,
