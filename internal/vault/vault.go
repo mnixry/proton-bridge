@@ -88,10 +88,7 @@ func New(vaultDir, gluonCacheDir string, key []byte, panicHandler async.PanicHan
 
 // GetUserIDs returns the user IDs and usernames of all users in the vault.
 func (vault *Vault) GetUserIDs() []string {
-	vault.lock.RLock()
-	defer vault.lock.RUnlock()
-
-	return xslices.Map(vault.getUnsafe().Users, func(user UserData) string {
+	return xslices.Map(vault.getSafe().Users, func(user UserData) string {
 		return user.UserID
 	})
 }
@@ -140,10 +137,7 @@ func (vault *Vault) getUsers() ([]*User, error) {
 
 // HasUser returns true if the vault contains a user with the given ID.
 func (vault *Vault) HasUser(userID string) bool {
-	vault.lock.RLock()
-	defer vault.lock.RUnlock()
-
-	return xslices.IndexFunc(vault.getUnsafe().Users, func(user UserData) bool {
+	return xslices.IndexFunc(vault.getSafe().Users, func(user UserData) bool {
 		return user.UserID == userID
 	}) >= 0
 }
@@ -299,26 +293,17 @@ func (vault *Vault) DeleteUser(userID string) error {
 }
 
 func (vault *Vault) Migrated() bool {
-	vault.lock.RLock()
-	defer vault.lock.RUnlock()
-
-	return vault.getUnsafe().Migrated
+	return vault.getSafe().Migrated
 }
 
 func (vault *Vault) SetMigrated() error {
-	vault.lock.Lock()
-	defer vault.lock.Unlock()
-
-	return vault.modUnsafe(func(data *Data) {
+	return vault.modSafe(func(data *Data) {
 		data.Migrated = true
 	})
 }
 
 func (vault *Vault) Reset(gluonDir string) error {
-	vault.lock.Lock()
-	defer vault.lock.Unlock()
-
-	return vault.modUnsafe(func(data *Data) {
+	return vault.modSafe(func(data *Data) {
 		*data = newDefaultData(gluonDir)
 	})
 }
@@ -459,10 +444,7 @@ func (vault *Vault) modUnsafe(fn func(data *Data)) error {
 }
 
 func (vault *Vault) getUser(userID string) UserData {
-	vault.lock.RLock()
-	defer vault.lock.RUnlock()
-
-	users := vault.getUnsafe().Users
+	users := vault.getSafe().Users
 
 	idx := xslices.IndexFunc(users, func(user UserData) bool {
 		return user.UserID == userID

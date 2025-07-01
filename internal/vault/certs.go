@@ -30,10 +30,7 @@ import (
 // If CertPEMPath is set, it will attempt to read the certificate from the file.
 // Otherwise, or on read/validation failure, it will return the certificate from the vault.
 func (vault *Vault) GetBridgeTLSCert() ([]byte, []byte) {
-	vault.lock.RLock()
-	defer vault.lock.RUnlock()
-
-	certs := vault.getUnsafe().Certs
+	certs := vault.getSafe().Certs
 
 	if certPath, keyPath := certs.CustomCertPath, certs.CustomKeyPath; certPath != "" && keyPath != "" {
 		if certPEM, keyPEM, err := readPEMCert(certPath, keyPath); err == nil {
