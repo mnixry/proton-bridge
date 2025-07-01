@@ -36,6 +36,7 @@ import (
 	"github.com/emersion/go-message/textproto"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	"golang.org/x/exp/maps"
 )
 
 var (
@@ -606,7 +607,7 @@ func sanitizeMBOXHeaderLine(decrypted *DecryptedMessage) error {
 		return nil
 	}
 
-	i := indexMBOXHeaderLine(decrypted)
+	i := indexMBOXHeaderLine(decrypted.Body.Bytes())
 	for i >= 0 {
 		var buf bytes.Buffer
 
@@ -627,29 +628,61 @@ func sanitizeMBOXHeaderLine(decrypted *DecryptedMessage) error {
 
 		// copy rest
 		if _, err := buf.Write(decrypted.Body.Bytes()); err != nil {
-			return fmt.Errorf("cannot rest of message: %w", err)
+			return fmt.Errorf("cannot copy rest of message: %w", err)
 		}
 
 		decrypted.Body = buf
-		i = indexMBOXHeaderLine(decrypted)
+		i = indexMBOXHeaderLine(decrypted.Body.Bytes())
 	}
 
 	return nil
 }
 
-func indexMBOXHeaderLine(decrypted *DecryptedMessage) int {
-	b := decrypted.Body.Bytes()
+func extractHeaderPartEnd(body []byte) int {
+	headerEnd := bytes.Index(body, []byte("\n\n"))
+	if headerEnd < 0 {
+		headerEnd = bytes.Index(body, []byte("\r\n\r\n"))
+	}
 
-	headerEnd := bytes.Index(b, []byte("\n\n"))
 	if headerEnd < 0 {
-		headerEnd = bytes.Index(b, []byte("\r\n\r\n"))
+		return -1
 	}
-	if headerEnd < 0 {
-		headerEnd = len(b)
+
+	requiredHeaders := map[string]bool{
+		"from": false,
+		"to":   false,
+		"date": false,
 	}
+
+	headerSection := body[:headerEnd]
+	lines := bytes.Split(headerSection, []byte{'\n'})
+	for _, line := range lines {
+		colonIdx := bytes.IndexByte(line, byte(':'))
+		if colonIdx <= 0 {
+			continue
+		}
+
+		fieldName := bytes.ToLower(line[:colonIdx])
+		switch string(fieldName) {
+		case "from", "to", "date":
+			requiredHeaders[string(fieldName)] = true
+		}
+	}
+
+	for _, val := range maps.Values(requiredHeaders) {
+		if !val {
+			return -1
+		}
+	}
+
+	return headerEnd
+}
+
+func indexMBOXHeaderLine(body []byte) int {
+	headerEnd := extractHeaderPartEnd(body)
 
 	for i := 0; i < headerEnd; i++ {
-		if i != 0 && b[i] != '\n' {
+		if i != 0 && body[i] != '\n' {
 			continue
 		}
 
@@ -658,7 +691,7 @@ func indexMBOXHeaderLine(decrypted *DecryptedMessage) int {
 			j = i + 1
 		}
 
-		if bytes.HasPrefix(b[j:], mboxFrom()) || bytes.HasPrefix(b[j:], mboxGtFrom()) {
+		if bytes.HasPrefix(body[j:], mboxFrom()) || bytes.HasPrefix(body[j:], mboxGtFrom()) {
 			return j
 		}
 	}

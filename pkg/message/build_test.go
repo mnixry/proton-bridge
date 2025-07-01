@@ -1304,28 +1304,55 @@ func TestHasMBOXHeaderLine(t *testing.T) {
 	cases := map[string]struct {
 		index, indexCRLF int
 	}{
-		"From: ok\nTo: Ok":                 {-1, -1},
-		"From: ok\nTo: Ok\n\nFrom - 123":   {-1, -1},
-		"From: ok\nTo: Ok\n\n>From - 123":  {-1, -1},
-		">From: ok\nTo: Ok":                {-1, -1},
-		">From: ok\nTo: Ok\n\nFrom - 123":  {-1, -1},
-		">From: ok\nTo: Ok\n\n>From - 123": {-1, -1},
+		// No MBOX line and missing header.
+		"From: ok\nTo: Ok": {-1, -1},
 
-		"From - 123\nFrom: ok\nTo: Ok":                {0, 0},
-		"From - 123\nFrom: ok\nTo: Ok\n\nFrom - 123":  {0, 0},
-		"From - 123\nFrom: ok\nTo: Ok\n\n>From - 123": {0, 0},
+		// MBOX line in body, not header.
+		"From: ok\nTo: Ok\n\nFrom - 123":  {-1, -1},
+		"From: ok\nTo: Ok\n\n>From - 123": {-1, -1},
 
-		"From: ok\nFrom - 123\nTo: Ok":                {9, 10},
-		"From: ok\nFrom - 123\nTo: Ok\n\nFrom - 123":  {9, 10},
-		"From: ok\nFrom - 123\nTo: Ok\n\n>From - 123": {9, 10},
+		// MBOX lines without proper header ending.
+		"From ok\nFrom: ok\nTo: Ok\nDate: ok":  {-1, -1},
+		">From ok\nFrom: ok\nTo: Ok\nDate: ok": {-1, -1},
 
-		">From - 123\nFrom: ok\nTo: Ok":                {0, 0},
-		">From - 123\nFrom: ok\nTo: Ok\n\nFrom - 123":  {0, 0},
-		">From - 123\nFrom: ok\nTo: Ok\n\n>From - 123": {0, 0},
+		// MBOX lines with proper header ending.
+		"From ok\nFrom: ok\nTo: Ok\nDate: ok\n\n":  {0, 0},
+		">From ok\nFrom: ok\nTo: Ok\nDate: ok\n\n": {0, 0},
 
-		"From: ok\n>From - 123\nTo: Ok":                {9, 10},
-		"From: ok\n>From - 123\nTo: Ok\n\nFrom - 123":  {9, 10},
-		"From: ok\n>From - 123\nTo: Ok\n\n>From - 123": {9, 10},
+		// MBOX lines in middle of headers.
+		"From: ok\nFrom middle\nTo: Ok\nDate: ok\n\n":  {9, 10},
+		"From: ok\n>From middle\nTo: Ok\nDate: ok\n\n": {9, 10},
+
+		// Multiple MBOX lines, should return first one.
+		"From first\nFrom second\nFrom: ok\nTo: Ok\nDate: ok\n\n":  {0, 0},
+		"From first\n>From second\nFrom: ok\nTo: Ok\nDate: ok\n\n": {0, 0},
+		">From first\nFrom second\nFrom: ok\nTo: Ok\nDate: ok\n\n": {0, 0},
+
+		// MBOX lines at various positions.
+		"From: sender\nTo: recipient\nFrom mbox\nDate: today\n\n":  {27, 29},
+		"From: sender\nTo: recipient\n>From mbox\nDate: today\n\n": {27, 29},
+		"From: sender\nTo: recipient\nDate: today\nFrom mbox\n\n":  {39, 42},
+		"From: sender\nTo: recipient\nDate: today\n>From mbox\n\n": {39, 42},
+
+		// MBOX line at end of header section.
+		"From: ok\nTo: Ok\nDate: ok\nFrom mbox\n\n":  {25, 28},
+		"From: ok\nTo: Ok\nDate: ok\n>From mbox\n\n": {25, 28},
+
+		// Headers with missing required fields.
+		"From mbox\nFrom: ok\nTo: Ok\n\n":   {-1, -1},
+		"From mbox\nFrom: ok\nDate: ok\n\n": {-1, -1},
+		"From mbox\nTo: Ok\nDate: ok\n\n":   {-1, -1},
+
+		// Valid headers but no MBOX lines.
+		"From: sender\nTo: recipient\nDate: today\n\n":                {-1, -1},
+		"From: sender\nTo: recipient\nDate: today\nSubject: test\n\n": {-1, -1},
+
+		// Headers that are like-MBOX but not.
+		"From: sender\n>From: other\nTo: recipient\nDate: today\n\n": {-1, -1},
+		"From: sender\nFrom: other\nTo: recipient\nDate: today\n\n":  {-1, -1},
+
+		"From mbox\nFrom: sender\n>From: header\nTo: recipient\nDate: today\n\n": {0, 0},
+		"From: sender\nFrom mbox\n>From: header\nTo: recipient\nDate: today\n\n": {13, 14},
 	}
 
 	test := func(t *testing.T, wantIndex int, given string, useCRLF bool) {
@@ -1337,7 +1364,19 @@ func TestHasMBOXHeaderLine(t *testing.T) {
 			decrypted.Body = *bytes.NewBufferString(given)
 		}
 
-		require.Equal(t, wantIndex, indexMBOXHeaderLine(decrypted))
+		headerIdx := indexMBOXHeaderLine(decrypted.Body.Bytes())
+		require.Equal(t, wantIndex, headerIdx)
+
+		if headerIdx == -1 {
+			return
+		}
+
+		partFromOne := decrypted.Body.Bytes()[headerIdx : headerIdx+5]
+		partFromTwo := decrypted.Body.Bytes()[headerIdx : headerIdx+6]
+		hasMboxHeader := strings.HasPrefix(string(partFromOne), "From ") || strings.HasPrefix(string(partFromOne), ">From ") ||
+			strings.HasPrefix(string(partFromTwo), "From ") || strings.HasPrefix(string(partFromTwo), ">From ")
+
+		require.True(t, hasMboxHeader)
 	}
 
 	for given, want := range cases {
@@ -1348,29 +1387,35 @@ func TestHasMBOXHeaderLine(t *testing.T) {
 
 func TestSanitizeMBOXHeaderLine(t *testing.T) {
 	cases := map[string]string{
+		// Unchanged - no MBOX headers in header section
 		"From: ok\nTo: Ok":                "From: ok\nTo: Ok",
 		"From: ok\nTo: Ok\n\nFrom - 123":  "From: ok\nTo: Ok\n\nFrom - 123",
 		"From: ok\nTo: Ok\n\n>From - 123": "From: ok\nTo: Ok\n\n>From - 123",
 
-		">From: ok\nTo: Ok":                ">From: ok\nTo: Ok",
-		">From: ok\nTo: Ok\n\nFrom - 123":  ">From: ok\nTo: Ok\n\nFrom - 123",
-		">From: ok\nTo: Ok\n\n>From - 123": ">From: ok\nTo: Ok\n\n>From - 123",
+		// Unchanged - no MBOX headers.
+		"From: ok\nTo: ok\nDate: ok":     "From: ok\nTo: ok\nDate: ok",
+		"From: ok\nTo: ok\nDate: ok\n\n": "From: ok\nTo: ok\nDate: ok\n\n",
 
-		"From - 123\nFrom: ok\nTo: Ok":                "From: ok\nTo: Ok",
-		"From - 123\nFrom: ok\nTo: Ok\n\nFrom - 123":  "From: ok\nTo: Ok\n\nFrom - 123",
-		"From - 123\nFrom: ok\nTo: Ok\n\n>From - 123": "From: ok\nTo: Ok\n\n>From - 123",
+		// MBOX headers should be removed
+		"From ok\nFrom: ok\nTo: ok\nDate: ok\n\n":  "From: ok\nTo: ok\nDate: ok\n\n",
+		">From ok\nFrom: ok\nTo: ok\nDate: ok\n\n": "From: ok\nTo: ok\nDate: ok\n\n",
 
-		"From: ok\nFrom - 123\nTo: Ok":                "From: ok\nTo: Ok",
-		"From: ok\nFrom - 123\nTo: Ok\n\nFrom - 123":  "From: ok\nTo: Ok\n\nFrom - 123",
-		"From: ok\nFrom - 123\nTo: Ok\n\n>From - 123": "From: ok\nTo: Ok\n\n>From - 123",
+		// MBOX header mixed in-between.
+		"From: sender\nFrom line\nTo: recipient\nDate: today\n\n":  "From: sender\nTo: recipient\nDate: today\n\n",
+		"From: sender\n>From line\nTo: recipient\nDate: today\n\n": "From: sender\nTo: recipient\nDate: today\n\n",
+		"From line\nFrom: sender\nTo: recipient\nDate: today\n\n":  "From: sender\nTo: recipient\nDate: today\n\n",
 
-		">From - 123\nFrom: ok\nTo: Ok":                "From: ok\nTo: Ok",
-		">From - 123\nFrom: ok\nTo: Ok\n\nFrom - 123":  "From: ok\nTo: Ok\n\nFrom - 123",
-		">From - 123\nFrom: ok\nTo: Ok\n\n>From - 123": "From: ok\nTo: Ok\n\n>From - 123",
+		// Multiple MBOX headers.
+		"From line1\nFrom line2\nFrom: sender\nTo: recipient\nDate: today\n\n":  "From: sender\nTo: recipient\nDate: today\n\n",
+		"From line1\n>From line2\nFrom: sender\nTo: recipient\nDate: today\n\n": "From: sender\nTo: recipient\nDate: today\n\n",
 
-		"From: ok\n>From - 123\nTo: Ok":                "From: ok\nTo: Ok",
-		"From: ok\n>From - 123\nTo: Ok\n\nFrom - 123":  "From: ok\nTo: Ok\n\nFrom - 123",
-		"From: ok\n>From - 123\nTo: Ok\n\n>From - 123": "From: ok\nTo: Ok\n\n>From - 123",
+		// Incomplete required headers - should not process.
+		"From line\nFrom: sender\nTo: recipient\n\n": "From line\nFrom: sender\nTo: recipient\n\n",
+		"From line\nFrom: sender\nDate: today\n\n":   "From line\nFrom: sender\nDate: today\n\n",
+
+		// MBOX and complete required headers - No separation between header part - should not be processed.
+		"From ok\nFrom: ok\nTo: ok\nDate: ok":  "From ok\nFrom: ok\nTo: ok\nDate: ok",
+		">From ok\nFrom: ok\nTo: ok\nDate: ok": ">From ok\nFrom: ok\nTo: ok\nDate: ok",
 	}
 
 	test := func(t *testing.T, given, want string, useCRLF bool) {
@@ -1382,6 +1427,9 @@ func TestSanitizeMBOXHeaderLine(t *testing.T) {
 		} else {
 			decrypted.Body = *bytes.NewBufferString(given)
 		}
+
+		require.NoError(t, sanitizeMBOXHeaderLine(decrypted))
+		require.Equal(t, []byte(want), decrypted.Body.Bytes())
 
 		require.NoError(t, sanitizeMBOXHeaderLine(decrypted))
 		require.Equal(t, []byte(want), decrypted.Body.Bytes())
