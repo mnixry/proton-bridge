@@ -31,6 +31,7 @@ import (
 	"github.com/ProtonMail/proton-bridge/v3/internal/cookies"
 	"github.com/ProtonMail/proton-bridge/v3/internal/legacy/credentials"
 	"github.com/ProtonMail/proton-bridge/v3/internal/locations"
+	"github.com/ProtonMail/proton-bridge/v3/internal/platform"
 	"github.com/ProtonMail/proton-bridge/v3/internal/updater"
 	"github.com/ProtonMail/proton-bridge/v3/internal/vault"
 	"github.com/ProtonMail/proton-bridge/v3/pkg/algo"
@@ -85,7 +86,7 @@ func TestMigratePrefsToVaultWithoutKeys(t *testing.T) {
 
 func TestKeychainMigration(t *testing.T) {
 	// Migration tested only for linux.
-	if runtime.GOOS != "linux" {
+	if runtime.GOOS != platform.LINUX {
 		return
 	}
 
@@ -134,7 +135,13 @@ func TestKeychainMigration(t *testing.T) {
 func TestUserMigration(t *testing.T) {
 	kcl := keychain.NewTestKeychainsList()
 
-	kc, _, err := keychain.NewKeychain("mock", "bridge", kcl.GetHelpers(), kcl.GetDefaultHelper())
+	kc, _, err := keychain.NewKeychain(
+		"mock", "bridge",
+		kcl.GetHelpers(),
+		kcl.GetDefaultHelper(),
+		0,
+		make(map[string]bool),
+	)
 	require.NoError(t, err)
 
 	require.NoError(t, kc.Put("brokenID", "broken"))

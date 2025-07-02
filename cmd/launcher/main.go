@@ -31,6 +31,7 @@ import (
 	"github.com/ProtonMail/proton-bridge/v3/internal/crash"
 	"github.com/ProtonMail/proton-bridge/v3/internal/locations"
 	"github.com/ProtonMail/proton-bridge/v3/internal/logging"
+	"github.com/ProtonMail/proton-bridge/v3/internal/platform"
 	"github.com/ProtonMail/proton-bridge/v3/internal/sentry"
 	"github.com/ProtonMail/proton-bridge/v3/internal/updater"
 	"github.com/ProtonMail/proton-bridge/v3/internal/useragent"
@@ -164,7 +165,7 @@ func main() { //nolint:funlen
 
 	// On windows, if you use Run(), a terminal stays open; we don't want that.
 	if //goland:noinspection GoBoolExpressions
-	runtime.GOOS == "windows" {
+	runtime.GOOS == platform.WINDOWS {
 		err = cmd.Start()
 	} else {
 		err = cmd.Run()

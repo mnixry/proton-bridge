@@ -24,6 +24,7 @@ import (
 	"path/filepath"
 	"runtime"
 
+	"github.com/ProtonMail/proton-bridge/v3/internal/platform"
 	"github.com/ProtonMail/proton-bridge/v3/pkg/files"
 	"github.com/sirupsen/logrus"
 )
@@ -90,7 +91,7 @@ func (l *Locations) getLicenseFilePath() string {
 	}
 
 	switch runtime.GOOS {
-	case "linux":
+	case platform.LINUX:
 		// Most Linux distributions.
 		path := "/usr/share/doc/protonmail/" + l.configName + "/LICENSE"
 		if _, err := os.Stat(path); err == nil {
@@ -98,7 +99,7 @@ func (l *Locations) getLicenseFilePath() string {
 		}
 		// Arch distributions.
 		return "/usr/share/licenses/protonmail-" + l.configName + "/LICENSE"
-	case "darwin": //nolint:goconst
+	case platform.MACOS: //nolint:goconst
 		path := filepath.Join(filepath.Dir(os.Args[0]), "..", "Resources", "LICENSE")
 		if _, err := os.Stat(path); err == nil {
 			return path
@@ -109,7 +110,7 @@ func (l *Locations) getLicenseFilePath() string {
 		// or may not work, depends where user installed the app and how
 		// user started the app.
 		return "/Applications/Proton Mail Bridge.app/Contents/Resources/LICENSE"
-	case "windows":
+	case platform.WINDOWS:
 		path := filepath.Join(filepath.Dir(os.Args[0]), "LICENSE.txt")
 		if _, err := os.Stat(path); err == nil {
 			return path
@@ -206,6 +207,14 @@ func (l *Locations) ProvideUnleashCachePath() (string, error) {
 	return l.getUnleashCachePath(), nil
 }
 
+func (l *Locations) ProvideUnleashStartupCachePath() (string, error) {
+	if err := os.MkdirAll(l.getUnleashStartupCachePath(), 0o700); err != nil {
+		return "", err
+	}
+
+	return l.getUnleashStartupCachePath(), nil
+}
+
 func (l *Locations) getGluonCachePath() string {
 	return filepath.Join(l.userData, "gluon")
 }
@@ -243,6 +252,10 @@ func (l *Locations) getNotificationsCachePath() string {
 }
 
 func (l *Locations) getUnleashCachePath() string { return filepath.Join(l.userCache, "unleash_cache") }
+
+func (l *Locations) getUnleashStartupCachePath() string {
+	return filepath.Join(l.userCache, "unleash_startup_cache")
+}
 
 // Clear removes everything except the lock and update files.
 func (l *Locations) Clear(except ...string) error {

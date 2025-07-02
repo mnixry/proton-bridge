@@ -25,6 +25,7 @@ import (
 	"path/filepath"
 	"runtime"
 
+	"github.com/ProtonMail/proton-bridge/v3/internal/platform"
 	"github.com/sirupsen/logrus"
 )
 
@@ -91,7 +92,7 @@ func UntarToDir(r io.Reader, dir string) error {
 			if _, err := io.Copy(f, lr); err != nil {
 				return err
 			}
-			if runtime.GOOS != "windows" {
+			if runtime.GOOS != platform.WINDOWS {
 				if err := f.Chmod(header.FileInfo().Mode()); err != nil {
 					return err
 				}

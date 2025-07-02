@@ -286,7 +286,7 @@ func (m *LabelConflictManager) NewInternalLabelConflictResolver(connectors []*Co
 		mailboxFetch:                 m.generateMailboxFetcher(connectors),
 		mailboxMessageCountFetch:     m.generateMailboxMessageCountFetcher(connectors),
 		userLabelConflictResolver:    m.NewConflictResolver(connectors),
-		allowNonEmptyMailboxDeletion: m.featureFlagProvider.GetFlagValue(unleash.ItnternalLabelConflictNonEmptyMailboxDeletion),
+		allowNonEmptyMailboxDeletion: m.featureFlagProvider.GetFlagValue(unleash.InternalLabelConflictNonEmptyMailboxDeletion),
 		client:                       m.client,
 		reporter:                     m.reporter,
 		log: logrus.WithFields(logrus.Fields{

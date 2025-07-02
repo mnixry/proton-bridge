@@ -22,6 +22,7 @@ import (
 	"strings"
 
 	"github.com/Masterminds/semver/v3"
+	"github.com/ProtonMail/proton-bridge/v3/internal/platform"
 )
 
 // IsCatalinaOrNewer checks whether the host is macOS Catalina 10.15.x or higher.
@@ -44,7 +45,7 @@ func getMinBigSur() *semver.Version   { return semver.MustParse("20.0.0") }
 func getMinVentura() *semver.Version  { return semver.MustParse("22.0.0") }
 
 func isThisDarwinNewerOrEqual(minVersion *semver.Version) bool {
-	if runtime.GOOS != "darwin" {
+	if runtime.GOOS != platform.MACOS {
 		return false
 	}
 

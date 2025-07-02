@@ -21,6 +21,8 @@ package constants
 import (
 	"fmt"
 	"runtime"
+
+	"github.com/ProtonMail/proton-bridge/v3/internal/platform"
 )
 
 const VendorName = "protonmail"
@@ -72,13 +74,13 @@ const (
 // nolint:goconst
 func getAPIOS() string {
 	switch runtime.GOOS {
-	case "darwin":
+	case platform.MACOS:
 		return "macos"
 
-	case "linux":
+	case platform.LINUX:
 		return "linux"
 
-	case "windows":
+	case platform.WINDOWS:
 		return "windows"
 
 	default:

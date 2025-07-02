@@ -39,7 +39,9 @@ import (
 	"github.com/ProtonMail/proton-bridge/v3/internal/frontend/theme"
 	"github.com/ProtonMail/proton-bridge/v3/internal/locations"
 	"github.com/ProtonMail/proton-bridge/v3/internal/logging"
+	"github.com/ProtonMail/proton-bridge/v3/internal/platform"
 	"github.com/ProtonMail/proton-bridge/v3/internal/sentry"
+	"github.com/ProtonMail/proton-bridge/v3/internal/unleash"
 	"github.com/ProtonMail/proton-bridge/v3/internal/useragent"
 	"github.com/ProtonMail/proton-bridge/v3/internal/vault"
 	"github.com/ProtonMail/proton-bridge/v3/pkg/keychain"
@@ -285,11 +287,13 @@ func run(c *cli.Context) error {
 							logrus.WithError(err).Error("Failed to get settings path")
 						}
 
+						featureFlags := unleash.GetStartupFeatureFlagsAndStore(constants.APIHost, version, locations.ProvideUnleashStartupCachePath)
+
 						return withSingleInstance(settings, locations.GetLockFile(), version, func() error {
 							// Look for available keychains
 							return WithKeychainList(crashHandler, func(keychains *keychain.List) error {
 								// Unlock the encrypted vault.
-								return WithVault(reporter, locations, keychains, crashHandler, func(v *vault.Vault, insecure, corrupt bool) error {
+								return WithVault(reporter, locations, keychains, featureFlags, crashHandler, func(v *vault.Vault, insecure, corrupt bool) error {
 									if !v.Migrated() {
 										// Migrate old settings into the vault.
 										if err := migrateOldSettings(v); err != nil {
@@ -577,5 +581,5 @@ func setDeviceCookies(jar *cookies.Jar) error {
 }
 
 func onMacOS() bool {
-	return runtime.GOOS == "darwin"
+	return runtime.GOOS == platform.MACOS
 }

@@ -22,6 +22,8 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+
+	"github.com/ProtonMail/proton-bridge/v3/internal/platform"
 )
 
 // Provider provides standard locations.
@@ -95,7 +97,7 @@ func (p *DefaultProvider) UserCache() string {
 // This is necessary because os.UserDataDir() is not implemented by the Go standard library, sadly.
 // On non-linux systems, it is the same as os.UserConfigDir().
 func userDataDir() (string, error) {
-	if runtime.GOOS != "linux" {
+	if runtime.GOOS != platform.LINUX {
 		return os.UserConfigDir()
 	}
 

@@ -27,6 +27,8 @@ import (
 	"time"
 
 	"github.com/ProtonMail/proton-bridge/v3/internal/constants"
+	"github.com/ProtonMail/proton-bridge/v3/internal/platform"
+	"github.com/ProtonMail/proton-bridge/v3/internal/unleash"
 	"github.com/docker/docker-credential-helpers/credentials"
 	"github.com/sirupsen/logrus"
 )
@@ -37,6 +39,10 @@ type helperConstructor func(string) (credentials.Helper, error)
 // Version is the keychain data version.
 const Version = "k11"
 
+// MaxFailedKeychainAttemptsLinux defines the number of failed attempts allowed for the preferred keychain on Linux.
+// Since counting starts at 0, a value of 2 allows for 3 total attempts.
+const MaxFailedKeychainAttemptsLinux = 2
+
 var (
 	// ErrNoKeychain indicates that no suitable keychain implementation could be loaded.
 	ErrNoKeychain = errors.New("no keychain") //nolint:gochecknoglobals
@@ -45,6 +51,8 @@ var (
 	ErrMacKeychainRebuild = errors.New("keychain error -25293")
 
 	ErrKeychainNoItem = errors.New("no such keychain item")
+
+	ErrPreferredKeychainNotAvailable = errors.New("preferred keychain is not available or usable")
 )
 
 func IsErrKeychainNoItem(err error) bool {
@@ -82,15 +90,39 @@ func (kcl *List) GetDefaultHelper() string {
 	return kcl.defaultHelper
 }
 
+func PreferredKeychainRetryError(attemptCount int) error {
+	return fmt.Errorf("%w, %d attempts remaining till vault reset", ErrPreferredKeychainNotAvailable, MaxFailedKeychainAttemptsLinux-attemptCount)
+}
+
+func ShouldRetryPreferredKeychain(featureFlags unleash.FeatureFlagStartupStore, preferredKeychain string) bool {
+	return !featureFlags.GetFlagValue(unleash.LinuxVaultPreferredKeychainNotAvailableRetryDisabled) &&
+		runtime.GOOS == platform.LINUX && preferredKeychain != ""
+}
+
 // NewKeychain creates a new native keychain. It also returns the keychain helper used to access the keychain.
-func NewKeychain(preferred, keychainName string, helpers Helpers, defaultHelper string) (kc *Keychain, usedKeychainHelper string, err error) {
+func NewKeychain(
+	preferred, keychainName string,
+	helpers Helpers,
+	defaultHelper string,
+	keychainFailedAttemptCount int,
+	featureFlags unleash.FeatureFlagStartupStore,
+) (kc *Keychain, usedKeychainHelper string, err error) {
 	// There must be at least one keychain helper available.
 	if len(helpers) < 1 {
 		return nil, "", ErrNoKeychain
 	}
 
 	// If the preferred keychain is unsupported, fallback to the default one.
+	// For linux, keep on exiting early before wiping the vault until we've exceeded the allowed retry count.
 	if _, ok := helpers[preferred]; !ok {
+		if ShouldRetryPreferredKeychain(featureFlags, preferred) {
+			if keychainFailedAttemptCount < MaxFailedKeychainAttemptsLinux {
+				return nil, "", PreferredKeychainRetryError(keychainFailedAttemptCount)
+			}
+
+			logrus.Errorf("%s, max attempts have been exceeded, resetting vault", ErrPreferredKeychainNotAvailable)
+		}
+
 		preferred = defaultHelper
 	}
 
@@ -242,7 +274,7 @@ func isUsable(helper credentials.Helper, err error) bool { //nolint:unused
 
 func getTestCredentials() *credentials.Credentials { //nolint:unused
 	// On macOS, a handful of users experience failures of the test credentials.
-	if runtime.GOOS == "darwin" {
+	if runtime.GOOS == platform.MACOS {
 		return &credentials.Credentials{
 			ServerURL: hostURL(constants.KeyChainName) + fmt.Sprintf("/check_%v", time.Now().UTC().UnixMicro()),
 			Username:  "", // username is ignored on macOS, it's extracted from splitting the server URL

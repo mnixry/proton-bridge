@@ -39,6 +39,7 @@ import (
 	"github.com/ProtonMail/proton-bridge/v3/internal/certs"
 	"github.com/ProtonMail/proton-bridge/v3/internal/events"
 	"github.com/ProtonMail/proton-bridge/v3/internal/hv"
+	"github.com/ProtonMail/proton-bridge/v3/internal/platform"
 	"github.com/ProtonMail/proton-bridge/v3/internal/safe"
 	"github.com/ProtonMail/proton-bridge/v3/internal/service"
 	"github.com/ProtonMail/proton-bridge/v3/internal/updater"
@@ -685,5 +686,5 @@ func computeFileSocketPath() (string, error) {
 // useFileSocket return true iff file socket should be used for the gRPC service.
 func useFileSocket() bool {
 	//goland:noinspection GoBoolExpressions
-	return runtime.GOOS != "windows"
+	return runtime.GOOS != platform.WINDOWS
 }

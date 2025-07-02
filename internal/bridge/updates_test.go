@@ -28,6 +28,7 @@ import (
 	"github.com/ProtonMail/go-proton-api/server"
 	bridgePkg "github.com/ProtonMail/proton-bridge/v3/internal/bridge"
 	"github.com/ProtonMail/proton-bridge/v3/internal/events"
+	"github.com/ProtonMail/proton-bridge/v3/internal/platform"
 	"github.com/ProtonMail/proton-bridge/v3/internal/updater"
 	"github.com/ProtonMail/proton-bridge/v3/internal/updater/versioncompare"
 	"github.com/elastic/go-sysinfo/types"
@@ -331,7 +332,7 @@ func Test_Update_CheckOSVersion_NoUpdate(t *testing.T) {
 
 			bridge.CheckForUpdates()
 
-			if runtime.GOOS == "darwin" {
+			if runtime.GOOS == platform.MACOS {
 				require.Equal(t, events.UpdateNotAvailable{}, <-updateNotAvailableCh)
 			} else {
 				require.Equal(t, events.UpdateInstalled{
@@ -442,7 +443,7 @@ func Test_Update_CheckOSVersion_HasUpdate(t *testing.T) {
 
 			bridge.CheckForUpdates()
 
-			if runtime.GOOS == "darwin" {
+			if runtime.GOOS == platform.MACOS {
 				require.Equal(t, events.UpdateInstalled{
 					Release: expectedUpdateRelease,
 					Silent:  true,

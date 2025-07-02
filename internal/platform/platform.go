@@ -15,31 +15,10 @@
 // You should have received a copy of the GNU General Public License
 // along with Proton Mail Bridge. If not, see <https://www.gnu.org/licenses/>.
 
-package versioner
+package platform
 
-import (
-	"os"
-	"runtime"
-
-	"github.com/ProtonMail/proton-bridge/v3/internal/platform"
+const (
+	MACOS   = "darwin"
+	LINUX   = "linux"
+	WINDOWS = "windows"
 )
-
-// fileExists returns whether the given file exists.
-func fileExists(path string) bool {
-	_, err := os.Stat(path)
-	return err == nil
-}
-
-// fileIsExecutable returns the given filepath and true if it exists.
-func fileIsExecutable(path string) bool {
-	if runtime.GOOS == platform.WINDOWS {
-		return true
-	}
-
-	info, err := os.Stat(path)
-	if err != nil {
-		return false
-	}
-
-	return info.Mode()&0o111 != 0
-}

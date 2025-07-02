@@ -19,6 +19,8 @@ package theme
 
 import (
 	"runtime"
+
+	"github.com/ProtonMail/proton-bridge/v3/internal/platform"
 )
 
 type Theme string
@@ -34,7 +36,7 @@ func IsAvailable(have Theme) bool {
 
 func DefaultTheme() Theme {
 	switch runtime.GOOS {
-	case "darwin", "windows":
+	case platform.MACOS, platform.WINDOWS:
 		return detectSystemTheme()
 	default:
 		return Light

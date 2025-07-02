@@ -15,31 +15,39 @@
 // You should have received a copy of the GNU General Public License
 // along with Proton Mail Bridge. If not, see <https://www.gnu.org/licenses/>.
 
-package versioner
+package vault
 
 import (
-	"os"
 	"runtime"
 
 	"github.com/ProtonMail/proton-bridge/v3/internal/platform"
+	"github.com/ProtonMail/proton-bridge/v3/internal/vault/storage"
 )
 
-// fileExists returns whether the given file exists.
-func fileExists(path string) bool {
-	_, err := os.Stat(path)
-	return err == nil
+const keychainStateFileName = "keychain_state.json"
+
+type KeychainState struct {
+	FailedAttempts int
 }
 
-// fileIsExecutable returns the given filepath and true if it exists.
-func fileIsExecutable(path string) bool {
-	if runtime.GOOS == platform.WINDOWS {
-		return true
+var keychainStateFile = storage.NewJSONStorageFile[KeychainState](keychainStateFileName, "keychain state") //nolint:gochecknoglobals
+
+func LoadKeychainState(vaultDir string) (KeychainState, error) {
+	if runtime.GOOS != platform.LINUX {
+		return KeychainState{}, nil
+	}
+	return keychainStateFile.Load(vaultDir)
+}
+
+func (k KeychainState) Save(vaultDir string) error {
+	if runtime.GOOS != platform.LINUX {
+		return nil
 	}
 
-	info, err := os.Stat(path)
-	if err != nil {
-		return false
-	}
+	return keychainStateFile.Save(vaultDir, k)
+}
 
-	return info.Mode()&0o111 != 0
+func (k KeychainState) ResetAndSave(vaultDir string) error {
+	k.FailedAttempts = 0
+	return k.Save(vaultDir)
 }

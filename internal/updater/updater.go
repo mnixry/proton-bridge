@@ -26,6 +26,7 @@ import (
 
 	"github.com/Masterminds/semver/v3"
 	"github.com/ProtonMail/gopenpgp/v2/crypto"
+	"github.com/ProtonMail/proton-bridge/v3/internal/platform"
 	"github.com/ProtonMail/proton-bridge/v3/internal/versioner"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -194,7 +195,7 @@ func (u *Updater) getVersionFileURLLegacy() string {
 //   - https://protonmail.com/download/darwin/universal/v1/version.json
 func (u *Updater) getVersionFileURL() string {
 	switch u.platform {
-	case "darwin":
+	case platform.MACOS:
 		return fmt.Sprintf("%v/%v/%v/universal/v%v/version.json", Host, u.product, u.platform, u.version)
 	default:
 		return fmt.Sprintf("%v/%v/%v/x86/v%v/version.json", Host, u.product, u.platform, u.version)

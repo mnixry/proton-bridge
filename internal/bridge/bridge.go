@@ -42,6 +42,7 @@ import (
 	"github.com/ProtonMail/proton-bridge/v3/internal/events"
 	"github.com/ProtonMail/proton-bridge/v3/internal/focus"
 	"github.com/ProtonMail/proton-bridge/v3/internal/identifier"
+	"github.com/ProtonMail/proton-bridge/v3/internal/platform"
 	"github.com/ProtonMail/proton-bridge/v3/internal/safe"
 	"github.com/ProtonMail/proton-bridge/v3/internal/sentry"
 	"github.com/ProtonMail/proton-bridge/v3/internal/services/imapsmtpserver"
@@ -687,7 +688,7 @@ func (bridge *Bridge) HasAPIConnection() bool {
 // then we verify whether the gluon cache exists using the "new" username (provided by the DB path in this case)
 // if so we modify the cache directory in the user vault.
 func (bridge *Bridge) verifyUsernameChange() {
-	if runtime.GOOS != "darwin" {
+	if runtime.GOOS != platform.MACOS {
 		return
 	}
 

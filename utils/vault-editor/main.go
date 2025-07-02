@@ -27,6 +27,7 @@ import (
 	"github.com/ProtonMail/gluon/async"
 	"github.com/ProtonMail/proton-bridge/v3/internal/app"
 	"github.com/ProtonMail/proton-bridge/v3/internal/locations"
+	"github.com/ProtonMail/proton-bridge/v3/internal/unleash"
 	"github.com/ProtonMail/proton-bridge/v3/internal/vault"
 	"github.com/ProtonMail/proton-bridge/v3/pkg/keychain"
 	"github.com/urfave/cli/v2"
@@ -52,7 +53,7 @@ func main() {
 func readAction(c *cli.Context) error {
 	return app.WithLocations(func(locations *locations.Locations) error {
 		return app.WithKeychainList(async.NoopPanicHandler{}, func(keychains *keychain.List) error {
-			return app.WithVault(nil, locations, keychains, async.NoopPanicHandler{}, func(vault *vault.Vault, insecure, corrupt bool) error {
+			return app.WithVault(nil, locations, keychains, make(unleash.FeatureFlagStartupStore), async.NoopPanicHandler{}, func(vault *vault.Vault, insecure, corrupt bool) error {
 				if _, err := os.Stdout.Write(vault.ExportJSON()); err != nil {
 					return fmt.Errorf("failed to write vault: %w", err)
 				}
@@ -66,7 +67,7 @@ func readAction(c *cli.Context) error {
 func writeAction(c *cli.Context) error {
 	return app.WithLocations(func(locations *locations.Locations) error {
 		return app.WithKeychainList(async.NoopPanicHandler{}, func(keychains *keychain.List) error {
-			return app.WithVault(nil, locations, keychains, async.NoopPanicHandler{}, func(vault *vault.Vault, insecure, corrupt bool) error {
+			return app.WithVault(nil, locations, keychains, make(unleash.FeatureFlagStartupStore), async.NoopPanicHandler{}, func(vault *vault.Vault, insecure, corrupt bool) error {
 				b, err := io.ReadAll(os.Stdin)
 				if err != nil {
 					return fmt.Errorf("failed to read vault: %w", err)

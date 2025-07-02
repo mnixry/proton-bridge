@@ -17,15 +17,7 @@
 
 package vault
 
-import (
-	"encoding/json"
-	"errors"
-	"fmt"
-	"os"
-	"path/filepath"
-
-	"github.com/sirupsen/logrus"
-)
+import "github.com/ProtonMail/proton-bridge/v3/internal/vault/storage"
 
 const keychainSettingsFileName = "keychain.json"
 
@@ -35,40 +27,15 @@ type KeychainSettings struct {
 	DisableTest bool   // Is the keychain test on startup disabled?
 }
 
+var keychainSettingsFile = storage.NewJSONStorageFile[KeychainSettings](keychainSettingsFileName, "keychain settings") //nolint:gochecknoglobals
+
 // LoadKeychainSettings load keychain settings from the vaultDir folder, or returns a default one if the file
 // does not exists or is invalid.
 func LoadKeychainSettings(vaultDir string) (KeychainSettings, error) {
-	path := filepath.Join(vaultDir, keychainSettingsFileName)
-	bytes, err := os.ReadFile(path) //nolint:gosec
-	if err != nil {
-		if errors.Is(err, os.ErrNotExist) {
-			logrus.
-				WithFields(logrus.Fields{"pkg": "vault", "path": path}).
-				Trace("Keychain settings file does not exists, default values will be used")
-			return KeychainSettings{}, nil
-		}
-		return KeychainSettings{}, err
-	}
-
-	var result KeychainSettings
-	if err := json.Unmarshal(bytes, &result); err != nil {
-		return KeychainSettings{}, fmt.Errorf("keychain settings file is invalid settings: %w", err)
-	}
-
-	return result, nil
+	return keychainSettingsFile.Load(vaultDir)
 }
 
 // Save saves the keychain settings in a file in the vaultDir folder.
 func (k KeychainSettings) Save(vaultDir string) error {
-	bytes, err := json.MarshalIndent(k, "", "  ")
-	if err != nil {
-		return err
-	}
-
-	if err = os.MkdirAll(vaultDir, 0o700); err != nil {
-		return err
-	}
-
-	path := filepath.Join(vaultDir, keychainSettingsFileName)
-	return os.WriteFile(path, bytes, 0o600)
+	return keychainSettingsFile.Save(vaultDir, k)
 }

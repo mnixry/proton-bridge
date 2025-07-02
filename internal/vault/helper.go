@@ -76,6 +76,34 @@ func SetHelper(vaultDir, helper string) error {
 	return settings.Save(vaultDir)
 }
 
+func GetKeychainFailedAttemptCount(vaultDir string) (int, error) {
+	keychainState, err := LoadKeychainState(vaultDir)
+	if err != nil {
+		return 0, err
+	}
+	return keychainState.FailedAttempts, nil
+}
+
+func IncrementKeychainFailedAttemptCount(vaultDir string) error {
+	keychainState, err := LoadKeychainState(vaultDir)
+	if err != nil {
+		return err
+	}
+
+	keychainState.FailedAttempts++
+	return keychainState.Save(vaultDir)
+}
+
+// ResetFailedKeychainAttemptCount - resets the failed keychain attempt count, and stores the data in the appropriate helper file.
+func ResetFailedKeychainAttemptCount(vaultDir string) error {
+	keychainState, err := LoadKeychainState(vaultDir)
+	if err != nil {
+		return err
+	}
+
+	return keychainState.ResetAndSave(vaultDir)
+}
+
 func GetVaultKey(kc *keychain.Keychain) ([]byte, error) {
 	_, keyEnc, err := kc.Get(vaultSecretName)
 	if err != nil {

@@ -37,6 +37,7 @@ import (
 	"github.com/ProtonMail/proton-bridge/v3/internal/bridge"
 	"github.com/ProtonMail/proton-bridge/v3/internal/constants"
 	"github.com/ProtonMail/proton-bridge/v3/internal/events"
+	"github.com/ProtonMail/proton-bridge/v3/internal/platform"
 	"github.com/ProtonMail/proton-bridge/v3/internal/user"
 	"github.com/bradenaw/juniper/stream"
 	"github.com/bradenaw/juniper/xslices"
@@ -77,7 +78,7 @@ func TestBridge_User_RefreshEvent(t *testing.T) {
 		withBridge(ctx, t, s.GetHostURL(), netCtl, locator, storeKey, func(bridge *bridge.Bridge, _ *bridge.Mocks) {
 			syncCh, closeCh := chToType[events.Event, events.SyncFinished](bridge.GetEvents(events.SyncFinished{}))
 
-			if runtime.GOOS != "windows" {
+			if runtime.GOOS != platform.WINDOWS {
 				require.Equal(t, userID, (<-syncCh).UserID)
 			}
 			require.Equal(t, userID, (<-syncCh).UserID)

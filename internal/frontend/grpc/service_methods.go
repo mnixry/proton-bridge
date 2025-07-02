@@ -32,6 +32,7 @@ import (
 	"github.com/ProtonMail/proton-bridge/v3/internal/frontend/theme"
 	"github.com/ProtonMail/proton-bridge/v3/internal/hv"
 	"github.com/ProtonMail/proton-bridge/v3/internal/kb"
+	"github.com/ProtonMail/proton-bridge/v3/internal/platform"
 	"github.com/ProtonMail/proton-bridge/v3/internal/safe"
 	"github.com/ProtonMail/proton-bridge/v3/internal/service"
 	"github.com/ProtonMail/proton-bridge/v3/internal/updater"
@@ -688,7 +689,7 @@ func (s *Service) SetDiskCachePath(_ context.Context, newPath *wrapperspb.String
 		path := newPath.Value
 
 		//goland:noinspection GoBoolExpressions
-		if (runtime.GOOS == "windows") && (path[0] == '/') {
+		if (runtime.GOOS == platform.WINDOWS) && (path[0] == '/') {
 			path = path[1:]
 		}
 

@@ -28,6 +28,7 @@ import (
 	"github.com/ProtonMail/proton-bridge/v3/internal/bridge"
 	"github.com/ProtonMail/proton-bridge/v3/internal/constants"
 	"github.com/ProtonMail/proton-bridge/v3/internal/events"
+	"github.com/ProtonMail/proton-bridge/v3/internal/platform"
 	"github.com/ProtonMail/proton-bridge/v3/pkg/restarter"
 
 	"github.com/abiosoft/ishell"
@@ -148,7 +149,7 @@ func New(
 	fe.AddCmd(dohCmd)
 
 	//goland:noinspection GoBoolExpressions
-	if runtime.GOOS == "darwin" {
+	if runtime.GOOS == platform.MACOS {
 		// Apple Mail commands.
 		configureCmd := &ishell.Cmd{
 			Name: "configure-apple-mail",
@@ -165,7 +166,7 @@ func New(
 	}
 
 	//goland:noinspection GoBoolExpressions
-	if runtime.GOOS == "darwin" {
+	if runtime.GOOS == platform.MACOS {
 		certCmd.AddCmd(&ishell.Cmd{
 			Name: "status",
 			Help: "Check if the TLS certificate used by Bridge is installed in the OS keychain",
