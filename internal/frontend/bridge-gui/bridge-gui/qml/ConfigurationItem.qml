@@ -64,6 +64,7 @@ Item {
 
                 MouseArea {
                     anchors.fill: parent
+                    hoverEnabled: true
 
                     onClicked: {
                         valueText.select(0, valueText.length);
@@ -72,6 +73,29 @@ Item {
                     }
                     onPressed: parent.scale = 0.90
                     onReleased: parent.scale = 1
+
+                    ToolTip {
+                        visible: parent.containsMouse
+                        delay: 500
+
+                        background: Rectangle {
+                            color: root.colorScheme.background_weak
+                            border.color: root.colorScheme.border_weak
+                            border.width: 1
+                            radius: 4
+                        }
+
+                        contentItem: Text {
+                            text: "Copy to clipboard"
+                            color: root.colorScheme.text_norm
+                            font.pixelSize: ProtonStyle.caption_font_size
+                            padding: 4
+
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                    }
+
                 }
             }
         }
