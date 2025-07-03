@@ -25,8 +25,8 @@ import (
 	"net"
 )
 
-// CheckCertificate returns whether the connection presents a known TLS certificate.
-func (p *TLSPinChecker) CheckCertificate(conn net.Conn) error {
+// CheckCertificate verifies that the connection presents a known pinned leaf TLS certificate.
+func (p *TLSPinChecker) CheckCertificate(conn net.Conn, certificateChainVerificationSkipped bool) error {
 	tlsConn, ok := conn.(*tls.Conn)
 	if !ok {
 		return errors.New("connection is not a TLS connection")
@@ -34,14 +34,31 @@ func (p *TLSPinChecker) CheckCertificate(conn net.Conn) error {
 
 	connState := tlsConn.ConnectionState()
 
-	for _, peerCert := range connState.PeerCertificates {
-		fingerprint := certFingerprint(peerCert)
+	// When certificate chain verification is enabled (e.g., for known API hosts), we expect the TLS handshake to produce verified chains.
+	// We then validate that the leaf certificate of at least one verified chain matches a known pinned public key.
+	if !certificateChainVerificationSkipped {
+		if len(connState.VerifiedChains) == 0 {
+			return errors.New("no verified certificate chains")
+		}
 
-		for _, pin := range p.trustedPins {
-			if pin == fingerprint {
+		for _, chain := range connState.VerifiedChains {
+			// Check if the leaf certificate is one of the trusted pins.
+			if p.isCertFoundInKnownPins(chain[0]) {
 				return nil
 			}
 		}
+
+		return ErrTLSMismatch
+	}
+
+	// When certificate chain verification is skipped (e.g., for DoH proxies using self-signed certs),
+	// we only validate the leaf certificate against known pinned public keys.
+	if len(connState.PeerCertificates) == 0 {
+		return errors.New("no peer certificates available")
+	}
+
+	if p.isCertFoundInKnownPins(connState.PeerCertificates[0]) {
+		return nil
 	}
 
 	return ErrTLSMismatch

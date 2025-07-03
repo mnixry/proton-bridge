@@ -50,12 +50,12 @@ var TrustedAPIPins = []string{ //nolint:gochecknoglobals
 }
 
 // TLSReportURI is the address where TLS reports should be sent.
-const TLSReportURI = "https://reports.protonmail.ch/reports/tls"
+const TLSReportURI = "https://reports.proton.me/reports/tls"
 
 // PinningTLSDialer wraps a TLSDialer to check fingerprints after connecting and
 // to report errors if the fingerprint check fails.
 type PinningTLSDialer struct {
-	dialer     TLSDialer
+	dialer     SecureTLSDialer
 	pinChecker PinChecker
 	reporter   Reporter
 	tlsIssueCh chan struct{}
@@ -68,13 +68,13 @@ type Reporter interface {
 
 // PinChecker is used to check TLS keys of connections.
 type PinChecker interface {
-	CheckCertificate(conn net.Conn) error
+	CheckCertificate(conn net.Conn, certificateChainVerificationSkipped bool) error
 }
 
 // NewPinningTLSDialer constructs a new dialer which only returns TCP connections to servers
 // which present known certificates.
 // It checks pins using the given pinChecker and reports issues using the given reporter.
-func NewPinningTLSDialer(dialer TLSDialer, reporter Reporter, pinChecker PinChecker) *PinningTLSDialer {
+func NewPinningTLSDialer(dialer SecureTLSDialer, reporter Reporter, pinChecker PinChecker) *PinningTLSDialer {
 	return &PinningTLSDialer{
 		dialer:     dialer,
 		pinChecker: pinChecker,
@@ -85,6 +85,7 @@ func NewPinningTLSDialer(dialer TLSDialer, reporter Reporter, pinChecker PinChec
 
 // DialTLSContext dials the given network/address, returning an error if the certificates don't match the trusted pins.
 func (p *PinningTLSDialer) DialTLSContext(ctx context.Context, network, address string) (net.Conn, error) {
+	shouldSkipCertificateChainVerification := p.dialer.ShouldSkipCertificateChainVerification(address)
 	conn, err := p.dialer.DialTLSContext(ctx, network, address)
 	if err != nil {
 		return nil, err
@@ -95,7 +96,7 @@ func (p *PinningTLSDialer) DialTLSContext(ctx context.Context, network, address 
 		return nil, err
 	}
 
-	if err := p.pinChecker.CheckCertificate(conn); err != nil {
+	if err := p.pinChecker.CheckCertificate(conn, shouldSkipCertificateChainVerification); err != nil {
 		if tlsConn, ok := conn.(*tls.Conn); ok && p.reporter != nil {
 			p.reporter.ReportCertIssue(TLSReportURI, host, port, tlsConn.ConnectionState())
 		}

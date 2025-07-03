@@ -22,11 +22,18 @@ import (
 	"crypto/tls"
 	"net"
 	"net/http"
+	"net/url"
+	"strings"
 	"time"
 )
 
 type TLSDialer interface {
 	DialTLSContext(ctx context.Context, network, address string) (conn net.Conn, err error)
+}
+
+type SecureTLSDialer interface {
+	DialTLSContext(ctx context.Context, network, address string) (conn net.Conn, err error)
+	ShouldSkipCertificateChainVerification(address string) bool
 }
 
 func SetBasicTransportTimeouts(t *http.Transport) {
@@ -71,6 +78,35 @@ func NewBasicTLSDialer(hostURL string) *BasicTLSDialer {
 	}
 }
 
+func extractDomain(hostname string) string {
+	parts := strings.Split(hostname, ".")
+	if len(parts) >= 2 {
+		return strings.Join(parts[len(parts)-2:], ".")
+	}
+	return hostname
+}
+
+// ShouldSkipCertificateChainVerification determines whether certificate chain validation should be skipped.
+// It compares the domain of the requested address with the configured host URL domain.
+// Returns true if the domains don't match (skip verification), false if they do (perform verification).
+//
+// NOTE: This assumes single-part TLDs (.com, .me) and won't handle multi-part TLDs correctly.
+func (d *BasicTLSDialer) ShouldSkipCertificateChainVerification(address string) bool {
+	parsedURL, err := url.Parse(d.hostURL)
+	if err != nil {
+		return true
+	}
+
+	addressHost, _, err := net.SplitHostPort(address)
+	if err != nil {
+		addressHost = address
+	}
+
+	hostDomain := extractDomain(parsedURL.Host)
+	addressDomain := extractDomain(addressHost)
+	return addressDomain != hostDomain
+}
+
 // DialTLSContext returns a connection to the given address using the given network.
 func (d *BasicTLSDialer) DialTLSContext(ctx context.Context, network, address string) (conn net.Conn, err error) {
 	return (&tls.Dialer{
@@ -78,7 +114,7 @@ func (d *BasicTLSDialer) DialTLSContext(ctx context.Context, network, address st
 			Timeout: 30 * time.Second,
 		},
 		Config: &tls.Config{
-			InsecureSkipVerify: address != d.hostURL, //nolint:gosec
+			InsecureSkipVerify: d.ShouldSkipCertificateChainVerification(address), //nolint:gosec
 		},
 	}).DialContext(ctx, network, address)
 }
