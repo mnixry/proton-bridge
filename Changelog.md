@@ -3,6 +3,12 @@
 Changelog [format](http://keepachangelog.com/en/1.0.0/)
 
 
+## Kanmon Bridge 3.21.2
+
+### Fixed
+* BRIDGE-406: Fixed faulty certificate chain validation logic. Made certificate pin checks exclusive to leaf certificates.
+
+
 ## Kanmon Bridge 3.21.1
 
 ### Changed
