@@ -64,8 +64,7 @@ func TestTLSPinInvalid(t *testing.T) {
 	checkTLSIssueHandler(t, 1, called)
 }
 
-// Disabled for now we'll need to patch this up.
-func _TestTLSPinNoMatch(t *testing.T) { //nolint:unused
+func TestTLSPinNoMatch(t *testing.T) {
 	skipIfProxyIsSet(t)
 
 	called, _, reporter, checker, cm := createClientWithPinningDialer(getRootURL())
