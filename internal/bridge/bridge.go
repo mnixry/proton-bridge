@@ -168,6 +168,7 @@ func New(
 	updater Updater, // the updater to fetch and install updates
 	curVersion *semver.Version, // the current version of the bridge
 	keychains *keychain.List, // usable keychains
+	obsService *observability.Service,
 
 	apiURL string, // the URL of the API to use
 	cookieJar http.CookieJar, // the cookie jar to use
@@ -206,6 +207,7 @@ func New(
 		keychains,
 		panicHandler,
 		reporter,
+		obsService,
 
 		api,
 		identifier,
@@ -242,6 +244,7 @@ func newBridge(
 	keychains *keychain.List,
 	panicHandler async.PanicHandler,
 	reporter reporter.Reporter,
+	obsService *observability.Service,
 
 	api *proton.Manager,
 	identifier identifier.Identifier,
@@ -275,7 +278,7 @@ func newBridge(
 
 	unleashService := unleash.NewBridgeService(ctx, api, locator, panicHandler, vault.GetFeatureFlagStickyKey())
 
-	observabilityService := observability.NewService(ctx, panicHandler)
+	obsService.Initialize(ctx, panicHandler)
 
 	bridge := &Bridge{
 		vault: vault,
@@ -317,11 +320,11 @@ func newBridge(
 		lastVersion: lastVersion,
 
 		tasks:       tasks,
-		syncService: syncservice.NewService(panicHandler, observabilityService),
+		syncService: syncservice.NewService(panicHandler, obsService),
 
 		unleashService: unleashService,
 
-		observabilityService: observabilityService,
+		observabilityService: obsService,
 
 		notificationStore: notifications.NewStore(locator.ProvideNotificationsCachePath),
 
@@ -336,7 +339,7 @@ func newBridge(
 		reporter,
 		uidValidityGenerator,
 		&bridgeIMAPSMTPTelemetry{b: bridge},
-		observabilityService,
+		obsService,
 		unleashService,
 	)
 

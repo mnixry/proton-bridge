@@ -31,18 +31,20 @@ import (
 	"github.com/ProtonMail/proton-bridge/v3/internal/locations"
 	"github.com/ProtonMail/proton-bridge/v3/internal/platform"
 	"github.com/ProtonMail/proton-bridge/v3/internal/sentry"
+	"github.com/ProtonMail/proton-bridge/v3/internal/services/observability"
 	"github.com/ProtonMail/proton-bridge/v3/internal/unleash"
 	"github.com/ProtonMail/proton-bridge/v3/internal/vault"
+	"github.com/ProtonMail/proton-bridge/v3/internal/vault/observabilitymetrics"
 	"github.com/ProtonMail/proton-bridge/v3/pkg/keychain"
 	"github.com/sirupsen/logrus"
 )
 
-func WithVault(reporter *sentry.Reporter, locations *locations.Locations, keychains *keychain.List, featureFlags unleash.FeatureFlagStartupStore, panicHandler async.PanicHandler, fn func(*vault.Vault, bool, bool) error) error {
+func WithVault(reporter *sentry.Reporter, locations *locations.Locations, keychains *keychain.List, obsSender observability.BasicSender, featureFlags unleash.FeatureFlagStartupStore, panicHandler async.PanicHandler, fn func(*vault.Vault, bool, bool) error) error {
 	logrus.Debug("Creating vault")
 	defer logrus.Debug("Vault stopped")
 
 	// Create the encVault.
-	encVault, insecure, corrupt, err := newVault(reporter, locations, keychains, featureFlags, panicHandler)
+	encVault, insecure, corrupt, err := newVault(reporter, locations, keychains, obsSender, featureFlags, panicHandler)
 	if err != nil {
 		return fmt.Errorf("could not create vault: %w", err)
 	}
@@ -64,7 +66,7 @@ func WithVault(reporter *sentry.Reporter, locations *locations.Locations, keycha
 	return fn(encVault, insecure, corrupt != nil)
 }
 
-func newVault(reporter *sentry.Reporter, locations *locations.Locations, keychains *keychain.List, featureFlags unleash.FeatureFlagStartupStore, panicHandler async.PanicHandler) (*vault.Vault, bool, error, error) {
+func newVault(reporter *sentry.Reporter, locations *locations.Locations, keychains *keychain.List, obsSender observability.BasicSender, featureFlags unleash.FeatureFlagStartupStore, panicHandler async.PanicHandler) (*vault.Vault, bool, error, error) {
 	vaultDir, err := locations.ProvideSettingsPath()
 	if err != nil {
 		return nil, false, nil, fmt.Errorf("could not get vault dir: %w", err)
@@ -101,6 +103,9 @@ func newVault(reporter *sentry.Reporter, locations *locations.Locations, keychai
 
 		// We store the insecure vault in a separate directory
 		vaultDir = path.Join(vaultDir, "insecure")
+
+		// Schedule the relevant observability metric for sending.
+		obsSender.AddMetrics(observabilitymetrics.GenerateVaultKeyFetchGenericErrorMetric())
 	} else {
 		vaultKey = key
 		lastUsedHelper = helper
@@ -114,7 +119,12 @@ func newVault(reporter *sentry.Reporter, locations *locations.Locations, keychai
 
 	userVault, corrupt, err := vault.New(vaultDir, gluonCacheDir, vaultKey, panicHandler)
 	if err != nil {
+		obsSender.AddMetrics(observabilitymetrics.GenerateVaultCreationGenericErrorMetric())
 		return nil, false, corrupt, fmt.Errorf("could not create vault: %w", err)
+	}
+
+	if corrupt != nil {
+		obsSender.AddMetrics(observabilitymetrics.GenerateVaultCreationCorruptErrorMetric())
 	}
 
 	// Remember the last successfully used keychain on Linux and store that as the user preference.

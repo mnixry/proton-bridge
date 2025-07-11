@@ -215,6 +215,14 @@ func (l *Locations) ProvideUnleashStartupCachePath() (string, error) {
 	return l.getUnleashStartupCachePath(), nil
 }
 
+func (l *Locations) ProvideObservabilityMetricsCachePath() (string, error) {
+	if err := os.MkdirAll(l.getObservabilityMetricsCachePath(), 0o700); err != nil {
+		return "", err
+	}
+
+	return l.getObservabilityMetricsCachePath(), nil
+}
+
 func (l *Locations) getGluonCachePath() string {
 	return filepath.Join(l.userData, "gluon")
 }
@@ -255,6 +263,10 @@ func (l *Locations) getUnleashCachePath() string { return filepath.Join(l.userCa
 
 func (l *Locations) getUnleashStartupCachePath() string {
 	return filepath.Join(l.userCache, "unleash_startup_cache")
+}
+
+func (l *Locations) getObservabilityMetricsCachePath() string {
+	return filepath.Join(l.userCache, "observability_cache")
 }
 
 // Clear removes everything except the lock and update files.

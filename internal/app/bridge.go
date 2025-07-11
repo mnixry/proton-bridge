@@ -33,6 +33,7 @@ import (
 	"github.com/ProtonMail/proton-bridge/v3/internal/events"
 	"github.com/ProtonMail/proton-bridge/v3/internal/locations"
 	"github.com/ProtonMail/proton-bridge/v3/internal/sentry"
+	"github.com/ProtonMail/proton-bridge/v3/internal/services/observability"
 	"github.com/ProtonMail/proton-bridge/v3/internal/updater"
 	"github.com/ProtonMail/proton-bridge/v3/internal/useragent"
 	"github.com/ProtonMail/proton-bridge/v3/internal/vault"
@@ -52,6 +53,7 @@ func withBridge(
 	locations *locations.Locations,
 	version *semver.Version,
 	identifier *useragent.UserAgent,
+	obsService *observability.Service,
 	crashHandler *crash.Handler,
 	reporter *sentry.Reporter,
 	vault *vault.Vault,
@@ -100,6 +102,7 @@ func withBridge(
 		updater,
 		version,
 		keychains,
+		obsService,
 
 		// The API stuff.
 		constants.APIHost,

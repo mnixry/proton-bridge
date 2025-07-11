@@ -28,6 +28,7 @@ import (
 	"github.com/ProtonMail/proton-bridge/v3/internal/services/observability/gluonmetrics"
 	smtpMetrics "github.com/ProtonMail/proton-bridge/v3/internal/services/smtp/observabilitymetrics"
 	"github.com/ProtonMail/proton-bridge/v3/internal/services/syncservice/observabilitymetrics"
+	vaultMetrics "github.com/ProtonMail/proton-bridge/v3/internal/vault/observabilitymetrics"
 )
 
 // userHeartbeatPermutationsObservability corresponds to bridge_generic_user_heartbeat_total_v1.schema.json.
@@ -229,6 +230,21 @@ func (s *scenario) GluonNewlyOpenedIMAPConnectionsExceedThreshold(username strin
 			gluonmetrics.GenerateNewOpenedIMAPConnectionsExceedThreshold("outlook", observability.BucketIMAPConnections(3000), observability.BucketIMAPConnections(3500)),
 		},
 	}
+	return s.t.withClientPass(context.Background(), username, s.t.getUserByName(username).userPass, func(ctx context.Context, c *proton.Client) error {
+		err := c.SendObservabilityBatch(ctx, batch)
+		return err
+	})
+}
+
+func (s *scenario) VaultKeychainErrorsObservabilityMetrics(username string) error {
+	batch := proton.ObservabilityBatch{
+		Metrics: []proton.ObservabilityMetric{
+			vaultMetrics.GenerateVaultKeyFetchGenericErrorMetric(),
+			vaultMetrics.GenerateVaultCreationCorruptErrorMetric(),
+			vaultMetrics.GenerateVaultCreationGenericErrorMetric(),
+		},
+	}
+
 	return s.t.withClientPass(context.Background(), username, s.t.getUserByName(username).userPass, func(ctx context.Context, c *proton.Client) error {
 		err := c.SendObservabilityBatch(ctx, batch)
 		return err

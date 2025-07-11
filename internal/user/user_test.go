@@ -168,7 +168,7 @@ func withUser(tb testing.TB, ctx context.Context, _ *server.Server, m *proton.Ma
 		nullSMTPServerManager,
 		nullEventSubscription,
 		nil,
-		observability.NewService(context.Background(), nil),
+		observability.NewTestService(),
 		"",
 		true,
 		notifications.NewStore(func() (string, error) {

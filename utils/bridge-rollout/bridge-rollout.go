@@ -24,6 +24,7 @@ import (
 	"github.com/ProtonMail/gluon/async"
 	"github.com/ProtonMail/proton-bridge/v3/internal/app"
 	"github.com/ProtonMail/proton-bridge/v3/internal/locations"
+	"github.com/ProtonMail/proton-bridge/v3/internal/services/observability"
 	"github.com/ProtonMail/proton-bridge/v3/internal/vault"
 	"github.com/ProtonMail/proton-bridge/v3/pkg/keychain"
 	"github.com/sirupsen/logrus"
@@ -62,7 +63,7 @@ func main() {
 func getRollout(_ *cli.Context) error {
 	return app.WithLocations(func(locations *locations.Locations) error {
 		return app.WithKeychainList(async.NoopPanicHandler{}, func(keychains *keychain.List) error {
-			return app.WithVault(nil, locations, keychains, make(map[string]bool), async.NoopPanicHandler{}, func(vault *vault.Vault, _, _ bool) error {
+			return app.WithVault(nil, locations, keychains, observability.NewTestService(), make(map[string]bool), async.NoopPanicHandler{}, func(vault *vault.Vault, _, _ bool) error {
 				fmt.Println(vault.GetUpdateRollout())
 				return nil
 			})
@@ -73,7 +74,7 @@ func getRollout(_ *cli.Context) error {
 func setRollout(c *cli.Context) error {
 	return app.WithLocations(func(locations *locations.Locations) error {
 		return app.WithKeychainList(async.NoopPanicHandler{}, func(keychains *keychain.List) error {
-			return app.WithVault(nil, locations, keychains, make(map[string]bool), async.NoopPanicHandler{}, func(vault *vault.Vault, _, _ bool) error {
+			return app.WithVault(nil, locations, keychains, observability.NewTestService(), make(map[string]bool), async.NoopPanicHandler{}, func(vault *vault.Vault, _, _ bool) error {
 				clamped := max(0.0, min(1.0, c.Float64("value")))
 				if err := vault.SetUpdateRollout(clamped); err != nil {
 					return err

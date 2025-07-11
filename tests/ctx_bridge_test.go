@@ -39,6 +39,7 @@ import (
 	"github.com/ProtonMail/proton-bridge/v3/internal/events"
 	frontend "github.com/ProtonMail/proton-bridge/v3/internal/frontend/grpc"
 	"github.com/ProtonMail/proton-bridge/v3/internal/service"
+	"github.com/ProtonMail/proton-bridge/v3/internal/services/observability"
 	"github.com/ProtonMail/proton-bridge/v3/internal/useragent"
 	"github.com/ProtonMail/proton-bridge/v3/internal/vault"
 	"github.com/ProtonMail/proton-bridge/v3/pkg/keychain"
@@ -172,6 +173,7 @@ func (t *testCtx) initBridge() (<-chan events.Event, error) {
 		t.mocks.Updater,
 		t.version,
 		keychain.NewTestKeychainsList(),
+		observability.NewTestService(),
 
 		// API stuff
 		t.api.GetHostURL(),

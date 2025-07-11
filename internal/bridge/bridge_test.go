@@ -45,6 +45,7 @@ import (
 	"github.com/ProtonMail/proton-bridge/v3/internal/focus"
 	"github.com/ProtonMail/proton-bridge/v3/internal/locations"
 	"github.com/ProtonMail/proton-bridge/v3/internal/services/imapsmtpserver"
+	"github.com/ProtonMail/proton-bridge/v3/internal/services/observability"
 	"github.com/ProtonMail/proton-bridge/v3/internal/unleash"
 	"github.com/ProtonMail/proton-bridge/v3/internal/updater"
 	"github.com/ProtonMail/proton-bridge/v3/internal/user"
@@ -944,6 +945,7 @@ func withBridgeNoMocks(
 		mocks.Updater,
 		v2_3_0,
 		keychain.NewTestKeychainsList(),
+		observability.NewTestService(),
 
 		// The API stuff.
 		apiURL,

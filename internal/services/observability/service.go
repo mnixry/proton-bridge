@@ -19,12 +19,17 @@ package observability
 
 import (
 	"context"
+	"encoding/json"
+	"os"
+	"path/filepath"
 	"sync"
 	"time"
 
 	"github.com/ProtonMail/gluon/async"
 	"github.com/ProtonMail/go-proton-api"
+	"github.com/ProtonMail/proton-bridge/v3/internal/locations"
 	"github.com/ProtonMail/proton-bridge/v3/internal/services/telemetry"
+	"github.com/bradenaw/juniper/xslices"
 	"github.com/sirupsen/logrus"
 )
 
@@ -34,6 +39,7 @@ var throttleDuration = 5 * time.Second //nolint:gochecknoglobals
 const (
 	maxStorageSize = 5000
 	maxBatchSize   = 1000
+	filename       = "metric_cache.json"
 )
 
 type client struct {
@@ -50,14 +56,22 @@ type Sender interface {
 	GetEmailClient() string
 }
 
+type BasicSender interface {
+	AddMetrics(metric ...proton.ObservabilityMetric)
+}
+
 type Service struct {
 	ctx    context.Context
 	cancel context.CancelFunc
 
 	panicHandler async.PanicHandler
 
+	cachePath string
+
 	lastDispatch        time.Time
 	isDispatchScheduled bool
+
+	wg sync.WaitGroup
 
 	signalDataArrived chan struct{}
 	signalDispatch    chan struct{}
@@ -73,41 +87,70 @@ type Service struct {
 	distinctionUtility *distinctionUtility
 }
 
-func NewService(ctx context.Context, panicHandler async.PanicHandler) *Service {
-	ctx, cancel := context.WithCancel(ctx)
-
-	service := &Service{
-		ctx:    ctx,
-		cancel: cancel,
-
-		panicHandler: panicHandler,
-
-		lastDispatch: time.Now().Add(-throttleDuration),
-
-		signalDataArrived: make(chan struct{}, 1),
-		signalDispatch:    make(chan struct{}, 1),
-
-		log: logrus.WithFields(logrus.Fields{"pkg": "observability"}),
-
-		metricStore: make([]proton.ObservabilityMetric, 0),
-
+func newService() *Service {
+	return &Service{
+		ctx:             context.Background(),
+		metricStore:     make([]proton.ObservabilityMetric, 0),
+		log:             logrus.WithFields(logrus.Fields{"pkg": "observability"}),
 		userClientStore: make(map[string]*client),
 	}
+}
 
-	service.distinctionUtility = newDistinctionUtility(ctx, panicHandler, service)
+// NewTestService initializes a new basic observability service with the required struct fields.
+// Should only be used for testing.
+func NewTestService() *Service {
+	return newService()
+}
 
-	return service
+func WithObservability(locations *locations.Locations, fn func(service *Service) error) error {
+	service := newService()
+
+	cacheDir, err := locations.ProvideObservabilityMetricsCachePath()
+	if err != nil {
+		service.log.WithError(err).Warn("Could not obtain cache path")
+		return fn(service)
+	}
+
+	cachePath := filepath.Clean(filepath.Join(cacheDir, filename))
+	service.cachePath = cachePath
+
+	service.readCacheFile()
+
+	defer service.writeCacheFile()
+
+	return fn(service)
+}
+
+// Initialize sets up the observability Service. If not initialized, the service will remain inactive and emit no metrics.
+// Should exclusively be called during bridge set-up.
+func (s *Service) Initialize(ctx context.Context, panicHandler async.PanicHandler) {
+	ctx, cancel := context.WithCancel(ctx)
+
+	s.ctx = ctx
+	s.cancel = cancel
+	s.panicHandler = panicHandler
+
+	s.lastDispatch = time.Now().Add(-throttleDuration)
+
+	s.signalDataArrived = make(chan struct{}, 1)
+	s.signalDispatch = make(chan struct{}, 1)
+
+	s.distinctionUtility = newDistinctionUtility(ctx, panicHandler, s)
 }
 
 // Run starts the observability service goroutine.
 // The function also sets some utility functions to a helper struct aimed at differentiating the amount of users sending metric updates.
 func (s *Service) Run(settingsGetter settingsGetter) {
-	s.log.Info("Starting service")
+	if s.log != nil {
+		s.log.Info("Starting service")
+	}
 
 	s.distinctionUtility.setSettingsGetter(settingsGetter)
 	s.distinctionUtility.runHeartbeat()
 
+	s.wg.Add(1)
 	go func() {
+		defer s.wg.Done()
 		s.start()
 	}()
 }
@@ -140,6 +183,62 @@ func (s *Service) start() {
 			s.sendSignal(s.signalDispatch)
 		}
 	}
+}
+
+func (s *Service) readCacheFile() {
+	if s.cachePath == "" {
+		return
+	}
+
+	file, err := os.Open(s.cachePath)
+	if err != nil {
+		s.log.WithError(err).Info("Unable to open cache file")
+		return
+	}
+
+	defer func(file *os.File) {
+		if err := file.Close(); err != nil {
+			s.log.WithError(err).Error("Unable to close cache file after read")
+		}
+	}(file)
+
+	s.withMetricStoreLock(func() {
+		if err = json.NewDecoder(file).Decode(&s.metricStore); err != nil {
+			s.log.WithError(err).Error("Unable to decode cache file")
+		}
+
+		// Since we omit marshalling the field, we need to explicitly overwrite it.
+		for i := range s.metricStore {
+			s.metricStore[i].ShouldCache = true
+		}
+	})
+}
+
+func (s *Service) writeCacheFile() {
+	if s.cachePath == "" {
+		return
+	}
+
+	file, err := os.Create(s.cachePath)
+	if err != nil {
+		s.log.WithError(err).Warn("Unable to create cache file")
+	}
+
+	defer func(file *os.File) {
+		if err := file.Close(); err != nil {
+			s.log.WithError(err).Error("Unable to close cache file after write")
+		}
+	}(file)
+
+	s.withMetricStoreLock(func() {
+		metricsToCache := xslices.Filter(s.metricStore, func(m proton.ObservabilityMetric) bool {
+			return m.ShouldCache
+		})
+
+		if err = json.NewEncoder(file).Encode(metricsToCache); err != nil {
+			s.log.WithError(err).Error("Unable to encode data to cache file")
+		}
+	})
 }
 
 func (s *Service) dispatchData() {
@@ -237,6 +336,12 @@ func (s *Service) addMetrics(metric ...proton.ObservabilityMetric) {
 	s.sendSignal(s.signalDataArrived)
 }
 
+func (s *Service) flushMetricsTest() {
+	s.withMetricStoreLock(func() {
+		s.metricStore = make([]proton.ObservabilityMetric, 0)
+	})
+}
+
 // addMetricsIfClients - will append a metric only if there are authenticated clients
 // via which we can reach the endpoint.
 func (s *Service) addMetricsIfClients(metric ...proton.ObservabilityMetric) {
@@ -280,6 +385,7 @@ func (s *Service) Stop() {
 	s.log.Info("Stopping service")
 
 	s.cancel()
+	s.wg.Wait()
 	close(s.signalDataArrived)
 	close(s.signalDispatch)
 }
