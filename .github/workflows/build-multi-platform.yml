@@ -23,6 +23,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
 
       - uses: jurplel/install-qt-action@v4
         with:
@@ -31,7 +34,7 @@ jobs:
 
       - uses: actions/setup-go@v5
         with:
-          go-version: '^1.24.0'
+          go-version: "^1.24.0"
 
       - name: Install Linux dependencies
         if: startsWith( matrix.os, 'ubuntu' )
@@ -40,28 +43,45 @@ jobs:
             ninja-build \
             libglvnd-dev \
             libsecret-1-dev \
+            linux-libc-dev \
             pkg-config
 
       - name: Install Windows dependencies
         if: startsWith( matrix.os, 'windows' )
+        shell: powershell
         run: choco install -y zip ninja
 
       - name: Install macOS dependencies
         if: startsWith( matrix.os, 'macos' )
         run: brew install zip ninja
 
-      - name: Export GitHub Actions cache environment variables
-        uses: actions/github-script@v7
+      - name: Retrieve vcpkg commit hash
+        id: cache_info
+        shell: bash
+        run: |
+          mkdir -p .cache
+          echo "vcpkg_commit=$(git -C ./extern/vcpkg rev-parse HEAD)" >> $GITHUB_OUTPUT
+          echo "vcpkg_cache_dir=$(realpath .cache)" >> $GITHUB_OUTPUT
+          echo "timestamp=$(date +%s)" >> $GITHUB_OUTPUT
+
+      - uses: actions/cache@v4
         with:
-          script: |
-            core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
-            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+          path: |
+            .cache/
+            extern/vcpkg/installed
+            extern/vcpkg/downloads
+            extern/vcpkg/scripts/buildsystems/vcpkg.cmake
+          key: vcpkg-${{ matrix.os }}-${{ steps.cache_info.outputs.vcpkg_commit }}-${{ steps.cache_info.outputs.timestamp }}
+          restore-keys: |
+            vcpkg-${{ matrix.os }}-
+            vcpkg-${{ matrix.os }}-${{ steps.cache_info.outputs.vcpkg_commit }}-
 
       - name: Build
         id: build
         env:
-          VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
           MSYSTEM: ""
+          VCPKG_DEFAULT_BINARY_CACHE: ${{ steps.cache_info.outputs.vcpkg_cache_dir }}
+          VCPKG_BUILD_TYPE: Release
         run: make build
 
       - name: Report build failure
