@@ -33,6 +33,7 @@ build-linux-qa:
     - .rules-branch-manual-MR-and-devel-always
   variables:
     BUILD_TAGS: "build_qa"
+    VCPKG_MAX_CONCURRENCY: 1
 
 build-darwin:
   extends:
