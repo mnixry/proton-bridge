@@ -30,7 +30,7 @@ namespace ProtonMailBridge.UI.Tests.Windows
         {
             ClickStartSetupButton();
             
-            TestContext.Out.WriteLine($"Trying to login with '{user.Username}':'{user.Password}'. Attempt {i}.");
+            TestContext.Out.WriteLine($"Trying to login with '{user.Username}':'{user.Password}'.");
             EnterCredentials(user);
             WaitForAuthorizationToComplete(loginTimeout);
 
