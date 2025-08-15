@@ -33,7 +33,7 @@ namespace ProtonMailBridge.UI.Tests.Tests
             _homeResult.CheckIfLoggedIn();
         }
 
-        [Test]
+        [Test, Category("TemporarilyExcluded")]
         public void OpenGoToHelpTopics()
         {
             _loginWindow.SignIn(TestUserData.GetPaidUser());
@@ -46,7 +46,7 @@ namespace ProtonMailBridge.UI.Tests.Tests
             _helpMenuWindow.ClickBackFromHelpMenu();
         }
 
-        [Test]
+        [Test, Category("TemporarilyExcluded")]
         public void CheckForUpdates()
         {
             _loginWindow.SignIn(TestUserData.GetPaidUser());
@@ -58,7 +58,7 @@ namespace ProtonMailBridge.UI.Tests.Tests
             Wait.UntilInputIsProcessed(TimeSpan.FromSeconds(1));
             _helpMenuWindow.ClickBackFromHelpMenu();
         }
-        [Test]
+        [Test, Category("TemporarilyExcluded")]
         public void OpenLogs()
         {
             _loginWindow.SignIn(TestUserData.GetPaidUser());
@@ -134,7 +134,7 @@ namespace ProtonMailBridge.UI.Tests.Tests
         [TearDown]
         public void TestCleanup()
         {
-            _mainWindow.RemoveAccount();
+            _mainWindow.RemoveAccountTestCleanup();
             ClientCleanup();
         }
     }

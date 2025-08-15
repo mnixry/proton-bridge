@@ -19,7 +19,6 @@ using ProtonMailBridge.UI.Tests.TestsHelper;
 using Keyboard = FlaUI.Core.Input.Keyboard;
 using Mouse = FlaUI.Core.Input.Mouse;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.Window;
-//using System.Windows.Forms;
 using CheckBox = FlaUI.Core.AutomationElements.CheckBox;
 using FlaUI.Core.Tools;
 using System.Diagnostics;
@@ -87,125 +86,127 @@ namespace ProtonMailBridge.UI.Tests.Windows
         private Button ResetButton => Window.FindFirstDescendant(cf => cf.ByControlType(ControlType.Button).And(cf.ByName("Reset Bridge button"))).AsButton();
         private Button ResetAndRestartButtonInPopUp => NotificationWindow.FindFirstDescendant(cf => cf.ByControlType(ControlType.Button).And(cf.ByName("Reset and restart"))).AsButton();
         private Button StartSetUpButton => Window.FindFirstDescendant(cf => cf.ByControlType(ControlType.Button).And(cf.ByName("Start setup"))).AsButton();
-       
+
         public SettingsMenuWindow ClickSettingsButton()
         {
-            SettingsButton.Click();
+            RetryHelper.EventuallyAction(() => SettingsButton.Click());
             return this;
         }
 
         public SettingsMenuWindow ClickBackFromSettingsMenu()
         {
-            BackToAccountViewButton.Click();
+            RetryHelper.EventuallyAction(() => BackToAccountViewButton.Click());
             return this;
         }
 
         public SettingsMenuWindow DisableAndEnableAutomaticUpdates()
         {
-            AutomaticUpdates.Click();
-            Assert.That(AutomaticUpdates.IsToggled, Is.False);
+            RetryHelper.EventuallyAction(() => AutomaticUpdates.Click());
+            RetryHelper.EventuallyAction(() => Assert.That(AutomaticUpdates.IsToggled, Is.False));
             Thread.Sleep(1000);
-            AutomaticUpdates.Click();
-            Assert.That(AutomaticUpdates.IsToggled, Is.True);
+            RetryHelper.EventuallyAction(() => AutomaticUpdates.Click());
+            RetryHelper.EventuallyAction(() => Assert.That(AutomaticUpdates.IsToggled, Is.True));
             return this;
         }
         public SettingsMenuWindow DisableAndEnableOpenOnStartUp()
         {
-            OpenOnStartUp.Click();
-            Assert.That(OpenOnStartUp.IsToggled, Is.False);
+            RetryHelper.EventuallyAction(() => OpenOnStartUp.Click());
+            RetryHelper.EventuallyAction(() => Assert.That(OpenOnStartUp.IsToggled, Is.False));
             Thread.Sleep(1000);
-            OpenOnStartUp.Click();
-            Assert.That(OpenOnStartUp.IsToggled, Is.True);
+            RetryHelper.EventuallyAction(() => OpenOnStartUp.Click());
+            RetryHelper.EventuallyAction(() => Assert.That(OpenOnStartUp.IsToggled, Is.True));
             return this;
         }
-
         public SettingsMenuWindow EnableAndDisableBetaAccess()
         {
-            BetaAccess.Click();
-            EnableBetaAccessButtonInPopUp.Click();
+            RetryHelper.EventuallyAction(() => BetaAccess.Click());
+            RetryHelper.EventuallyAction(() => EnableBetaAccessButtonInPopUp.Click());
             Thread.Sleep(1000);
-            Assert.That(BetaAccess.IsToggled, Is.True);
-            BetaAccess.Click();
-            Assert.That(BetaAccess.IsToggled, Is.False);
+            RetryHelper.EventuallyAction(() => Assert.That(BetaAccess.IsToggled, Is.True));
+            RetryHelper.EventuallyAction(() => BetaAccess.Click());
+            RetryHelper.EventuallyAction(() => Assert.That(BetaAccess.IsToggled, Is.False));
             return this;
         }
         public SettingsMenuWindow ExpandAdvancedSettings()
         {
-            AdvancedSettings.Click();
+            RetryHelper.EventuallyAction(() => AdvancedSettings.Click());
             Thread.Sleep(1000);
-            Assert.That(AlternativeRouting != null && AlternativeRouting.IsAvailable, Is.True);
+            RetryHelper.EventuallyAction(() => Assert.That(AlternativeRouting != null && AlternativeRouting.IsAvailable, Is.True));
             return this;
         }
 
         public SettingsMenuWindow CollapseAdvancedSettings()
         {
-            AdvancedSettings.Click();
+            RetryHelper.EventuallyAction(() => AdvancedSettings.Click());
             return this;
         }
+
         public SettingsMenuWindow EnableAndDisableAlternativeRouting()
         {
-            AlternativeRouting.Click();
-            Assert.That(AlternativeRouting.IsToggled, Is.True);
+            RetryHelper.EventuallyAction(() => AlternativeRouting.Click());
+            RetryHelper.EventuallyAction(() => Assert.That(AlternativeRouting.IsToggled, Is.True));
             Thread.Sleep(1000);
-            AlternativeRouting.Click();
-            Assert.That(AlternativeRouting?.IsToggled, Is.False);
+            RetryHelper.EventuallyAction(() => AlternativeRouting.Click());
+            RetryHelper.EventuallyAction(() => Assert.That(AlternativeRouting?.IsToggled, Is.False));
             return this;
         }
 
         public SettingsMenuWindow CheckEnableAndDisableDarkMode()
         {
-            DarkMode.Click();
-            Assert.That(DarkMode.IsToggled, Is.True);
+            RetryHelper.EventuallyAction(() => DarkMode.Click());
+            RetryHelper.EventuallyAction(() => Assert.That(DarkMode.IsToggled, Is.True));
             Thread.Sleep(1000);
-            DarkMode.Click();
-            Assert.That(DarkMode.IsToggled, Is.False);
+            RetryHelper.EventuallyAction(() => DarkMode.Click());
+            RetryHelper.EventuallyAction(() => Assert.That(DarkMode.IsToggled, Is.False));
             return this;
         }
+
         public SettingsMenuWindow DisableAndEnableShowAllMail()
         {
-            ShowAllMail.Click();
-            HideAllMailFolderInPopUp.Click();
-            Assert.That(ShowAllMail.IsToggled, Is.False);
+            RetryHelper.EventuallyAction(() => ShowAllMail.Click());
+            RetryHelper.EventuallyAction(() => HideAllMailFolderInPopUp.Click());
+            RetryHelper.EventuallyAction(() => Assert.That(ShowAllMail.IsToggled, Is.False));
             Thread.Sleep(1000);
-            ShowAllMail.Click();
+            RetryHelper.EventuallyAction(() => ShowAllMail.Click());
             Thread.Sleep(1000);
-            ShowAllMailFolderInPopUp.Click();
-            Assert.That(ShowAllMail?.IsToggled, Is.True);
+            RetryHelper.EventuallyAction(() => ShowAllMailFolderInPopUp.Click());
+            RetryHelper.EventuallyAction(() => Assert.That(ShowAllMail?.IsToggled, Is.True));
             return this;
         }
 
         public SettingsMenuWindow DisableAndEnableCollectUsageDiagnostics()
         {
-            CollectUsageDiagnostics.Click();
+            RetryHelper.EventuallyAction(() => CollectUsageDiagnostics.Click());
             Thread.Sleep(3000);
-            Assert.That(CollectUsageDiagnostics.IsToggled, Is.False);
+            RetryHelper.EventuallyAction(() => Assert.That(CollectUsageDiagnostics.IsToggled, Is.False));
             Thread.Sleep(1000);
-            CollectUsageDiagnostics.Click();
+            RetryHelper.EventuallyAction(() => CollectUsageDiagnostics.Click());
             Thread.Sleep(1000);
-            Assert.That(CollectUsageDiagnostics?.IsToggled, Is.True);
+            RetryHelper.EventuallyAction(() => Assert.That(CollectUsageDiagnostics?.IsToggled, Is.True));
             return this;
         }
-
         public SettingsMenuWindow OpenChangeDefaultPorts()
         {
-            ChangeDefaultPortsButton.Click();
+            RetryHelper.EventuallyAction(() => ChangeDefaultPortsButton.Click());
             return this;
         }
 
         public SettingsMenuWindow CancelChangingDefaultPorts()
         {
-            CancelDefaultPorts.Click();
+            RetryHelper.EventuallyAction(() => CancelDefaultPorts.Click());
+
             return this;
         }
         private int GenerateUniqueRandomPort()
         {
-            return random.Next(MinPort, MaxPort +1);
+            return random.Next(MinPort, MaxPort + 1);
         }
         public SettingsMenuWindow ChangeDefaultPorts()
         {
-            ChangeDefaultPortsButton.Click();
+            RetryHelper.EventuallyAction(() => ChangeDefaultPortsButton.Click());
+
             Thread.Sleep(2000);
-            ImapPort.Click();
+            RetryHelper.EventuallyAction(() => ImapPort.Click());
             int imapPort = GenerateUniqueRandomPort();
             int smtpPort;
 
@@ -226,7 +227,8 @@ namespace ProtonMailBridge.UI.Tests.Windows
 
         public SettingsMenuWindow SwitchBackToDefaultPorts()
         {
-            ChangeDefaultPortsButton.Click();
+            RetryHelper.EventuallyAction(() => ChangeDefaultPortsButton.Click());
+
             Thread.Sleep(2000);
             ImapPort.Click();
             ImapPort.Patterns.Value.Pattern.SetValue("");
@@ -241,17 +243,18 @@ namespace ProtonMailBridge.UI.Tests.Windows
 
         public SettingsMenuWindow OpenChangeConnectionMode()
         {
-            ChangeConnectionModeButton.Click();
+            RetryHelper.EventuallyAction(() => ChangeConnectionModeButton.Click());
             return this;
         }
         public SettingsMenuWindow CancelChangeConnectionMode()
         {
-            CancelChangeConnectionModeButton.Click();
+            RetryHelper.EventuallyAction(() => CancelChangeConnectionModeButton.Click());
             return this;
         }
         public SettingsMenuWindow ChangeConnectionMode()
         {
-            ImapSslMode.Click();
+            RetryHelper.EventuallyAction(() => ImapSslMode.Click());
+
             SmtpSslMode.Click();
             Thread.Sleep(2000);
             SaveChangedConnectionMode.Click();
@@ -259,7 +262,8 @@ namespace ProtonMailBridge.UI.Tests.Windows
         }
         public SettingsMenuWindow SwitchBackToDefaultConnectionMode()
         {
-            ImapStarttlsMode.Click();
+            RetryHelper.EventuallyAction(() => ImapStarttlsMode.Click());
+
             SmtpStarttlsMode.Click();
             Thread.Sleep(2000);
             SaveChangedConnectionMode.Click();
@@ -268,7 +272,7 @@ namespace ProtonMailBridge.UI.Tests.Windows
 
         public SettingsMenuWindow ConfigureLocalCache()
         {
-            ConfigureLocalCacheButton.Click();
+            RetryHelper.EventuallyAction(() => ConfigureLocalCacheButton.Click());
             return this;
         }
         public SettingsMenuWindow CancelToConfigureLocalCache()
@@ -319,14 +323,15 @@ namespace ProtonMailBridge.UI.Tests.Windows
         public SettingsMenuWindow ChangeAndSwitchBackLocalCacheLocation()
         {
             string? userProfilePath = Environment.GetEnvironmentVariable("USERPROFILE");
-            ChangeLocalCacheLocationButton.Click();
+            RetryHelper.EventuallyAction(() => ChangeLocalCacheLocationButton.Click());
+
             Thread.Sleep(2000);
             FocusOnSelectCacheLocationWindow();
             ClickNewFolder.Click();
             Wait.UntilInputIsProcessed(TimeSpan.FromMilliseconds(2000));
             Keyboard.TypeVirtualKeyCode(0x0D);
             AutomationElement pane = Window.FindFirstDescendant(cf => cf.ByControlType(ControlType.Pane));
-            AutomationElement pane2 =  pane.FindFirstDescendant(cf => cf.ByControlType(ControlType.Pane).And(cf.ByName("Shell Folder View")));
+            AutomationElement pane2 = pane.FindFirstDescendant(cf => cf.ByControlType(ControlType.Pane).And(cf.ByName("Shell Folder View")));
             AutomationElement list = pane2.FindFirstDescendant(cf => cf.ByControlType(ControlType.List).And(cf.ByName("Items View")));
             AutomationElement listItem = list.FindFirstDescendant(cf => cf.ByControlType(ControlType.ListItem).And(cf.ByName("New folder")));
             TextBox folderName = listItem.FindFirstDescendant(cf => cf.ByControlType(ControlType.Edit)).AsTextBox();
@@ -409,7 +414,8 @@ namespace ProtonMailBridge.UI.Tests.Windows
         }
         public SettingsMenuWindow ExportAssertDeleteTLSCertificates()
         {
-            ExportTLSCertificatesButton.Click();
+            RetryHelper.EventuallyAction(() => ExportTLSCertificatesButton.Click());
+
             Thread.Sleep(2000);
             ClickNewFolder.Click();
             Wait.UntilInputIsProcessed(TimeSpan.FromMilliseconds(2000));
@@ -472,7 +478,8 @@ namespace ProtonMailBridge.UI.Tests.Windows
         }
         public SettingsMenuWindow VerifyRepairRestartsSync()
         {
-            RepairBridgeButton.Click();
+            RetryHelper.EventuallyAction(() => RepairBridgeButton.Click());
+
             RepairButtonInPopUp.Click();
             bool syncRestarted = WaitForCondition(() =>
             {
@@ -509,7 +516,7 @@ namespace ProtonMailBridge.UI.Tests.Windows
 
         public SettingsMenuWindow VerifyResetAndRestartBridge()
         {
-            ResetButton.Click();
+            RetryHelper.EventuallyAction(() => ResetButton.Click());
             ResetAndRestartButtonInPopUp.Click();
             Thread.Sleep(5000);
             LaunchApp();

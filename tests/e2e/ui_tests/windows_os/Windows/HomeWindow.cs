@@ -11,6 +11,7 @@ namespace ProtonMailBridge.UI.Tests.Windows
     public class HomeWindow : UIActions
     {
         private AutomationElement[] AccountViewButtons => AccountView.FindAllChildren(cf => cf.ByControlType(ControlType.Button));
+        
         private AutomationElement[] HomeButtons => Window.FindAllDescendants(cf => cf.ByControlType(ControlType.Button));
         private Button AddNewAccountButton => HomeButtons[6].AsButton();
         private Button RemoveAccountButton => AccountViewButtons[1].AsButton();
@@ -21,14 +22,14 @@ namespace ProtonMailBridge.UI.Tests.Windows
         private CheckBox SplitAddressesToggle => AccountView.FindFirstDescendant(cf => cf.ByControlType(ControlType.CheckBox).And(cf.ByName("Split addresses toggle"))).AsCheckBox();
         private Button EnableSplitAddressButton => Window.FindFirstDescendant(cf => cf.ByControlType(ControlType.Button).And(cf.ByName("Enable split mode"))).AsButton();
 
-        public HomeWindow RemoveAccount()
+        public HomeWindow RemoveAccountTestCleanup()
         {
             try
             {
                 RemoveAccountButton.Click();
                 ConfirmRemoveAccountButton.Click();
             }
-            catch (System.NullReferenceException)
+            catch (System.IndexOutOfRangeException)
             {
                 ClientCleanup();
             }

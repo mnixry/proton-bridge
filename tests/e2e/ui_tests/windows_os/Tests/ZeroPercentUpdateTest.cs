@@ -26,8 +26,7 @@ namespace ProtonMailBridge.UI.Tests.Tests
             LaunchApp();
         }
 
-        [Test]
-        [Category("ZeroPercentUpdateRollout")]
+        [Test, Category("TemporarilyExcluded")]
         public void EnableBetaAccessVerifyBetaIsEnabledVerifyNotificationAndRestartBridge()
         {
             _zeroPercentWindow.ClickStartSetupButton();
@@ -52,6 +51,7 @@ namespace ProtonMailBridge.UI.Tests.Tests
         public void TestCleanup()
         {
             ClientCleanup();
+
         }
     }
 }

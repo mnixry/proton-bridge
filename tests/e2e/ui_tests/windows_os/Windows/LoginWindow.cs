@@ -4,6 +4,7 @@ using FlaUI.Core.Definitions;
 using ProtonMailBridge.UI.Tests.TestsHelper;
 using ProtonMailBridge.UI.Tests.Results;
 using System.Diagnostics;
+using System.ComponentModel.DataAnnotations;
 
 namespace ProtonMailBridge.UI.Tests.Windows
 {
@@ -11,7 +12,8 @@ namespace ProtonMailBridge.UI.Tests.Windows
     {
         private AutomationElement[] InputFields => Window.FindAllDescendants(cf => cf.ByControlType(ControlType.Edit));
         private TextBox UsernameInput => InputFields[0].AsTextBox();
-        private TextBox PasswordInput => InputFields[1].AsTextBox();
+        private AutomationElement PasswordGroup => Window.FindFirstDescendant(cf => cf.ByControlType(ControlType.Group).And(cf.ByName("Password")));
+        private TextBox PasswordInput => PasswordGroup.FindFirstDescendant(cf => cf.ByControlType(ControlType.Edit)).AsTextBox();
         private Button SignInButton => Window.FindFirstDescendant(cf => cf.ByControlType(ControlType.Button).And(cf.ByName("Sign in"))).AsButton();
         private Button SigningInButton => Window.FindFirstDescendant(cf => cf.ByControlType(ControlType.Button).And(cf.ByName("Signing in"))).AsButton();
         private Button StartSetupButton => Window.FindFirstDescendant(cf => cf.ByName("Start setup")).AsButton();
@@ -20,11 +22,17 @@ namespace ProtonMailBridge.UI.Tests.Windows
         private Button UnlockButton => Window.FindFirstDescendant(cf => cf.ByControlType(ControlType.Button).And(cf.ByName("Unlock"))).AsButton();
         private Button CancelSignIn => Window.FindFirstDescendant(cf => cf.ByControlType(ControlType.Button).And(cf.ByName("Cancel"))).AsButton();
 
+        private Button UnlockingButton => Window.FindFirstDescendant(cf => cf.ByControlType(ControlType.Button).And(cf.ByName("Unlocking"))).AsButton();
+
+        private static readonly int loginTimeout = 500;
+
         public LoginWindow SignIn(TestUserData user)
         {
             ClickStartSetupButton();
+            
+            TestContext.Out.WriteLine($"Trying to login with '{user.Username}':'{user.Password}'. Attempt {i}.");
             EnterCredentials(user);
-            WaitForAuthorizationToComplete(60);
+            WaitForAuthorizationToComplete(loginTimeout);
 
             SetUpLater?.Click();
 
@@ -33,11 +41,9 @@ namespace ProtonMailBridge.UI.Tests.Windows
 
         public LoginWindow SignInMailbox(TestUserData user)
         {
-            ClickStartSetupButton();
-            EnterCredentials(user);
-            Wait.UntilInputIsProcessed(TestData.TenSecondsTimeout);
+            SignIn(user);
             EnterMailboxPassword(user);
-            Wait.UntilInputIsProcessed(TestData.TenSecondsTimeout);
+            WaitForUnlockToComplete(loginTimeout);
 
             SetUpLater?.Click();
 
@@ -59,8 +65,14 @@ namespace ProtonMailBridge.UI.Tests.Windows
 
         public LoginWindow EnterCredentials(TestUserData user)
         {
+            for (int i = 0; i < InputFields.Length; i++)
+            {
+                Console.WriteLine($"---------- {InputFields[i].Name} ----------");
+            }
+
             UsernameInput.Text = user.Username;
             PasswordInput.Text = user.Password;
+            TestContext.Out.WriteLine($"Trying to sign in with username '{user.Username}' and password '{user.Password}'");
             SignInButton.Click();
             return this;
         }
@@ -68,6 +80,7 @@ namespace ProtonMailBridge.UI.Tests.Windows
         public LoginWindow EnterMailboxPassword(TestUserData user)
         {
             MailboxPasswordInput.Text = user.MailboxPassword;
+            TestContext.Out.WriteLine($"Entering mailbox password '{user.MailboxPassword}'");
             UnlockButton.Click();
             return this;
         }
@@ -88,6 +101,26 @@ namespace ProtonMailBridge.UI.Tests.Windows
             {
                 //if Signing in button is not visible authorization process is finished
                 if (SigningInButton == null)
+                {
+                    return;
+                }
+
+                Wait.UntilInputIsProcessed();
+                Thread.Sleep(500);
+            }
+
+        }
+
+        private void WaitForUnlockToComplete(int numOfSeconds)
+        {
+            TimeSpan timeout = TimeSpan.FromSeconds(numOfSeconds);
+            Stopwatch stopwatch = Stopwatch.StartNew();
+
+
+            while (stopwatch.Elapsed < timeout)
+            {
+                //if Signing in button is not visible authorization process is finished
+                if (UnlockingButton == null)
                 {
                     return;
                 }

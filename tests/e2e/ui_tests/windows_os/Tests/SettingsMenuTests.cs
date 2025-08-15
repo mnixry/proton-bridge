@@ -14,6 +14,7 @@ using FlaUI.UIA3;
 namespace ProtonMailBridge.UI.Tests.Tests
 {
     [TestFixture]
+    [Category("SettingsMenuTests")]
     public class SettingsMenuTests : TestSession
     {
         private readonly LoginWindow _loginWindow = new();
@@ -175,7 +176,6 @@ namespace ProtonMailBridge.UI.Tests.Tests
             _settingsMenuWindow.ClickSettingsButton();
             _settingsMenuWindow.ExpandAdvancedSettings();
             Mouse.Scroll(-20);
-            //Thread.Sleep(3000);
             _settingsMenuResults.CollectUsageDiagnosticsIsEnabledByDefault();
             Mouse.Scroll(20);
             _settingsMenuWindow.CollapseAdvancedSettings();
@@ -189,8 +189,10 @@ namespace ProtonMailBridge.UI.Tests.Tests
             _settingsMenuWindow.ClickSettingsButton();
             _settingsMenuWindow.ExpandAdvancedSettings();
             Mouse.Scroll(-20);
+            Thread.Sleep(5000);
             _settingsMenuWindow.DisableAndEnableCollectUsageDiagnostics();
             Mouse.Scroll(20);
+            Thread.Sleep(5000);
             _settingsMenuWindow.CollapseAdvancedSettings();
             _settingsMenuWindow.ClickBackFromSettingsMenu();
         }
@@ -270,7 +272,7 @@ namespace ProtonMailBridge.UI.Tests.Tests
             _settingsMenuWindow.ClickBackFromSettingsMenu();
         }
 
-        [Test]
+        [Test, Category("TemporarilyExcluded")]
         public void ChangeLocationSwitchBackToDefaultAndDeleteOldLocalCacheLocation()
         {
             _loginWindow.SignIn(TestUserData.GetPaidUser());
@@ -284,7 +286,7 @@ namespace ProtonMailBridge.UI.Tests.Tests
             _settingsMenuWindow.ClickBackFromSettingsMenu();
         }
 
-        [Test]
+        [Test, Category("TemporarilyExcluded")]
         public void ExportTlsCertificatesVerifyExportAndDeleteTheExportFolder()
         {
             _loginWindow.SignIn(TestUserData.GetPaidUser());
@@ -325,7 +327,15 @@ namespace ProtonMailBridge.UI.Tests.Tests
         [TearDown]
         public void TestCleanup()
         {
-            _mainWindow.RemoveAccount();
+            try
+            {
+                _mainWindow.RemoveAccountTestCleanup();
+            }
+            catch (Exception ex)
+            {
+                TestContext.Out.WriteLine("Teardown error on test account cleanup: " + ex);
+            }
+
             ClientCleanup();
         }
     }

@@ -32,7 +32,7 @@ namespace ProtonMailBridge.UI.Tests.Windows
         private Button LogsButton => HomeButtons[9].AsButton();
         private Button ReportProblemButton => HomeButtons[10].AsButton();
         private Button ICannotFindEmailInClient => HomeButtons[7].AsButton();
-        private TextBox DescriptionOnWhatHappened => Window.FindFirstDescendant(cf => cf.ByControlType(ControlType.Edit)).AsTextBox();
+        private TextBox DescriptionOnWhatHappened => Window.FindFirstDescendant(cf => cf.ByControlType(ControlType.Pane)).FindFirstDescendant(cf => cf.ByControlType(ControlType.Pane)).FindFirstDescendant(cf => cf.ByControlType(ControlType.Edit)).AsTextBox();
         private RadioButton MissingEmails => ReportProblemPane[0].FindFirstDescendant(cf => cf.ByControlType(ControlType.RadioButton).And(cf.ByName("Old emails are missing"))).AsRadioButton();
         private RadioButton FindEmails => ReportProblemPane[0].FindFirstDescendant(cf => cf.ByControlType(ControlType.RadioButton).And(cf.ByName("Yes"))).AsRadioButton();
         private CheckBox VPNSoftware => ReportProblemPane[0].FindFirstDescendant(cf => cf.ByControlType(ControlType.CheckBox).And(cf.ByName("VPN"))).AsCheckBox();

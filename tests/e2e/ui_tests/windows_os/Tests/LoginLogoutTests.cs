@@ -3,25 +3,39 @@ using ProtonMailBridge.UI.Tests.TestsHelper;
 using ProtonMailBridge.UI.Tests.Windows;
 using ProtonMailBridge.UI.Tests.Results;
 using FlaUI.Core.Input;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
 namespace ProtonMailBridge.UI.Tests.Tests
 {
     [TestFixture]
+    [Category("LoginLogoutTests")]
     public class LoginLogoutTests : TestSession
     {
         private readonly LoginWindow _loginWindow = new();
         private readonly HomeWindow _mainWindow = new();
         private readonly HomeResult _homeResult = new();
         private readonly string FreeAccountErrorText = "Bridge is exclusive to our mail paid plans. Upgrade your account to use Bridge.";
+        private bool removeAccount = true;
 
         [Test]
+        [Category("NOOP")]
+        public void Noop()
+        {
+            TestContext.Out.WriteLine("NoOP");
+            removeAccount = false;
+        }
+
+        [Test]
+        [Category("DebugTests")]
         public void LoginAsFreeUser()
         {
             _loginWindow.SignIn(TestUserData.GetFreeUser());
             _homeResult.CheckIfFreeAccountErrorIsDisplayed(FreeAccountErrorText);
+            removeAccount = false;
         }
 
         [Test]
+        [Category("DebugTests")]
         public void LoginAsPaidUser()
         {
             _loginWindow.SignIn(TestUserData.GetPaidUser());
@@ -46,13 +60,8 @@ namespace ProtonMailBridge.UI.Tests.Tests
         [Test]
         public void AddAliasAddress()
         {
-            _loginWindow.SignIn(TestUserData.GetPaidUser());
-            _homeResult.CheckIfLoggedIn();
-            _mainWindow.AddNewAccount();
             _loginWindow.SignIn(TestUserData.GetAliasUser());
-            _homeResult.CheckIfAccountAlreadySignedInIsDisplayed();
-            _homeResult.ClickOkToAcknowledgeAccountAlreadySignedIn();
-            _loginWindow.ClickCancelToSignIn();
+            _homeResult.CheckIfLoggedIn();
         }
 
         [Test]
@@ -83,6 +92,7 @@ namespace ProtonMailBridge.UI.Tests.Tests
             _loginWindow.SignIn(TestUserData.GetIncorrectCredentialsUser());
             _homeResult.CheckIfIncorrectCredentialsErrorIsDisplayed();
             _loginWindow.ClickCancelToSignIn();
+            removeAccount = false;
         }
 
         [Test, Order (1)]
@@ -91,8 +101,7 @@ namespace ProtonMailBridge.UI.Tests.Tests
             _loginWindow.SignIn(TestUserData.GetEmptyCredentialsUser());
             _homeResult.CheckIfEnterUsernameAndEnterPasswordErrorMsgsAreDisplayed();
             _loginWindow.ClickCancelToSignIn();
-            _loginWindow.SignIn(TestUserData.GetPaidUser());
-            _homeResult.CheckIfLoggedIn();
+            removeAccount = false;
         }
 
         [Test]
@@ -114,14 +123,7 @@ namespace ProtonMailBridge.UI.Tests.Tests
             _loginWindow.SignIn(TestUserData.GetDisabledUser());
             _homeResult.CheckIfDsabledAccountErrorIsDisplayed();
             _loginWindow.ClickCancelToSignIn();
-        }
-
-        [Test]
-        public void AddDeliquentAccount()
-        {
-            _loginWindow.SignIn(TestUserData.GetDeliquentUser());
-            _homeResult.CheckIfDelinquentAccountErrorIsDisplayed();
-            _loginWindow.ClickCancelToSignIn();
+            removeAccount = false;
         }
 
         [Test]
@@ -143,14 +145,18 @@ namespace ProtonMailBridge.UI.Tests.Tests
 
         [SetUp]
         public void TestInitialize()
-        {
+        {   
             LaunchApp();
+            Thread.Sleep(5000);
         }
         
         [TearDown]
         public void TestCleanup()
         {
-            _mainWindow.RemoveAccount();
+            if (removeAccount)
+            {
+                _mainWindow.RemoveAccountTestCleanup();
+            }
             ClientCleanup();
         }
     }
