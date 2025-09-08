@@ -175,15 +175,21 @@ func (f *frontendCLI) loginAccount(c *ishell.Context) {
 	}
 
 	if auth.TwoFA.Enabled&proton.HasTOTP != 0 {
-		code := f.readStringInAttempts("Two factor code", c.ReadLine, isNotEmpty)
-		if code == "" {
-			f.printAndLogError("Cannot login: need two factor code")
-			return
-		}
+		if len(auth.TwoFA.FIDO2.RegisteredKeys) > 0 && f.yesNoQuestion("Do you want to use a security key for Two-factor authentication") {
+			if err := f.authWithHardwareKey(client, auth); err != nil {
+				f.printAndLogError("Cannot login: ", err)
+				return
+			}
+		} else {
+			code := f.readStringInAttempts("Two factor code", c.ReadLine, isNotEmpty)
+			if code == "" {
+				f.printAndLogError("Cannot login: need two factor code")
+			}
 
-		if err := client.Auth2FA(context.Background(), proton.Auth2FAReq{TwoFactorCode: code}); err != nil {
-			f.printAndLogError("Cannot login: ", err)
-			return
+			if err := client.Auth2FA(context.Background(), proton.Auth2FAReq{TwoFactorCode: code}); err != nil {
+				f.printAndLogError("Cannot login: ", err)
+				return
+			}
 		}
 	}
 

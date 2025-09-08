@@ -110,3 +110,15 @@ Recommendation:
   a different network to access Proton Mail.
 `)
 }
+
+func sliceAnyToByteArray(s []any) []byte {
+	result := make([]byte, len(s))
+	for i, val := range s {
+		if intVal, ok := val.(float64); ok {
+			result[i] = byte(intVal)
+		} else {
+			panic("boom")
+		}
+	}
+	return result
+}

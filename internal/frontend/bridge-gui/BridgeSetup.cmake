@@ -51,8 +51,13 @@ endif()
 # We rely on vcpkg for to get gRPC / Protobuf
 # run build.sh / build.ps1 to get gRPC / Protobuf and dependencies installed.
 
-set(VCPKG_ROOT "${BRIDGE_REPO_ROOT}/extern/vcpkg")
+if(WIN32)
+    set(VCPKG_ROOT "${BRIDGE_REPO_ROOT}/extern/vcpkg-windows")
+else()
+    set(VCPKG_ROOT "${BRIDGE_REPO_ROOT}/extern/vcpkg")
+endif()
 message(STATUS "VCPKG_ROOT is ${VCPKG_ROOT}")
+
 if (WIN32)
     find_program(VCPKG_EXE "${VCPKG_ROOT}/vcpkg.exe")
 else()

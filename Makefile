@@ -9,7 +9,7 @@ TARGET_OS?=${GOOS}
 ROOT_DIR:=$(realpath .)
 
 ## Build
-.PHONY: build build-gui build-nogui build-launcher versioner hasher
+.PHONY: build build-gui build-nogui build-launcher versioner hasher install-libfido2
 
 # Keep version hardcoded so app build works also without Git repository.
 BRIDGE_APP_VERSION?=3.21.2+git
@@ -31,6 +31,24 @@ BUILD_FLAGS:=-tags='${BUILD_TAGS}'
 BUILD_FLAGS_LAUNCHER:=${BUILD_FLAGS}
 GO_LDFLAGS:=$(addprefix -X github.com/ProtonMail/proton-bridge/v3/internal/constants., Version=${APP_VERSION} Revision=${REVISION} Tag=${TAG} BuildTime=${BUILD_TIME})
 GO_LDFLAGS+=-X "github.com/ProtonMail/proton-bridge/v3/internal/constants.FullAppName=${APP_FULL_NAME}"
+
+## Libfido2 set-up.
+# We use vcpkg for libfido2 on *nix systems.
+VCPKG_ROOT_NIX := $(ROOT_DIR)/extern/vcpkg
+
+ifeq "${TARGET_OS}" "darwin"
+    VCPKG_INSTALLED_ARM := $(VCPKG_ROOT_NIX)/installed/arm64-osx
+    VCPKG_INSTALLED_X64 := $(VCPKG_ROOT_NIX)/installed/x64-osx
+
+	LIBFIDO2_CFLAGS_ARM64 := -I$(VCPKG_INSTALLED_ARM)/include
+	LIBFIDO2_LDFLAGS_ARM64 := -L$(VCPKG_INSTALLED_ARM)/lib -lfido2 -lcbor -lssl -lcrypto
+
+	LIBFIDO2_CFLAGS_X64 := -I$(VCPKG_INSTALLED_X64)/include
+	LIBFIDO2_LDFLAGS_X64 := -L$(VCPKG_INSTALLED_X64)/lib -lfido2 -lcbor -lssl -lcrypto
+endif
+ifeq "${TARGET_OS}" "linux"
+    LIBFIDO2_LDFLAGS := -lfido2 -lcbor -lssl -lcrypto
+endif
 
 ifneq "${DSN_SENTRY}" ""
 	GO_LDFLAGS+=-X github.com/ProtonMail/proton-bridge/v3/internal/constants.DSNSentry=${DSN_SENTRY}
@@ -95,8 +113,14 @@ go-build=go build $(1) -o $(2) $(3)
 go-build-finalize=${go-build}
 ifeq "${GOOS}-$(shell uname -m)" "darwin-arm64"
 	go-build-finalize= \
-		MACOSX_DEPLOYMENT_TARGET=${MACOS_MIN_VERSION_ARM64} CGO_ENABLED=1 CGO_CFLAGS="-mmacosx-version-min=${MACOS_MIN_VERSION_ARM64}" GOARCH=arm64 $(call go-build,$(1),$(2)_arm,$(3)) && \
-		MACOSX_DEPLOYMENT_TARGET=${MACOS_MIN_VERSION_AMD64} CGO_ENABLED=1 CGO_CFLAGS="-mmacosx-version-min=${MACOS_MIN_VERSION_AMD64}" GOARCH=amd64 $(call go-build,$(1),$(2)_amd,$(3)) && \
+		MACOSX_DEPLOYMENT_TARGET=${MACOS_MIN_VERSION_ARM64} CGO_ENABLED=1 \
+    	CGO_CFLAGS="-mmacosx-version-min=${MACOS_MIN_VERSION_ARM64} ${LIBFIDO2_CFLAGS_ARM64}" \
+    	CGO_LDFLAGS="${LIBFIDO2_LDFLAGS_ARM64}" \
+		GOARCH=arm64 $(call go-build,$(1),$(2)_arm,$(3)) && \
+		MACOSX_DEPLOYMENT_TARGET=${MACOS_MIN_VERSION_AMD64} CGO_ENABLED=1 \
+		CGO_CFLAGS="-mmacosx-version-min=${MACOS_MIN_VERSION_AMD64} ${LIBFIDO2_CFLAGS_X64}" \
+		CGO_LDFLAGS="${LIBFIDO2_LDFLAGS_X64}" \
+		GOARCH=amd64 $(call go-build,$(1),$(2)_amd,$(3)) && \
 		lipo -create -output $(2) $(2)_arm $(2)_amd && rm -f $(2)_arm $(2)_amd
 endif
 
@@ -105,6 +129,14 @@ ifeq "${GOOS}" "windows"
 		$(if $(4),cp "${ROOT_DIR}/${RESOURCE_FILE}" ${4}  &&,) \
 		$(call go-build,$(1),$(2),$(3)) \
 		$(if $(4), && rm -f ${4},)
+endif
+
+ifneq "${GOOS}" "darwin"
+ifneq "${GOOS}" "windows"
+	go-build-finalize= \
+		CGO_LDFLAGS="${LIBFIDO2_LDFLAGS}" \
+		$(call go-build,$(1),$(2),$(3))
+endif
 endif
 
 ${EXE_NAME}: gofiles  ${RESOURCE_FILE}
@@ -137,7 +169,7 @@ ${DEPLOY_DIR}/linux: ${EXE_TARGET} build-launcher
 	cp -pf ./dist/${EXE_NAME}.desktop ${DEPLOY_DIR}/linux/
 	mv ${LAUNCHER_EXE} ${DEPLOY_DIR}/linux/
 
-${DEPLOY_DIR}/darwin: ${EXE_TARGET} build-launcher
+${DEPLOY_DIR}/darwin: install-libfido2 ${EXE_TARGET} build-launcher
 	mv ${EXE_GUI_TARGET} ${EXE_TARGET_DARWIN}
 	mv ${EXE_TARGET} ${DARWINAPP_CONTENTS}/MacOS/${BRIDGE_EXE_NAME}
 	perl -i -pe"s/>${BRIDGE_GUI_EXE_NAME}/>${LAUNCHER_EXE}/g" ${DARWINAPP_CONTENTS}/Info.plist
@@ -411,6 +443,10 @@ clean-vcpkg:
 	rm -rf ./.git/submodule/vcpkg
 	rm -rf ./extern/vcpkg
 	git checkout -- extern/vcpkg
+	git submodule deinit -f ./extern/vcpkg-windows
+	rm -rf ./.git/submodule/vcpkg-windows
+	rm -rf ./extern/vcpkg-windows
+	git checkout -- extern/vcpkg-windows
 
 clean: clean-vendor clean-gui clean-vcpkg
 	rm -rf vendor-cache
@@ -421,6 +457,15 @@ clean: clean-vendor clean-gui clean-vcpkg
 	rm -f release-notes/bridge.html
 	rm -f release-notes/import-export.html
 	rm -f ${LAUNCHER_EXE} ${BRIDGE_EXE} ${BRIDGE_EXE_NAME}
+
+
+install-libfido2:
+ifeq "${TARGET_OS}" "darwin"
+	git submodule update --init --recursive ${VCPKG_ROOT_NIX} || \
+		{ echo "Failed to init vcpkg submodule"; exit 1; }
+	${VCPKG_ROOT_NIX}/bootstrap-vcpkg.sh -disableMetrics
+	cd extern/vcpkg && ./vcpkg install libfido2:arm64-osx libfido2:x64-osx
+endif
 
 
 .PHONY: generate

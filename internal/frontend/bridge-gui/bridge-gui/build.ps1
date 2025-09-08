@@ -22,26 +22,6 @@ Write-host "Bridge-gui directory is $scriptDir"
 Write-host "Bridge repos root dir $bridgeRepoRootDir"
 Push-Location $scriptDir
 
-# There is bug in CI caused by defining the lower case and upper case
-# vars for proxy. For pure bash (case sensitive - creating
-# two env items) or pure powershell (case insensitive - by default writes any
-# changes into first defined env instance) it is transparent. But during bridge gui
-# build we are populating case sensitive env vars from bash to powershell which
-# then cause error when trying to list env vars. This is causing an error
-# during CMake lookup for CXX and build fails. Therefore we need unset the
-# lower case version if present.
-Write-Host "Checking for duplicate proxy variables..."
-@("HTTP_PROXY", "HTTPS_PROXY", "NO_PROXY") | ForEach-Object {
-  $upper = $_
-  $lower = $_.ToLower()
-      
-  if ((Test-Path "Env:$upper") -and (Test-Path "Env:$lower")) {
-    Write-Host "Removing duplicate lowercase variable: $lower"
-    Remove-Item "Env:$lower" -ErrorAction SilentlyContinue
-  }
-}
-
-
 $ErrorActionPreference = "Stop"
 
 $cmakeExe=$(Get-Command cmake).source
@@ -78,7 +58,7 @@ if ($null -eq $buildConfig)
 }
 
 $buildDir=(Join-Path $scriptDir "cmake-build-$buildConfig".ToLower())
-$vcpkgRoot = (Join-Path $bridgeRepoRootDir "extern/vcpkg" -Resolve)
+$vcpkgRoot = (Join-Path $bridgeRepoRootDir "extern/vcpkg-windows" -Resolve)
 $vcpkgExe = (Join-Path $vcpkgRoot "vcpkg.exe")
 $vcpkgBootstrap = (Join-Path $vcpkgRoot "bootstrap-vcpkg.bat")
 
@@ -90,6 +70,10 @@ function check_exit() {
         exit 1
     }
 }
+
+# Create short path dirs to avoid windows filepath char limit.
+New-Item -ItemType Directory -Force -Path "C:\b" | Out-Null
+New-Item -ItemType Directory -Force -Path "C:\p" | Out-Null
 
 Write-host "Running build for version $bridgeVersion - $buildConfig in $buildDir"
 
@@ -106,7 +90,7 @@ if ($null -eq $bridgeBuildEnv)
 
 git submodule update --init --recursive $vcpkgRoot
 . $vcpkgBootstrap -disableMetrics
-. $vcpkgExe install sentry-native:x64-windows grpc:x64-windows --clean-after-build
+. $vcpkgExe install sentry-native:x64-windows grpc:x64-windows --x-buildtrees-root=C:\b --x-packages-root=C:\p --clean-after-build
 . $vcpkgExe upgrade --no-dry-run
 . $cmakeExe -G "Visual Studio 17 2022" -DCMAKE_BUILD_TYPE="$buildConfig" `
                                        -DBRIDGE_APP_FULL_NAME="$bridgeFullName" `

@@ -1,15 +1,13 @@
 module github.com/ProtonMail/proton-bridge/v3
 
-go 1.24
-
-toolchain go1.24.4
+go 1.24.4
 
 require (
 	github.com/0xAX/notificator v0.0.0-20220220101646-ee9b8921e557
 	github.com/Masterminds/semver/v3 v3.2.0
 	github.com/ProtonMail/gluon v0.17.1-0.20250627102828-b014b7cc8132
 	github.com/ProtonMail/go-autostart v0.0.0-20210130080809-00ed301c8e9a
-	github.com/ProtonMail/go-proton-api v0.4.1-0.20250718133628-3404fdbca5ad
+	github.com/ProtonMail/go-proton-api v0.4.1-0.20250910105600-4de5d9039a5f
 	github.com/ProtonMail/gopenpgp/v2 v2.9.0-proton
 	github.com/PuerkitoBio/goquery v1.8.1
 	github.com/abiosoft/ishell v2.0.0+incompatible
@@ -26,30 +24,34 @@ require (
 	github.com/emersion/go-smtp v0.15.1-0.20221021114529-49b17434419d
 	github.com/emersion/go-vcard v0.0.0-20230331202150-f3d26859ccd3
 	github.com/fatih/color v1.13.0
+	github.com/fxamacker/cbor/v2 v2.9.0
 	github.com/getsentry/sentry-go v0.15.0
+	github.com/go-ctap/ctaphid v0.7.0
+	github.com/go-ctap/winhello v0.1.0
 	github.com/go-resty/resty/v2 v2.7.0
 	github.com/godbus/dbus v4.1.0+incompatible
 	github.com/golang/mock v1.6.0
 	github.com/google/go-cmp v0.6.0
-	github.com/google/uuid v1.3.0
+	github.com/google/uuid v1.6.0
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/jaytaylor/html2text v0.0.0-20211105163654-bc68cce691ba
 	github.com/jeandeaual/go-locale v0.0.0-20220711133428-7de61946b173
 	github.com/keybase/go-keychain v0.0.0
+	github.com/keys-pub/go-libfido2 v1.5.4-0.20250104233141-2534349bd685
 	github.com/miekg/dns v1.1.50
 	github.com/pbnjay/memory v0.0.0-20210728143218-7b4eea64cf58
 	github.com/pkg/errors v0.9.1
 	github.com/pkg/profile v1.7.0
 	github.com/sirupsen/logrus v1.9.2
-	github.com/stretchr/testify v1.8.4
+	github.com/stretchr/testify v1.10.0
 	github.com/urfave/cli/v2 v2.24.4
 	github.com/vmihailenco/msgpack/v5 v5.3.5
 	go.uber.org/goleak v1.2.1
 	golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1
-	golang.org/x/net v0.38.0
+	golang.org/x/net v0.40.0
 	golang.org/x/oauth2 v0.7.0
-	golang.org/x/sys v0.31.0
-	golang.org/x/text v0.23.0
+	golang.org/x/sys v0.33.0
+	golang.org/x/text v0.26.0
 	google.golang.org/api v0.114.0
 	google.golang.org/grpc v1.56.3
 	google.golang.org/protobuf v1.33.0
@@ -98,6 +100,7 @@ require (
 	github.com/joeshaw/multierror v0.0.0-20140124173710-69b34d4ec901 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.4 // indirect
+	github.com/ldclabs/cose v1.3.2 // indirect
 	github.com/leodido/go-urn v1.2.4 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.19 // indirect
@@ -114,18 +117,19 @@ require (
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/ssor/bom v0.0.0-20170718123548-6386211fdfcf // indirect
-	github.com/stretchr/objx v0.5.0 // indirect
+	github.com/stretchr/objx v0.5.2 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.2.11 // indirect
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
+	github.com/x448/float16 v0.8.4 // indirect
 	github.com/xrash/smetrics v0.0.0-20201216005158-039620a65673 // indirect
 	gitlab.com/c0b/go-ordered-json v0.0.0-20201030195603-febf46534d5a // indirect
 	go.opencensus.io v0.24.0 // indirect
 	golang.org/x/arch v0.3.0 // indirect
-	golang.org/x/crypto v0.36.0 // indirect
-	golang.org/x/mod v0.17.0 // indirect
-	golang.org/x/sync v0.12.0 // indirect
-	golang.org/x/tools v0.21.1-0.20240508182429-e35e4ccd0d2d // indirect
+	golang.org/x/crypto v0.39.0 // indirect
+	golang.org/x/mod v0.25.0 // indirect
+	golang.org/x/sync v0.15.0 // indirect
+	golang.org/x/tools v0.33.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20230410155749-daa745c078e1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
@@ -137,4 +141,5 @@ replace (
 	github.com/emersion/go-smtp => github.com/ProtonMail/go-smtp v0.0.0-20231109081432-2b3d50599865
 	github.com/go-resty/resty/v2 => github.com/LBeernaertProton/resty/v2 v2.0.0-20231129100320-dddf8030d93a
 	github.com/keybase/go-keychain => github.com/cuthix/go-keychain v0.0.0-20240103134243-0b6a41580b77
+	github.com/keys-pub/go-libfido2 => github.com/ElectroNafta/go-libfido2 v0.0.0-20250915152115-4584ec5a59ac
 )
