@@ -863,6 +863,12 @@ void QMLBackend::login2FA(QString const &username, QString const &code) const {
     )
 }
 
+void QMLBackend::loginFido(const QString &username, QString const &pin) const {
+    HANDLE_EXCEPTION(
+        app().grpc().loginFido(username, pin);
+    )
+}
+
 
 //****************************************************************************************************************************************************
 /// \param[in] username The username.
@@ -884,6 +890,11 @@ void QMLBackend::loginAbort(QString const &username) const {
     )
 }
 
+void QMLBackend::abortFidoAssertion(QString const &username) const {
+    HANDLE_EXCEPTION(
+            app().grpc().abortFidoAssertion(username);
+            )
+}
 
 //****************************************************************************************************************************************************
 /// \param[in] active Should DoH be active.
@@ -1206,7 +1217,6 @@ void QMLBackend::onLoginAlreadyLoggedIn(QString const &userID) {
     )
 }
 
-
 //****************************************************************************************************************************************************
 /// \param[in] userID The userID.
 //****************************************************************************************************************************************************
@@ -1347,11 +1357,19 @@ void QMLBackend::connectGrpcEvents() {
     connect(client, &GRPCClient::login2FARequested, this, &QMLBackend::login2FARequested);
     connect(client, &GRPCClient::login2FAError, this, &QMLBackend::login2FAError);
     connect(client, &GRPCClient::login2FAErrorAbort, this, &QMLBackend::login2FAErrorAbort);
+    connect(client, &GRPCClient::loginFidoRequested, this, &QMLBackend::loginFidoRequested);
+    connect(client, &GRPCClient::login2FAOrFidoRequested, this, &QMLBackend::login2FAOrFidoRequested);
     connect(client, &GRPCClient::login2PasswordRequested, this, &QMLBackend::login2PasswordRequested);
     connect(client, &GRPCClient::login2PasswordError, this, &QMLBackend::login2PasswordError);
     connect(client, &GRPCClient::login2PasswordErrorAbort, this, &QMLBackend::login2PasswordErrorAbort);
     connect(client, &GRPCClient::loginFinished, this, &QMLBackend::onLoginFinished);
     connect(client, &GRPCClient::loginAlreadyLoggedIn, this, &QMLBackend::onLoginAlreadyLoggedIn);
+    connect(client, &GRPCClient::loginFidoTouchRequested, this, &QMLBackend::loginFidoTouchRequested);
+    connect(client, &GRPCClient::loginFidoTouchCompleted, this, &QMLBackend::loginFidoTouchCompleted);
+    connect(client, &GRPCClient::loginFidoPinRequired, this, &QMLBackend::loginFidoPinRequired);
+    connect(client, &GRPCClient::loginFidoPinInvalid, this, &QMLBackend::loginFidoPinInvalid);
+    connect(client, &GRPCClient::loginFidoPinBlocked, this, &QMLBackend::loginFidoPinBlocked);
+    connect(client, &GRPCClient::loginFidoError, this, &QMLBackend::loginFidoError);
     connect(client, &GRPCClient::loginHvRequested, this, &QMLBackend::loginHvRequested);
     connect(client, &GRPCClient::loginHvError, this, &QMLBackend::loginHvError);
 

@@ -175,9 +175,11 @@ signals:
 public: // login related calls
     grpc::Status login(QString const &username, QString const &password); ///< Performs the 'login' call.
     grpc::Status login2FA(QString const &username, QString const &code); ///< Performs the 'login2FA' call.
+    grpc::Status loginFido(QString const &username, QString const &pin); ///< Performs the 'loginFido' call.
     grpc::Status login2Passwords(QString const &username, QString const &password); ///< Performs the 'login2Passwords' call.
     grpc::Status loginAbort(QString const &username); ///< Performs the 'loginAbort' call.
-    grpc::Status loginHv(QString const &username, QString const &password); ///< Performs the 'login' call with additional useHv flag
+    grpc::Status loginHv(QString const &username, QString const &password); ///< Performs the 'login' call with additional useHv flag.
+    grpc::Status abortFidoAssertion(const QString &username); ///< Performs the 'abortFidoAssertion' call.
 
 signals:
     void loginUsernamePasswordError(QString const &errMsg);
@@ -186,6 +188,8 @@ signals:
     void login2FARequested(QString const &username);
     void login2FAError(QString const &errMsg);
     void login2FAErrorAbort(QString const &errMsg);
+    void loginFidoRequested(QString const &username);
+    void login2FAOrFidoRequested(QString const &username);
     void login2PasswordRequested(QString const &username);
     void login2PasswordError(QString const &errMsg);
     void login2PasswordErrorAbort(QString const &errMsg);
@@ -193,6 +197,12 @@ signals:
     void loginAlreadyLoggedIn(QString const &userID);
     void loginHvRequested(QString const &hvUrl);
     void loginHvError(QString const &errMsg);
+    void loginFidoTouchRequested(QString const &username);
+    void loginFidoTouchCompleted(QString const &username);
+    void loginFidoPinRequired(QString const &username);
+    void loginFidoPinInvalid(QString const &errMsg);
+    void loginFidoPinBlocked(QString const &errMsg);
+    void loginFidoError(QString const &errMsg);
 
 public: // Update related calls
     grpc::Status checkUpdate();

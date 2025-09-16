@@ -109,6 +109,18 @@ Item {
         colorScheme: root.colorScheme
         notification: root.notifications.repairBridge
     }
+    NotificationDialog {
+        colorScheme: root.colorScheme
+        notification: root.notifications.touchFidoKey
+    }
+    NotificationDialog {
+        colorScheme: root.colorScheme
+        notification: root.notifications.fidoPinRequested
+    }
+    NotificationDialog {
+        colorScheme: root.colorScheme
+        notification: root.notifications.fidoPinBlocked
+    }
     UserNotificationDialog {
         colorScheme: root.colorScheme
         notification: root.notifications.userNotification

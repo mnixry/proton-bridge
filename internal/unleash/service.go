@@ -47,6 +47,7 @@ const (
 	InternalLabelConflictResolverDisabled                = "InboxBridgeUnexpectedFoldersLabelsStartupFixupDisabled"
 	InternalLabelConflictNonEmptyMailboxDeletion         = "InboxBridgeUnknownNonEmptyMailboxDeletion"
 	LinuxVaultPreferredKeychainNotAvailableRetryDisabled = "InboxBridgeLinuxVaultPreferredKeychainNotAvailableRetryDisabled"
+	InboxBridgeU2FLoginEnabled                           = "InboxBridgeU2FLogin"
 )
 
 type FeatureFlagValueProvider interface {

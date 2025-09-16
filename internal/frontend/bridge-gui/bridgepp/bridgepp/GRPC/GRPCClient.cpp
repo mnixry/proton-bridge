@@ -632,6 +632,28 @@ grpc::Status GRPCClient::login2FA(QString const &username, QString const &code) 
     return this->logGRPCCallStatus(stub_->Login2FA(this->clientContext().get(), request, &empty), __FUNCTION__);
 }
 
+//****************************************************************************************************************************************************
+/// \param[in] username The username.
+/// \param[in] code The Security key PIN.
+/// \return the status for the gRPC call.
+//****************************************************************************************************************************************************
+grpc::Status GRPCClient::loginFido(const QString &username, const QString &pin) {
+    LoginRequest request;
+    request.set_username(username.toStdString());
+    request.set_password(pin.toStdString());
+    return this->logGRPCCallStatus(stub_->LoginFido(this->clientContext().get(), request, &empty), __FUNCTION__ );
+}
+
+//****************************************************************************************************************************************************
+/// \param[in] username The username.
+/// \return the status for the gRPC call.
+//****************************************************************************************************************************************************
+grpc::Status GRPCClient::abortFidoAssertion(const QString &username) {
+    LoginAbortRequest request;
+    request.set_username(username.toStdString());
+    return this->logGRPCCallStatus(stub_->FidoAssertionAbort(this->clientContext().get(), request, &empty), __FUNCTION__);
+}
+
 
 //****************************************************************************************************************************************************
 /// \param[in] username The username.
@@ -1256,6 +1278,15 @@ void GRPCClient::processLoginEvent(LoginEvent const &event) {
         case HV_ERROR:
             emit loginHvError(QString::fromStdString(error.message()));
             break;
+        case FIDO_PIN_INVALID:
+            emit loginFidoPinInvalid(QString::fromStdString(error.message()));
+            break;
+        case FIDO_PIN_BLOCKED:
+            emit loginFidoPinBlocked(QString::fromStdString(error.message()));
+            break;
+        case FIDO_ERROR:
+            emit loginFidoError(QString::fromStdString(error.message()));
+            break;
         default:
             this->logError("Unknown login error event received.");
             break;
@@ -1265,6 +1296,14 @@ void GRPCClient::processLoginEvent(LoginEvent const &event) {
     case LoginEvent::kTfaRequested:
         this->logTrace("Login event received: TfaRequested.");
         emit login2FARequested(QString::fromStdString(event.tfarequested().username()));
+        break;
+    case LoginEvent::kFidoRequested:
+        this->logTrace("Login event received: FidoRequested.");
+        emit loginFidoRequested(QString::fromStdString(event.fidorequested().username()));
+        break;
+    case LoginEvent::kTfaOrFidoRequested:
+        this->logTrace("Login event received: TfaOrFidoRequested.");
+        emit login2FAOrFidoRequested(QString::fromStdString(event.tfaorfidorequested().username()));
         break;
     case LoginEvent::kTwoPasswordRequested:
         this->logTrace("Login event received: TwoPasswordRequested.");
@@ -1283,6 +1322,18 @@ void GRPCClient::processLoginEvent(LoginEvent const &event) {
     case LoginEvent::kHvRequested:
         this->logTrace("Login event Received: HvRequested");
         emit loginHvRequested(QString::fromStdString(event.hvrequested().hvurl()));
+        break;
+    case LoginEvent::kLoginFidoTouchRequested:
+        this->logTrace("Login event received: FidoTouchRequested");
+        emit loginFidoTouchRequested(QString::fromStdString(event.loginfidotouchrequested().username()));
+        break;
+    case LoginEvent::kLoginFidoTouchCompleted:
+        this->logTrace("Login event received: FidoTouchCompleted");
+        emit loginFidoTouchCompleted(QString::fromStdString(event.loginfidotouchcompleted().username()));
+        break;
+    case LoginEvent::kLoginFidoPinRequired:
+        this->logTrace("Login event received: FidoPinRequired");
+        emit loginFidoPinRequired(QString::fromStdString(event.loginfidopinrequired().username()));
         break;
     default:
         this->logError("Unknown Login event received.");

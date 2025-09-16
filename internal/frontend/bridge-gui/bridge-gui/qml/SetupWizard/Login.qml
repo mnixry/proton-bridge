@@ -21,6 +21,8 @@ FocusScope {
     enum RootStack {
         Login,
         TOTP,
+        FIDO,
+        TOTPOrFIDO,
         MailboxPassword,
         HV
     }
@@ -51,6 +53,7 @@ FocusScope {
         passwordTextField.hidePassword();
         secondPasswordTextField.hidePassword();
         hvLinkClicked = false;
+        fidoLayout.reset();
     }
     function resetViaHv() {
         usernameTextField.enabled = false;
@@ -93,6 +96,29 @@ FocusScope {
                 twoFactorUsernameLabel.text = username;
                 stackLayout.currentIndex = Login.RootStack.TOTP;
                 twoFactorPasswordTextField.focus = true;
+                switchToTotpButton.visible = false;
+                switchToFidoButton.visible = false;
+            }
+            function onLoginFidoRequested(username) {
+                fidoUsernameLabel.text = username;
+                stackLayout.currentIndex = Login.RootStack.FIDO;
+                switchToTotpButton.visible = false;
+                switchToFidoButton.visible = false;
+            }
+            function onLogin2FAOrFidoRequested(username) {
+                fidoUsernameLabel.text = username;
+                twoFactorUsernameLabel.text = username;
+                stackLayout.currentIndex = Login.RootStack.FIDO;
+                switchToTotpButton.visible = true;
+                switchToFidoButton.visible = true;
+            }
+            function onLoginFidoPinBlocked(_) {
+                console.assert(stackLayout.currentIndex === Login.RootStack.FIDO, "Unexpected onLoginFidoPinBlocked");
+                root.reset();
+            }
+            function onLoginFidoError(_) {
+                console.assert(stackLayout.currentIndex === Login.RootStack.FIDO || stackLayout.currentIndex === Login.RootStack.Login, "Unexpected loginFidoError");
+                root.reset();
             }
             function onLogin2PasswordError(_) {
                 console.assert(stackLayout.currentIndex === Login.RootStack.MailboxPassword, "Unexpected login2PasswordError");
@@ -352,7 +378,7 @@ FocusScope {
                     Layout.fillWidth: true
                     colorScheme: wizard.colorScheme
                     horizontalAlignment: Text.AlignHCenter
-                    text: qsTr("You have enabled two-factor authentication. Please enter the 6-digit code provided by your authenticator application.")
+                    text: qsTr("You have enabled two-factor authentication. Enter the 6-digit code provided by your authenticator application.")
                     type: Label.LabelType.Body
                     wrapMode: Text.WordWrap
                 }
@@ -404,6 +430,117 @@ FocusScope {
 
                     onClicked: {
                         root.abort();
+                    }
+                }
+                Label {
+                    id: switchToFidoButton
+                    Layout.fillWidth: true
+                    Layout.alignment: Qt.AlignHCenter
+                    colorScheme: wizard.colorScheme
+                    horizontalAlignment: Text.AlignHCenter
+                    text: "<a href='#'>" + qsTr("Use security key instead") + "</a>"
+
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        enabled: !twoFAButton.loading
+                        onClicked: {
+                            stackLayout.currentIndex = Login.RootStack.FIDO;
+                            fidoLayout.reset();
+                            totpLayout.reset();
+                        }
+                    }
+                }
+            }
+        }
+        Item {
+            ColumnLayout {
+                id: fidoLayout
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.verticalCenter: parent.verticalCenter
+                spacing: ProtonStyle.wizard_spacing_medium
+
+                function reset() {
+                    fidoButton.loading = false;
+                }
+
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    spacing: ProtonStyle.wizard_spacing_small
+
+                    Label {
+                        Layout.alignment: Qt.AlignHCenter
+                        Layout.fillWidth: true
+                        colorScheme: wizard.colorScheme
+                        horizontalAlignment: Text.AlignHCenter
+                        text: qsTr("Security key authentication")
+                        type: Label.LabelType.Title
+                    }
+                    Label {
+                        id: fidoUsernameLabel
+                        Layout.alignment: Qt.AlignHCenter
+                        Layout.fillWidth: true
+                        color: wizard.colorScheme.text_weak
+                        colorScheme: wizard.colorScheme
+                        horizontalAlignment: Text.AlignHCenter
+                        text: ""
+                        type: Label.LabelType.Body
+                    }
+                }
+                Label {
+                    id: fidoDescriptionLabel
+                    Layout.alignment: Qt.AlignHCenter
+                    Layout.fillWidth: true
+                    colorScheme: wizard.colorScheme
+                    horizontalAlignment: Text.AlignHCenter
+                    text: qsTr("Security key authentication is enabled. Please connect your security key.")
+                    type: Label.LabelType.Body
+                    wrapMode: Text.WordWrap
+                }
+                Button {
+                    id: fidoButton
+                    Layout.fillWidth: true
+                    colorScheme: wizard.colorScheme
+                    enabled: !loading
+                    text: loading ? qsTr("Authenticating") : qsTr("Authenticate")
+
+                    onClicked: {
+                        if (Backend.goos === "windows") {
+                            fidoButton.loading = true;
+                        }
+                        Backend.loginFido(usernameTextField.text, "");
+                    }
+                }
+                Button {
+                    Layout.fillWidth: true
+                    colorScheme: wizard.colorScheme
+                    enabled: !fidoButton.loading
+                    secondary: true
+                    secondaryIsOpaque: true
+                    text: qsTr("Cancel")
+
+                    onClicked: {
+                        root.abort();
+                    }
+                }
+                Label {
+                    id: switchToTotpButton
+                    Layout.fillWidth: true
+                    Layout.alignment: Qt.AlignHCenter
+                    colorScheme: wizard.colorScheme
+                    horizontalAlignment: Text.AlignHCenter
+                    text: "<a href='#'>" + qsTr("Use authenticator app instead") + "</a>"
+
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        enabled: !fidoButton.loading
+                        onClicked: {
+                            stackLayout.currentIndex = Login.RootStack.TOTP;
+                            fidoLayout.reset();
+                            totpLayout.reset();
+                        }
                     }
                 }
             }
@@ -499,7 +636,9 @@ FocusScope {
                     text: qsTr("Cancel")
 
                     onClicked: {
-                        root.abort();
+                        stackLayout.currentIndex = Login.RootStack.TOTP;
+                        twoFactorPasswordTextField.focus = true;
+
                     }
                 }
             }

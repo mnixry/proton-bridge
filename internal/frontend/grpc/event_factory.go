@@ -89,6 +89,26 @@ func NewLoginTfaRequestedEvent(username string) *StreamEvent {
 	return loginEvent(&LoginEvent{Event: &LoginEvent_TfaRequested{TfaRequested: &LoginTfaRequestedEvent{Username: username}}})
 }
 
+func NewLoginFidoRequestedEvent(username string) *StreamEvent {
+	return loginEvent(&LoginEvent{Event: &LoginEvent_FidoRequested{FidoRequested: &LoginFidoRequestedEvent{Username: username}}})
+}
+
+func NewLoginTfaOrFidoRequestedEvent(username string) *StreamEvent {
+	return loginEvent(&LoginEvent{Event: &LoginEvent_TfaOrFidoRequested{TfaOrFidoRequested: &LoginTfaOrFidoRequestedEvent{Username: username}}})
+}
+
+func NewLoginFidoTouchRequested(username string) *StreamEvent {
+	return loginEvent(&LoginEvent{Event: &LoginEvent_LoginFidoTouchRequested{LoginFidoTouchRequested: &LoginFidoTouchEvent{Username: username}}})
+}
+
+func NewLoginFidoTouchCompleted(username string) *StreamEvent {
+	return loginEvent(&LoginEvent{Event: &LoginEvent_LoginFidoTouchCompleted{LoginFidoTouchCompleted: &LoginFidoTouchEvent{Username: username}}})
+}
+
+func NewLoginFidoPinRequired(username string) *StreamEvent {
+	return loginEvent(&LoginEvent{Event: &LoginEvent_LoginFidoPinRequired{LoginFidoPinRequired: &LoginFidoPinRequired{Username: username}}})
+}
+
 func NewLoginTwoPasswordsRequestedEvent(username string) *StreamEvent {
 	return loginEvent(&LoginEvent{Event: &LoginEvent_TwoPasswordRequested{TwoPasswordRequested: &LoginTwoPasswordsRequestedEvent{Username: username}}})
 }

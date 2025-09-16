@@ -62,7 +62,7 @@ QtObject {
             target: Backend
         }
     }
-    property var all: [root.noInternet, root.imapPortStartupError, root.smtpPortStartupError, root.imapPortChangeError, root.smtpPortChangeError, root.imapConnectionModeChangeError, root.smtpConnectionModeChangeError, root.updateManualReady, root.updateManualRestartNeeded, root.updateManualError, root.updateForce, root.updateForceError, root.updateSilentRestartNeeded, root.updateSilentError, root.updateIsLatestVersion, root.loginConnectionError, root.onlyPaidUsers, root.alreadyLoggedIn, root.enableBeta, root.bugReportSendSuccess, root.bugReportSendError, root.bugReportSendFallback, root.cacheCantMove, root.cacheLocationChangeSuccess, root.enableSplitMode, root.resetBridge, root.changeAllMailVisibility, root.deleteAccount, root.noKeychain, root.rebuildKeychain, root.addressChanged, root.apiCertIssue, root.userBadEvent, root.imapLoginWhileSignedOut, root.genericError, root.genericQuestion, root.hvErrorEvent, root.repairBridge, root.userNotification]
+    property var all: [root.noInternet, root.imapPortStartupError, root.smtpPortStartupError, root.imapPortChangeError, root.smtpPortChangeError, root.imapConnectionModeChangeError, root.smtpConnectionModeChangeError, root.updateManualReady, root.updateManualRestartNeeded, root.updateManualError, root.updateForce, root.updateForceError, root.updateSilentRestartNeeded, root.updateSilentError, root.updateIsLatestVersion, root.loginConnectionError, root.onlyPaidUsers, root.alreadyLoggedIn, root.enableBeta, root.bugReportSendSuccess, root.bugReportSendError, root.bugReportSendFallback, root.cacheCantMove, root.cacheLocationChangeSuccess, root.enableSplitMode, root.resetBridge, root.changeAllMailVisibility, root.deleteAccount, root.noKeychain, root.rebuildKeychain, root.addressChanged, root.apiCertIssue, root.userBadEvent, root.imapLoginWhileSignedOut, root.genericError, root.genericQuestion, root.hvErrorEvent, root.repairBridge, root.userNotification, root.touchFidoKey, root.fidoPinRequested, root.fidoPinBlocked, root.fidoErrorEvent]
     property Notification alreadyLoggedIn: Notification {
         brief: qsTr("Already signed in")
         description: qsTr("This account is already signed in.")
@@ -1227,6 +1227,170 @@ QtObject {
             }
             target: Backend
         }
+    }
+
+
+    property Notification touchFidoKey: Notification {
+        title: qsTr("Touch your security key")
+        description: qsTr("To complete authentication, touch the button or sensor on your security key.")
+        group: Notifications.Group.Dialogs
+        icon: "./icons/ic-exclamation-circle-filled.svg"
+        type: Notification.NotificationType.Info
+        additionalImageSrc: "./icons/fingerprint.svg"
+
+        function reset() {
+            root.touchFidoKey.active = false;
+            root.touchFidoKey.busyIndicator = false;
+            root.touchFidoKey.additionalImageSrc = "./icons/fingerprint.svg";
+        }
+
+        action: [
+            Action {
+                id: touchFidoKey_cancel
+                text: qsTr("Cancel")
+                property bool forceSecondary: true
+
+                onTriggered: {
+                    Backend.abortFidoAssertion(root.touchFidoKey.username);
+                    root.touchFidoKey.reset();
+                }
+            }
+        ]
+
+        Connections {
+            function onLoginFidoTouchRequested(username) {
+                root.touchFidoKey.username = username;
+                root.touchFidoKey.active = true;
+                touchFidoKey_cancel.enabled = true;
+            }
+            function onLoginFidoTouchCompleted(_) {
+                root.touchFidoKey.additionalImageSrc = "";
+                root.touchFidoKey.busyIndicator = true;
+                touchFidoKey_cancel.enabled = false;
+            }
+            function onLoginFidoPinInvalid(_) {
+                root.touchFidoKey.reset();
+            }
+            function onLoginFinished(_) {
+                root.touchFidoKey.reset();
+            }
+            function onLoginFidoError(errorMsg) {
+                root.touchFidoKey.reset();
+            }
+            target: Backend
+        }
+    }
+
+    property Notification fidoPinRequested: Notification {
+        property string fidoPinInput: ""
+
+        title: qsTr("Enter security key PIN")
+        description: qsTr("To continue, enter the PIN for your security key.")
+        group: Notifications.Group.Dialogs
+        icon: "./icons/ic-exclamation-circle-filled.svg"
+        type: Notification.NotificationType.Info
+        useTextField: true
+
+        onTextFieldChanged: function(value) {
+            root.fidoPinRequested.fidoPinInput = value;
+        }
+
+        function reset() {
+            root.fidoPinRequested.active = false;
+            root.fidoPinRequested.clearTextFieldRequested();
+            root.fidoPinRequested.type = Notification.NotificationType.Info;
+        }
+        function clearAndFocusTextField() {
+            root.fidoPinRequested.clearTextFieldRequested();
+            root.fidoPinRequested.focusTextField()
+        }
+
+        action: [
+            Action {
+                text: qsTr("Continue")
+                onTriggered: {
+                    Backend.loginFido("", Qt.btoa(root.fidoPinRequested.fidoPinInput));
+                    root.fidoPinRequested.reset();
+                }
+            },
+            Action {
+                text: qsTr("Cancel")
+                onTriggered: {
+                    root.fidoPinRequested.reset();
+                }
+            }
+        ]
+
+        Connections {
+            function onLoginFidoPinRequired(_) {
+                root.fidoPinRequested.clearAndFocusTextField();
+                root.fidoPinRequested.active = true;
+            }
+            function onLoginFidoPinInvalid(_) {
+                root.fidoPinRequested.clearAndFocusTextField();
+                root.fidoPinRequested.active = true;
+                root.fidoPinRequested.description = qsTr("The PIN you entered is incorrect. Try again.");
+                root.fidoPinRequested.type = Notification.NotificationType.Warning;
+            }
+            function onLoginFidoTouchRequested(_) {
+                root.fidoPinRequested.reset();
+            }
+            function onLoginFinished(_) {
+                root.fidoPinRequested.reset();
+            }
+            function onLoginFidoError(errorMsg) {
+                root.fidoPinRequested.reset();
+            }
+            target: Backend
+        }
+    }
+
+    property Notification fidoPinBlocked: Notification {
+        title: qsTr("Security key PIN blocked")
+        description: qsTr("Your security key PIN is blocked due to too many failed attempts. Try removing and re-inserting your key, or check your security key's documentation for unlock instructions.")
+        group: Notifications.Group.Dialogs
+        icon: "./icons/ic-exclamation-circle-filled.svg"
+        type: Notification.NotificationType.Danger
+
+        action: [
+            Action {
+                text: qsTr("OK")
+                onTriggered: {
+                    root.fidoPinBlocked.active = false;
+                    root.touchFidoKey.reset();
+                    root.fidoPinRequested.reset();
+                }
+            }
+        ]
+
+        Connections {
+            function onLoginFidoPinBlocked(_) {
+                root.fidoPinBlocked.active = true;
+            }
+            target: Backend
+        }
+    }
+
+    property Notification fidoErrorEvent: Notification {
+        group: Notifications.Group.Configuration
+        icon: "./icons/ic-exclamation-circle-filled.svg"
+        type: Notification.NotificationType.Danger
+
+        action: Action {
+            text: qsTr("OK")
+            onTriggered: {
+                root.fidoErrorEvent.active = false;
+            }
+        }
+
+        Connections {
+            function onLoginFidoError(errorMsg) {
+                root.fidoErrorEvent.active = true;
+                root.fidoErrorEvent.description = errorMsg;
+            }
+            target: Backend
+        }
+
     }
 
     signal askChangeAllMailVisibility(var isVisibleNow)

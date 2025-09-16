@@ -38,6 +38,7 @@ import (
 	"github.com/ProtonMail/proton-bridge/v3/internal/bridge"
 	"github.com/ProtonMail/proton-bridge/v3/internal/certs"
 	"github.com/ProtonMail/proton-bridge/v3/internal/events"
+	"github.com/ProtonMail/proton-bridge/v3/internal/frontend/grpc/fido"
 	"github.com/ProtonMail/proton-bridge/v3/internal/hv"
 	"github.com/ProtonMail/proton-bridge/v3/internal/platform"
 	"github.com/ProtonMail/proton-bridge/v3/internal/safe"
@@ -102,6 +103,8 @@ type Service struct { // nolint:structcheck
 
 	hvDetails    *proton.APIHVDetails
 	useHvDetails bool
+
+	fidoManager *fido.Manager
 }
 
 // NewService returns a new instance of the service.
@@ -187,6 +190,8 @@ func NewService(
 		parentPID:       parentPID,
 		parentPIDDoneCh: make(chan struct{}),
 		showOnStartup:   showOnStartup,
+
+		fidoManager: &fido.Manager{},
 	}
 
 	// Initializing.Done is only called sync.Once. Please keep the increment set to 1

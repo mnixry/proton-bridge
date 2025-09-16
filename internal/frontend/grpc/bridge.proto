@@ -63,8 +63,10 @@ service Bridge {
   // login
   rpc Login(LoginRequest) returns (google.protobuf.Empty);
   rpc Login2FA(LoginRequest) returns (google.protobuf.Empty);
+  rpc LoginFido(LoginRequest) returns (google.protobuf.Empty);
   rpc Login2Passwords(LoginRequest) returns (google.protobuf.Empty);
   rpc LoginAbort(LoginAbortRequest) returns (google.protobuf.Empty);
+  rpc FidoAssertionAbort(LoginAbortRequest) returns (google.protobuf.Empty);
 
   // update
   rpc CheckUpdate(google.protobuf.Empty) returns (google.protobuf.Empty);
@@ -313,6 +315,11 @@ message LoginEvent {
     LoginFinishedEvent finished = 4;
     LoginFinishedEvent alreadyLoggedIn = 5;
     LoginHvRequestedEvent hvRequested = 6;
+    LoginFidoRequestedEvent fidoRequested = 7;
+    LoginTfaOrFidoRequestedEvent tfaOrFidoRequested = 8;
+    LoginFidoTouchEvent loginFidoTouchRequested = 9;
+    LoginFidoTouchEvent loginFidoTouchCompleted = 10;
+    LoginFidoPinRequired loginFidoPinRequired = 11;
   }
 }
 
@@ -325,6 +332,9 @@ enum LoginErrorType {
   TWO_PASSWORDS_ERROR = 5;
   TWO_PASSWORDS_ABORT = 6;
   HV_ERROR = 7;
+  FIDO_PIN_INVALID = 8;
+  FIDO_PIN_BLOCKED = 9;
+  FIDO_ERROR = 10;
 }
 
 message LoginErrorEvent {
@@ -333,6 +343,22 @@ message LoginErrorEvent {
 }
 
 message LoginTfaRequestedEvent {
+  string username = 1;
+}
+
+message LoginFidoRequestedEvent {
+  string username = 1;
+}
+
+message LoginTfaOrFidoRequestedEvent {
+  string username = 1;
+}
+
+message LoginFidoTouchEvent {
+  string username = 1;
+}
+
+message LoginFidoPinRequired {
   string username = 1;
 }
 

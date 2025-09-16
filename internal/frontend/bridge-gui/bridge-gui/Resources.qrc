@@ -72,6 +72,7 @@
         <file>qml/icons/systray-mono-warn.png</file>
         <file>qml/icons/systray.svg</file>
         <file>qml/icons/ic-notification-bell.svg</file>
+        <file>qml/icons/fingerprint.svg</file>
         <file alias="bridge.svg">../../../../dist/bridge.svg</file>
         <file alias="bridgeMacOS.svg">../../../../dist/bridgeMacOS.svg</file>
         <file>qml/KeychainSettings.qml</file>
@@ -112,6 +113,7 @@
         <file>qml/Proton/TextArea.qml</file>
         <file>qml/Proton/TextField.qml</file>
         <file>qml/Proton/Toggle.qml</file>
+        <file>qml/Proton/Spinner.qml</file>
         <file>qml/Resources/bug_report_flow.json</file>
         <file>qml/Resources/Help/Template.html</file>
         <file>qml/Resources/Help/WhyBridge.html</file>

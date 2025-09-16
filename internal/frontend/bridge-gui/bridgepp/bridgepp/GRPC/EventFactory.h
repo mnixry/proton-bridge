@@ -48,7 +48,9 @@ SPStreamEvent newLoginTfaRequestedEvent(QString const &username); ///< Create a 
 SPStreamEvent newLoginTwoPasswordsRequestedEvent(QString const &username); ///< Create a new LoginTwoPasswordsRequestedEvent event.
 SPStreamEvent newLoginFinishedEvent(QString const &userID, bool wasSignedOut); ///< Create a new LoginFinishedEvent event.
 SPStreamEvent newLoginAlreadyLoggedInEvent(QString const &userID); ///< Create a new LoginAlreadyLoggedInEvent event.
-SPStreamEvent newLoginHvRequestedEvent(); ///< Create a new LoginHvRequestedEvent
+SPStreamEvent newLoginHvRequestedEvent(); ///< Create a new LoginHvRequestedEvent.
+SPStreamEvent newLoginFidoRequestedEvent(QString const &username); ///< Create a new LoginFidoRequestedEvent.
+SPStreamEvent newLoginTfaOrFidoRequestedEvent(QString const &username); ///< Create a new LoginTfaOrFidoRequestedEvent.
 
 // Update related events
 SPStreamEvent newUpdateErrorEvent(grpc::UpdateErrorType errorType); ///< Create a new UpdateErrorEvent event.

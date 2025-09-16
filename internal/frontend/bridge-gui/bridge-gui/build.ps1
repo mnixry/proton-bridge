@@ -22,6 +22,7 @@ Write-host "Bridge-gui directory is $scriptDir"
 Write-host "Bridge repos root dir $bridgeRepoRootDir"
 Push-Location $scriptDir
 
+
 $ErrorActionPreference = "Stop"
 
 $cmakeExe=$(Get-Command cmake).source

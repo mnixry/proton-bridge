@@ -303,6 +303,32 @@ SPStreamEvent newLoginTfaRequestedEvent(QString const &username) {
 
 
 //****************************************************************************************************************************************************
+/// \param[in] username The username.
+/// \return The event.
+//****************************************************************************************************************************************************
+SPStreamEvent newLoginFidoRequestedEvent(QString const &username) {
+    auto event = new ::grpc::LoginFidoRequestedEvent;
+    event->set_username(username.toStdString());
+    auto loginEvent = new grpc::LoginEvent;
+    loginEvent->set_allocated_fidorequested(event);
+    return wrapLoginEvent(loginEvent);
+}
+
+
+//****************************************************************************************************************************************************
+/// \param[in] username The username.
+/// \return The event.
+//****************************************************************************************************************************************************
+SPStreamEvent newLoginTfaOrFidoRequestedEvent(QString const &username) {
+        auto event = new ::grpc::LoginTfaOrFidoRequestedEvent;
+        event->set_username(username.toStdString());
+        auto loginEvent = new grpc::LoginEvent;
+        loginEvent->set_allocated_tfaorfidorequested(event);
+        return wrapLoginEvent(loginEvent);
+    }
+
+
+//****************************************************************************************************************************************************
 /// \return The event.
 //****************************************************************************************************************************************************
 SPStreamEvent newLoginHvRequestedEvent() {

@@ -19,6 +19,7 @@ package cli
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -26,7 +27,9 @@ import (
 	"github.com/ProtonMail/proton-bridge/v3/internal/bridge"
 	"github.com/ProtonMail/proton-bridge/v3/internal/certs"
 	"github.com/ProtonMail/proton-bridge/v3/internal/constants"
+	"github.com/ProtonMail/proton-bridge/v3/internal/fido"
 	"github.com/ProtonMail/proton-bridge/v3/internal/hv"
+	"github.com/ProtonMail/proton-bridge/v3/internal/unleash"
 	"github.com/ProtonMail/proton-bridge/v3/internal/vault"
 	"github.com/abiosoft/ishell"
 )
@@ -174,22 +177,39 @@ func (f *frontendCLI) loginAccount(c *ishell.Context) {
 		return
 	}
 
-	if auth.TwoFA.Enabled&proton.HasTOTP != 0 {
-		if len(auth.TwoFA.FIDO2.RegisteredKeys) > 0 && f.yesNoQuestion("Do you want to use a security key for Two-factor authentication") {
-			if err := f.authWithHardwareKey(client, auth); err != nil {
-				f.printAndLogError("Cannot login: ", err)
-				return
-			}
-		} else {
-			code := f.readStringInAttempts("Two factor code", c.ReadLine, isNotEmpty)
-			if code == "" {
-				f.printAndLogError("Cannot login: need two factor code")
-			}
+	u2fLoginEnabled := f.bridge.GetFeatureFlagValue(unleash.InboxBridgeU2FLoginEnabled)
 
-			if err := client.Auth2FA(context.Background(), proton.Auth2FAReq{TwoFactorCode: code}); err != nil {
+	switch auth.TwoFA.Enabled {
+	case proton.HasTOTP:
+		if err := f.loginTOTP(c, client); err != nil {
+			f.printAndLogError("Cannot login: ", err)
+			return
+		}
+
+	case proton.HasFIDO2:
+		if !u2fLoginEnabled {
+			// This case may only occur for internal users.
+			f.printAndLogError("Cannot login: Security key authentication required but not enabled in server configuration.")
+			return
+		}
+
+		if len(auth.TwoFA.FIDO2.RegisteredKeys) == 0 {
+			f.printAndLogError("Cannot login: Security key login is required, but no registered keys were provided.")
+		}
+		if err := fido.AuthWithHardwareKeyCLI(f, client, auth); err != nil {
+			f.printAndLogError("Cannot login: ", err)
+			return
+		}
+
+	case proton.HasFIDO2AndTOTP:
+		if u2fLoginEnabled && len(auth.TwoFA.FIDO2.RegisteredKeys) > 0 && f.yesNoQuestion("Do you want to use a security key for Two-factor authentication") {
+			if err := fido.AuthWithHardwareKeyCLI(f, client, auth); err != nil {
 				f.printAndLogError("Cannot login: ", err)
 				return
 			}
+		} else if err := f.loginTOTP(c, client); err != nil {
+			f.printAndLogError("Cannot login: ", err)
+			return
 		}
 	}
 
@@ -228,6 +248,15 @@ func (f *frontendCLI) loginAccount(c *ishell.Context) {
 	}
 
 	f.Printf("Account %s was added successfully.\n", bold(user.Username))
+}
+
+func (f *frontendCLI) loginTOTP(c *ishell.Context, client *proton.Client) error {
+	code := f.readStringInAttempts("Two factor code", c.ReadLine, isNotEmpty)
+	if code == "" {
+		return errors.New("need two factor code")
+	}
+
+	return client.Auth2FA(context.Background(), proton.Auth2FAReq{TwoFactorCode: code})
 }
 
 func (f *frontendCLI) loginAccountHv(c *ishell.Context, loginName string, password string, keyPass []byte, hvDetails *proton.APIHVDetails) {

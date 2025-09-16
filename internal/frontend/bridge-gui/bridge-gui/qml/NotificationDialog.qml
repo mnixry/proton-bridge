@@ -24,6 +24,9 @@ Dialog {
     property var notification
     property bool isUserNotification: false
 
+    // Placeholder for text input label text.
+    property string textFieldText: ""
+
     modal: true
     shouldShow: notification && notification.active && !notification.dismissed
 
@@ -53,6 +56,7 @@ Dialog {
             sourceSize.width: 64
             visible: source != ""
         }
+
         Label {
             Layout.alignment: Qt.AlignHCenter
             Layout.bottomMargin: 8
@@ -83,6 +87,43 @@ Dialog {
             implicitWidth: additionalChildrenContainer.childrenRect.width
             visible: children.length > 0
         }
+
+        Image {
+            Layout.alignment: Qt.AlignHCenter
+            Layout.bottomMargin: 16
+            Layout.preferredHeight: 64
+            Layout.preferredWidth: 64
+            source: root.notification.additionalImageSrc
+            sourceSize.height: 64
+            sourceSize.width: 64
+            visible: root.notification.additionalImageSrc != ""
+        }
+
+        TextField {
+            id: textField
+            Layout.fillWidth: true
+            Layout.preferredWidth: 240
+            Layout.bottomMargin: 16
+            colorScheme: root.colorScheme
+            text: root.textFieldText
+            visible: root.notification && root.notification.useTextField
+
+            onTextChanged: root.notification.textFieldChanged(text)
+
+            Connections {
+                target: root.notification
+                function onClearTextFieldRequested() {
+                    root.notification.textFieldChanged("")
+                    textField.clear();
+                }
+
+                function onFocusTextField() {
+                    textField.focus = true;
+                }
+            }
+        }
+
+
         LinkLabel {
             Layout.alignment: Qt.AlignHCenter
             Layout.bottomMargin: 32
@@ -93,6 +134,18 @@ Dialog {
             visible: notification.linkUrl.length > 0
 
         }
+
+        Spinner {
+            Layout.alignment: Qt.AlignHCenter
+            colorScheme: root.colorScheme
+            Layout.bottomMargin: 16
+            Layout.preferredHeight: 64
+            Layout.preferredWidth: 64
+            size: 64
+            running: true
+            visible: root.notification && root.notification.busyIndicator
+        }
+
 
         ColumnLayout {
             spacing: 8
@@ -105,8 +158,7 @@ Dialog {
                     action: modelData
                     colorScheme: root.colorScheme
                     loading: modelData.loading
-                    secondary: index > 0
-                }
+                    secondary: modelData.forceSecondary !== undefined ? modelData.forceSecondary : index > 0                }
             }
         }
     }

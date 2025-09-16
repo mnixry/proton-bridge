@@ -193,8 +193,10 @@ public slots: // slot for signals received from QML -> To be forwarded to Bridge
     void login(QString const &username, QString const &password) const; ///< Slot for the login button (initial login).
     void loginHv(QString const &username, QString const &password) const; ///< Slot for the login button (after HV challenge completed).
     void login2FA(QString const &username, QString const &code) const; ///< Slot for the login button (2FA login).
+    void loginFido(QString const &username, QString const &pin) const; ///< Slot for the authenticate button (FIDO2/Security Key login).
     void login2Password(QString const &username, QString const &password) const; ///< Slot for the login button (mailbox password login).
     void loginAbort(QString const &username) const; ///< Slot for the login abort procedure.
+    void abortFidoAssertion(QString const &username) const; ///< Slot for aborting the FIDO login procedure.
     void toggleDoH(bool active); ///, Slot for the DoH toggle.
     void toggleAutomaticUpdate(bool makeItActive); ///< Slot for the automatic update toggle
     void updateCurrentMailClient(); ///< Slot for the change of the current mail client.
@@ -242,11 +244,19 @@ signals: // Signals received from the Go backend, to be forwarded to QML
     void login2FARequested(QString const &username); ///< Signal for the 'login2FARequested' gRPC stream event.
     void login2FAError(QString const &errorMsg); ///< Signal for the 'login2FAError' gRPC stream event.
     void login2FAErrorAbort(QString const &errorMsg); ///< Signal for the 'login2FAErrorAbort' gRPC stream event.
+    void loginFidoRequested(QString const &username); ///< Signal for the 'loginFidoRequested' gRPC stream event.
+    void login2FAOrFidoRequested(QString const &username); ///<Signal for the 'login2FAOrFidoRequested' gRPC stream event.
     void login2PasswordRequested(QString const &username); ///< Signal for the 'login2PasswordRequested' gRPC stream event.
     void login2PasswordError(QString const &errorMsg); ///< Signal for the 'login2PasswordError' gRPC stream event.
     void login2PasswordErrorAbort(QString const &errorMsg); ///< Signal for the 'login2PasswordErrorAbort' gRPC stream event.
     void loginFinished(int index, bool wasSignedOut); ///< Signal for the 'loginFinished' gRPC stream event.
     void loginAlreadyLoggedIn(int index); ///< Signal for the 'loginAlreadyLoggedIn' gRPC stream event.
+    void loginFidoTouchRequested(QString const &username); ///< Signal for the `loginFidoTouchRequested' gRPC stream event.
+    void loginFidoTouchCompleted(QString const &username); ///< Signal for the `loginFidoTouchCompleted' gRPC stream event.
+    void loginFidoPinRequired(QString const &username); ///< Signal for the `loginFidoPinRequired' gRPC stream event.
+    void loginFidoPinInvalid(QString const &errorMsg); ///< Signal for the `loginFidoPinInvalid' gRPC stream event.
+    void loginFidoPinBlocked(QString const &errorMsg); ///< Signal for the `loginFidoPinBlocked' gRPC stream event.
+    void loginFidoError(QString const &errorMsg); ///< Signal for the 'loginFidoError' gRPC stream event.
     void loginHvRequested(QString const &hvUrl); ///< Signal for the 'loginHvRequested' gRPC stream event.
     void loginHvError(QString const &errorMsg); ///< Signal for the 'loginHvError' gRPC stream event.
     void updateManualReady(QString const &version); ///< Signal for the 'updateManualReady' gRPC stream event.

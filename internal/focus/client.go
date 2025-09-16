@@ -87,8 +87,7 @@ func withClientConn(ctx context.Context, settingsPath string, fn func(context.Co
 	if err != nil {
 		return err
 	}
-	cc, err := grpc.DialContext(
-		ctx,
+	cc, err := grpc.NewClient(
 		net.JoinHostPort(Host, fmt.Sprint(config.Port)),
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)

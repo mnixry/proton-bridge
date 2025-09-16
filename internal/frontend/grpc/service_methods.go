@@ -35,6 +35,7 @@ import (
 	"github.com/ProtonMail/proton-bridge/v3/internal/platform"
 	"github.com/ProtonMail/proton-bridge/v3/internal/safe"
 	"github.com/ProtonMail/proton-bridge/v3/internal/service"
+	"github.com/ProtonMail/proton-bridge/v3/internal/unleash"
 	"github.com/ProtonMail/proton-bridge/v3/internal/updater"
 	"github.com/ProtonMail/proton-bridge/v3/pkg/ports"
 	"github.com/sirupsen/logrus"
@@ -500,9 +501,26 @@ func (s *Service) Login(_ context.Context, login *LoginRequest) (*emptypb.Empty,
 		s.authClient = client
 		s.auth = auth
 
+		u2fLoginEnabled := s.bridge.GetFeatureFlagValue(unleash.InboxBridgeU2FLoginEnabled)
+
 		switch {
-		case auth.TwoFA.Enabled&proton.HasTOTP != 0:
+		case auth.TwoFA.Enabled == proton.HasTOTP:
 			_ = s.SendEvent(NewLoginTfaRequestedEvent(login.Username))
+
+		case auth.TwoFA.Enabled == proton.HasFIDO2:
+			if !u2fLoginEnabled {
+				// Such a case may only occur to internal users.
+				_ = s.SendEvent(NewLoginError(LoginErrorType_FIDO_ERROR, "Security key authentication required but not enabled in server configuration."))
+				return
+			}
+			_ = s.SendEvent(NewLoginFidoRequestedEvent(login.Username))
+
+		case auth.TwoFA.Enabled == proton.HasFIDO2AndTOTP:
+			if u2fLoginEnabled {
+				_ = s.SendEvent(NewLoginTfaOrFidoRequestedEvent(login.Username))
+			} else {
+				_ = s.SendEvent(NewLoginTfaRequestedEvent(login.Username))
+			}
 
 		case auth.PasswordMode == proton.TwoPasswordMode:
 			_ = s.SendEvent(NewLoginTwoPasswordsRequestedEvent(login.Username))
@@ -577,6 +595,17 @@ func (s *Service) Login2Passwords(_ context.Context, login *LoginRequest) (*empt
 		s.password = password
 
 		s.finishLogin()
+	}()
+
+	return &emptypb.Empty{}, nil
+}
+
+func (s *Service) FidoAssertionAbort(_ context.Context, loginAbort *LoginAbortRequest) (*emptypb.Empty, error) {
+	s.log.WithField("username", loginAbort.Username).Debug("FidoAssertionAbort")
+
+	go func() {
+		defer async.HandlePanic(s.panicHandler)
+		s.fidoManager.Cancel()
 	}()
 
 	return &emptypb.Empty{}, nil

@@ -45,6 +45,11 @@ func (f *frontendCLI) yesNoQuestion(question string) bool {
 	return len(answer) > 0 // Empty is false.
 }
 
+func (f *frontendCLI) PromptAndWaitReturn(prompt string) {
+	f.Print(prompt, ". Press Enter/Return to continue: ")
+	f.ReadLine()
+}
+
 func (f *frontendCLI) readStringInAttempts(title string, readFunc func() string, isOK func(string) bool) (value string) {
 	f.Printf("%s: ", title)
 	value = readFunc()
@@ -58,6 +63,10 @@ func (f *frontendCLI) readStringInAttempts(title string, readFunc func() string,
 		value = readFunc()
 	}
 	return
+}
+
+func (f *frontendCLI) ReadSecurityKeyPin() string {
+	return f.readStringInAttempts("Security key PIN", f.ReadPassword, isNotEmpty)
 }
 
 func (f *frontendCLI) printAndLogError(args ...interface{}) {
@@ -109,16 +118,4 @@ Recommendation:
   (such as ProtonVPN) which encrypts your Internet connection, or use
   a different network to access Proton Mail.
 `)
-}
-
-func sliceAnyToByteArray(s []any) []byte {
-	result := make([]byte, len(s))
-	for i, val := range s {
-		if intVal, ok := val.(float64); ok {
-			result[i] = byte(intVal)
-		} else {
-			panic("boom")
-		}
-	}
-	return result
 }
