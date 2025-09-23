@@ -35,6 +35,7 @@ main(){
     ignore GO-2025-3563 "BRIDGE-346 net/http request smuggling"
     ignore GO-2025-3754 "BRIDGE-388 github.com/cloudflare/circl indirect import from gopenpgp; need to wait for upstream to patch"
     ignore GO-2025-3849 "BRIDGE-416 database/sql race condition leading to potential data overwrite"
+    ignore GO-2025-3956 "BRIDGE-428 LookPath from os/exec may result in binaries listed in the path to be returned"
 
     has_vulns
 
