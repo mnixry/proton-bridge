@@ -151,7 +151,7 @@ Proton Mail Bridge includes the following 3rd party software:
 * [go-message](https://github.com/ProtonMail/go-message) available under [license](https://github.com/ProtonMail/go-message/blob/master/LICENSE) 
 * [go-smtp](https://github.com/ProtonMail/go-smtp) available under [license](https://github.com/ProtonMail/go-smtp/blob/master/LICENSE) 
 * [winhello](https://github.com/ProtonMail/winhello) available under [license](https://github.com/ProtonMail/winhello/blob/master/LICENSE) 
-* [resty](https://github.com/LBeernaertProton/resty/v2) available under [license](https://github.com/LBeernaertProton/resty/v2/blob/master/LICENSE) 
-* [go-keychain](https://github.com/cuthix/go-keychain) available under [license](https://github.com/cuthix/go-keychain/blob/master/LICENSE) 
+* [resty](https://github.com/ProtonMail/resty/v2) available under [license](https://github.com/ProtonMail/resty/v2/blob/master/LICENSE) 
+* [go-keychain](https://github.com/ProtonMail/go-keychain) available under [license](https://github.com/ProtonMail/go-keychain/blob/master/LICENSE) 
 * [go-libfido2](https://github.com/ProtonMail/go-libfido2) available under [license](https://github.com/ProtonMail/go-libfido2/blob/master/LICENSE) 
 <!-- END AUTOGEN -->

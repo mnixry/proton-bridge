@@ -7,7 +7,7 @@ require (
 	github.com/Masterminds/semver/v3 v3.2.0
 	github.com/ProtonMail/gluon v0.17.1-0.20250627102828-b014b7cc8132
 	github.com/ProtonMail/go-autostart v0.0.0-20210130080809-00ed301c8e9a
-	github.com/ProtonMail/go-proton-api v0.4.1-0.20250925134057-a44ee01d3b3b
+	github.com/ProtonMail/go-proton-api v0.4.1-0.20250930094753-9c2b53694f72
 	github.com/ProtonMail/gopenpgp/v2 v2.9.0-proton
 	github.com/PuerkitoBio/goquery v1.8.1
 	github.com/abiosoft/ishell v2.0.0+incompatible
@@ -139,7 +139,7 @@ replace (
 	github.com/emersion/go-message => github.com/ProtonMail/go-message v0.13.1-0.20240919135104-3bc88e6a9423
 	github.com/emersion/go-smtp => github.com/ProtonMail/go-smtp v0.0.0-20231109081432-2b3d50599865
 	github.com/go-ctap/winhello => github.com/ProtonMail/winhello v0.0.0-20250918145518-a739b7dc2e56
-	github.com/go-resty/resty/v2 => github.com/LBeernaertProton/resty/v2 v2.0.0-20231129100320-dddf8030d93a
-	github.com/keybase/go-keychain => github.com/cuthix/go-keychain v0.0.0-20240103134243-0b6a41580b77
+	github.com/go-resty/resty/v2 => github.com/ProtonMail/resty/v2 v2.0.0-20250929142426-e3dc6308c80b
+	github.com/keybase/go-keychain => github.com/ProtonMail/go-keychain v0.0.0-20250929142014-ea8548dff768
 	github.com/keys-pub/go-libfido2 => github.com/ProtonMail/go-libfido2 v0.0.0-20250916110427-df894d6d07a1
 )
