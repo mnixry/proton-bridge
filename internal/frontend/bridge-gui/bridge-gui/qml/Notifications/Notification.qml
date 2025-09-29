@@ -40,11 +40,10 @@ QtObject {
     property string subtitle
     property string username
 
-    // Whether to display a spinner.
-    property bool busyIndicator: false
+    property bool busyIndicator: false // Whether to display a spinner.
 
-    // Whether to display a text input field.
-    property bool useTextField: false
+    property bool useTextField: false // Whether to display a text input field.
+    property bool isTextFieldPassword: false // Whether the additional text input field is for a password.
 
     // Source for an additional image, won't be displayed if empty.
     property string additionalImageSrc: ""
@@ -53,6 +52,7 @@ QtObject {
     signal clearTextFieldRequested()
     signal textFieldChanged(string value)
     signal focusTextField()
+    signal hideTextFieldPassword()
 
     onActiveChanged: {
         dismissed = false;

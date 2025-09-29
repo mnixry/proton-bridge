@@ -105,6 +105,7 @@ Dialog {
             Layout.preferredWidth: 240
             Layout.bottomMargin: 16
             colorScheme: root.colorScheme
+            echoMode: root.notification.isTextFieldPassword ? TextInput.Password : TextInput.Normal
             text: root.textFieldText
             visible: root.notification && root.notification.useTextField
 
@@ -116,9 +117,13 @@ Dialog {
                     root.notification.textFieldChanged("")
                     textField.clear();
                 }
-
                 function onFocusTextField() {
                     textField.focus = true;
+                }
+                function onHideTextFieldPassword() {
+                    if (root.notification.isTextFieldPassword) {
+                        textField.hidePassword();
+                    }
                 }
             }
         }

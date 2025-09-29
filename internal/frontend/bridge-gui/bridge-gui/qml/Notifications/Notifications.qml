@@ -1290,6 +1290,7 @@ QtObject {
         icon: "./icons/ic-exclamation-circle-filled.svg"
         type: Notification.NotificationType.Info
         useTextField: true
+        isTextFieldPassword: true
 
         onTextFieldChanged: function(value) {
             root.fidoPinRequested.fidoPinInput = value;
@@ -1298,6 +1299,7 @@ QtObject {
         function reset() {
             root.fidoPinRequested.active = false;
             root.fidoPinRequested.clearTextFieldRequested();
+            root.fidoPinRequested.hideTextFieldPassword();
             root.fidoPinRequested.type = Notification.NotificationType.Info;
         }
         function clearAndFocusTextField() {

@@ -22,7 +22,6 @@ FocusScope {
         Login,
         TOTP,
         FIDO,
-        TOTPOrFIDO,
         MailboxPassword,
         HV
     }
