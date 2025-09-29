@@ -44,7 +44,7 @@ func getNewestAppVersion() (string, error) {
 	}
 
 	finalURL := resp.Request.URL.String()
-	re := regexp.MustCompile(`tag\/(\d+\.\d+\.\d+)`)
+	re := regexp.MustCompile(`tag\/v?(\d+\.\d+\.\d+)`)
 	matches := re.FindStringSubmatch(finalURL)
 	if len(matches) < 2 {
 		return "", errors.New("no version found in redirect URL")
