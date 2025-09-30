@@ -22,6 +22,7 @@ package grpc
 import (
 	"context"
 	"fmt"
+	"github.com/ProtonMail/go-proton-api"
 
 	"github.com/ProtonMail/gluon/async"
 	"github.com/ProtonMail/proton-bridge/v3/internal/fido"
@@ -43,6 +44,11 @@ func (s *Service) LoginFido(_ context.Context, login *LoginRequest) (*emptypb.Em
 		if err := fido.AuthWithHardwareKeyGUI(s.authClient, s.auth, false); err != nil {
 			_ = s.SendEvent(NewLoginError(LoginErrorType_FIDO_ERROR, fmt.Sprintf("Security key authentication failed: %s", err)))
 			s.loginClean()
+			return
+		}
+
+		if s.auth.PasswordMode == proton.TwoPasswordMode {
+			_ = s.SendEvent(NewLoginTwoPasswordsRequestedEvent(login.Username))
 			return
 		}
 

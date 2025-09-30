@@ -25,6 +25,7 @@ import (
 	"fmt"
 
 	"github.com/ProtonMail/gluon/async"
+	"github.com/ProtonMail/go-proton-api"
 	"github.com/ProtonMail/proton-bridge/v3/internal/fido"
 	"github.com/keys-pub/go-libfido2"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -101,6 +102,11 @@ func (s *Service) LoginFido(_ context.Context, login *LoginRequest) (*emptypb.Em
 				s.loginClean()
 			}
 
+			return
+		}
+
+		if s.auth.PasswordMode == proton.TwoPasswordMode {
+			_ = s.SendEvent(NewLoginTwoPasswordsRequestedEvent(login.Username))
 			return
 		}
 

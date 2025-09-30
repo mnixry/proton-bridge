@@ -1277,6 +1277,10 @@ QtObject {
             function onLoginFidoError(errorMsg) {
                 root.touchFidoKey.reset();
             }
+            function onLogin2PasswordRequested(_) {
+                root.touchFidoKey.reset();
+            }
+            
             target: Backend
         }
     }

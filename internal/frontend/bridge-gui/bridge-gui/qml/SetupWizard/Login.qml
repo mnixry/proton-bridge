@@ -133,7 +133,8 @@ FocusScope {
                 errorLabel.text = qsTr("Incorrect login credentials. Please try again.");
             }
             function onLogin2PasswordRequested(username) {
-                console.assert(stackLayout.currentIndex === Login.RootStack.Login || stackLayout.currentIndex === Login.RootStack.TOTP, "Unexpected login2PasswordRequested");
+                console.assert(stackLayout.currentIndex === Login.RootStack.Login || stackLayout.currentIndex === Login.RootStack.FIDO || stackLayout.currentIndex === Login.RootStack.TOTP, "Unexpected login2PasswordRequested");
+                fidoLayout.reset();
                 stackLayout.currentIndex = Login.RootStack.MailboxPassword;
                 mailboxPasswordUsernameLabel.text = username;
                 secondPasswordTextField.focus = true;
