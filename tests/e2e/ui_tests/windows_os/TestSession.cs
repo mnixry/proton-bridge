@@ -148,7 +148,10 @@ namespace ProtonMailBridge.UI.Tests
             string appExecutable = TestData.AppExecutable;
             Application.Launch(appExecutable);
             Wait.UntilInputIsProcessed(TestData.FiveSecondsTimeout);
-            App = Application.Attach("bridge-gui.exe");
+            Retry.WhileException( () =>
+            {
+                App = Application.Attach("bridge-gui.exe");
+            }, TimeSpan.FromSeconds(60), null, true);
             RefreshWindow(TestData.OneMinuteTimeout);
             Window.Focus();
         }
