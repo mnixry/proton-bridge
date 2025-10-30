@@ -57,6 +57,11 @@ if (APPLE) # We need to link the Cocoa framework for the dock icon.
     find_library(COCOA_LIBRARY Cocoa REQUIRED)
 endif()
 
+if (WIN32)
+    add_compile_definitions(NOMINMAX) # Interference with grpc and msvc macros
+    add_compile_definitions(WIN32_LEAN_AND_MEAN)
+endif()
+
 
 #*****************************************************************************************************************************************************
 # Qt
