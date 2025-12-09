@@ -45,6 +45,8 @@ main(){
     ignore GO-2025-4013 "BRIDGE-440 validating cert chains with DSA public keys may cause programs to panic"
     ignore GO-2025-4011 "BRIDGE-440 pasing a maliciously crafted DER payloads could allocate excessive memory"
     ignore GO-2025-4014 "BRIDGE-440 tarball extraction may read an unbounded amount of data from the archive into memory"
+    ignore GO-2025-4175 "BRIDGE-440 improper application of excluded DNS name constraints when verifying wildcard names in crypto/x509"
+    ignore GO-2025-4155 "BRIDGE-440 excessive resource consumption when printing error string for host certificate validation in crypto/x509"
 
     has_vulns
 
