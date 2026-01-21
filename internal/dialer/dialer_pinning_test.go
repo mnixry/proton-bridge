@@ -90,12 +90,22 @@ func TestTLSSignedCertWrongPublicKey(t *testing.T) {
 	r.Error(t, err, "expected dial to fail because of wrong public key")
 }
 
+/*
+For the following test the SSL pin rotates from time to time. Thus, the pin needs to be updated accordingly.
+A new pin can be extracted by running the following command:
+
+		echo | openssl s_client -connect rsa4096.badssl.com:443 2>/dev/null | \
+	  	openssl x509 -pubkey -noout | \
+		openssl pkey -pubin -outform DER | \
+		openssl dgst -sha256 -binary | \
+		base64
+*/
 func TestTLSSignedCertTrustedPublicKey(t *testing.T) {
 	skipIfProxyIsSet(t)
 
 	_, dialer, _, checker, _ := createClientWithPinningDialer("")
 	copyTrustedPins(checker)
-	checker.trustedPins = append(checker.trustedPins, `pin-sha256="OVsJeI/WFSpspmADz1Je5BL2nhu7hZKdBFlw6n09lU4="`)
+	checker.trustedPins = append(checker.trustedPins, `pin-sha256="GGNnH/+pMnSFwy6vEDvfi5TRVWMpC5IINu3BHRM1c4E="`)
 	_, err := dialer.DialTLSContext(context.Background(), "tcp", "rsa4096.badssl.com:443")
 	r.NoError(t, err, "expected dial to succeed because public key is known and cert is signed by CA")
 }
