@@ -3,6 +3,33 @@
 Changelog [format](http://keepachangelog.com/en/1.0.0/)
 
 
+## Laviolette Bridge 3.22.0
+
+### Added
+* BRIDGE-358: Hover tooltip for IMAP/SMTP settings clipboard UI actions.
+* BRIDGE-356: Added support for unavailable keychain retries on Linux, such that we don't wipe the vault. Feature flag support before Bridge initialization. 
+* BRIDGE-278: Rollout feature flag support.
+* BRIDGE-151: Additional sentry reporting related to auto-update failures.
+* BRIDGE-361: Debug information on the utilized keychain helper.
+* BRIDGE-396: Observability caching and metrics for vault related issues.
+* BRIDGE-449: Generic IMAP OK heartbeat for long lasting commands.
+
+### Changed
+* BRIDGE-374: Modified MBOX header sanitization logic, it now ensures that RFC822 headers are present before stripping content.
+* BRIDGE-391: Simplified internal label conflict resolver.
+* BRIDGE-409: Increased the import size limit to 55MB.
+* BRIDGE-369: Bumped gopenpgp to v2.9.0. 
+* BRIDGE-455: Bumped Go to 1.24.11.
+* BRIDGE-424: FIDO2 support.
+
+### Fixed
+* BRIDGE-395: Don't store the last utilized keychain as the user preference on Windows & macOS.
+* BRIDGE-387: Use the address gluon ID, instead of the address ID to fetch message counts.
+* BRIDGE-394: Prevent the RFC822 parser from mutating the message literal.
+* BRIDGE-355: Prevent Bridge from crashing when an unknown message charset is detected on Import.
+* BRIDGE-447: Adjusted error message for message import size limitation.
+
+
 ## Kanmon Bridge 3.21.2
 
 ### Fixed
