@@ -636,9 +636,7 @@ FocusScope {
                     text: qsTr("Cancel")
 
                     onClicked: {
-                        stackLayout.currentIndex = Login.RootStack.TOTP;
-                        twoFactorPasswordTextField.focus = true;
-
+                        root.abort();
                     }
                 }
             }
