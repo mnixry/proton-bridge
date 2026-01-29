@@ -44,6 +44,8 @@ jobs:
             libglvnd-dev \
             libsecret-1-dev \
             linux-libc-dev \
+            libfido2-dev \
+            libcbor-dev \
             pkg-config
 
       - name: Install Windows dependencies
@@ -53,7 +55,7 @@ jobs:
 
       - name: Install macOS dependencies
         if: startsWith( matrix.os, 'macos' )
-        run: brew install zip ninja
+        run: brew install zip ninja libfido2 libcbor
 
       - name: Retrieve vcpkg commit hash
         id: cache_info
