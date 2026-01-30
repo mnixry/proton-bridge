@@ -31,6 +31,9 @@ main(){
 
     jq -r '.finding | select( (.osv != null) and (.trace[0].function != null) ) | .osv ' < vulns.json > vulns_osv_ids.txt
 
+    ignore GO-2026-4340 "BRIDGE-466 TLS 1.3 specific, network-local attacker may disclose minor information before encryption level changes"
+    ignore GO-2026-4341 "BRIDGE-466 net/url potentially excessive memory consumption when processing a large number of query parameters"
+
     has_vulns
 
     echo
