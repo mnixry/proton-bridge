@@ -153,7 +153,7 @@ func New(
 		// Apple Mail commands.
 		configureCmd := &ishell.Cmd{
 			Name: "configure-apple-mail",
-			Help: "Configures Apple Mail to use ProtonMail Bridge",
+			Help: "configures Apple Mail to use ProtonMail Bridge",
 			Func: fe.configureAppleMail,
 		}
 		fe.AddCmd(configureCmd)
@@ -162,35 +162,35 @@ func New(
 	// TLS commands.
 	certCmd := &ishell.Cmd{
 		Name: "cert",
-		Help: "Manage the TLS certificate used by Bridge",
+		Help: "manage the TLS certificate used by Bridge",
 	}
 
 	//goland:noinspection GoBoolExpressions
 	if runtime.GOOS == platform.MACOS {
 		certCmd.AddCmd(&ishell.Cmd{
 			Name: "status",
-			Help: "Check if the TLS certificate used by Bridge is installed in the OS keychain",
+			Help: "check if the TLS certificate used by Bridge is installed in the OS keychain",
 			Func: fe.tlsCertStatus,
 		})
 		certCmd.AddCmd(&ishell.Cmd{
 			Name: "install",
-			Help: "Install TLS certificate used by Bridge in the OS keychain",
+			Help: "install TLS certificate used by Bridge in the OS keychain",
 			Func: fe.installTLSCert,
 		})
 		certCmd.AddCmd(&ishell.Cmd{
 			Name: "uninstall",
-			Help: "Uninstall the TLS certificate used by Bridge from the OS keychain",
+			Help: "uninstall the TLS certificate used by Bridge from the OS keychain",
 			Func: fe.uninstallTLSCert,
 		})
 	}
 	certCmd.AddCmd(&ishell.Cmd{
 		Name: "export",
-		Help: "Export the TLS certificate used by Bridge",
+		Help: "export the TLS certificate used by Bridge",
 		Func: fe.exportTLSCerts,
 	})
 	certCmd.AddCmd(&ishell.Cmd{
 		Name: "import",
-		Help: "Import a TLS certificate to be used by Bridge",
+		Help: "import a TLS certificate to be used by Bridge",
 		Func: fe.importTLSCerts,
 	})
 	fe.AddCmd(certCmd)
@@ -198,16 +198,16 @@ func New(
 	// All mail visibility commands.
 	allMailCmd := &ishell.Cmd{
 		Name: "all-mail-visibility",
-		Help: "choose not to list the All Mail folder in your local client",
+		Help: "choose not to list the 'All Mail' folder in your local client",
 	}
 	allMailCmd.AddCmd(&ishell.Cmd{
 		Name: "hide",
-		Help: "All Mail folder will not be listed in your local client",
+		Help: "'All Mail' folder will not be listed in your local client",
 		Func: fe.hideAllMail,
 	})
 	allMailCmd.AddCmd(&ishell.Cmd{
 		Name: "show",
-		Help: "All Mail folder will be listed in your local client",
+		Help: "'All Mail' folder will be listed in your local client",
 		Func: fe.showAllMail,
 	})
 	fe.AddCmd(allMailCmd)
@@ -338,28 +338,36 @@ func New(
 	}
 	telemetryCmd.AddCmd(&ishell.Cmd{
 		Name: "enable",
-		Help: "Usage diagnostics collection will be enabled",
+		Help: "usage diagnostics collection will be enabled",
 		Func: fe.enableTelemetry,
 	})
 	telemetryCmd.AddCmd(&ishell.Cmd{
 		Name: "disable",
-		Help: "Usage diagnostics collection will be disabled",
+		Help: "usage diagnostics collection will be disabled",
 		Func: fe.disableTelemetry,
 	})
 	fe.AddCmd(telemetryCmd)
 
 	dbgCmd := &ishell.Cmd{
 		Name: "debug",
-		Help: "Debug diagnostics ",
+		Help: "debug diagnostics ",
 	}
 
 	dbgCmd.AddCmd(&ishell.Cmd{
 		Name: "mailbox-state",
-		Help: "Verify local mailbox state against proton server state",
+		Help: "verify local mailbox state against proton server state",
 		Func: fe.debugMailboxState,
 	})
 
 	fe.AddCmd(dbgCmd)
+
+	versionCmd := &ishell.Cmd{
+		Name: "version",
+		Help: "print the version of the Proton Mail Bridge",
+		Func: fe.getVersion,
+	}
+
+	fe.AddCmd(versionCmd)
 
 	go fe.watchEvents(eventCh)
 

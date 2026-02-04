@@ -369,3 +369,7 @@ func (f *frontendCLI) repair(_ *ishell.Context) {
 		f.Println("Bridge cannot connect to the Proton servers. A connection is required to utilize this feature.")
 	}
 }
+
+func (f *frontendCLI) getVersion(_ *ishell.Context) {
+	f.Printf("Proton Mail Bridge %s\n", f.bridge.GetCurrentVersion())
+}
