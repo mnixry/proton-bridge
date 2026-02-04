@@ -152,9 +152,8 @@ SettingsView {
         Layout.fillWidth: true
         checked: Backend.trayIconVisible
         colorScheme: root.colorScheme
-        description: qsTr("Show the Bridge icon in the menu bar. When the Bridge icon is not visible, launch the " +
-        "application again to display the main window.")
-        text: qsTr("Show the Bridge icon in the menu bar")
+        description: qsTr("If the Bridge icon is hidden, relaunch the application to see the main window.")
+        text: qsTr("Show Bridge icon in menu bar")
         type: SettingsItem.Toggle
         visible: (Backend.goos === "darwin") && root._isAdvancedShown
 
