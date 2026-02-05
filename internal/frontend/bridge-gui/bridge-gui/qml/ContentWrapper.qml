@@ -27,17 +27,22 @@ Item {
     signal quitBridge
     signal showClientConfigurator(var user, string address, bool justLoggedIn)
     signal showLogin(var username)
-
-    function selectUser(userID) {
+     function selectUser(userID) {
         const users = Backend.users;
+
         for (let i = 0; i < users.count; i++) {
             const user = users.get(i);
             if (user.id !== userID) {
                 continue;
             }
             accounts.currentIndex = i;
-            if (user.state === EUserState.SignedOut)
+
+            if (user.state === EUserState.SignedOut) {
                 showLogin(user.primaryEmailOrUsername());
+            }
+
+            showAccountProfile(); //redirect the user to the account profile view upon selection.
+
             return;
         }
         console.error("User with ID ", userID, " was not found in the account list");
@@ -54,9 +59,16 @@ Item {
     function showSettings() {
         rightContent.showGeneralSettings();
     }
-
     function hasAccount() {
         return Backend.users.count > 0
+    }
+    function resetTopLeftBarButtonFocus() {
+        settingsButton.focus = false;
+        helpButton.focus = false;
+        dotMenuButton.focus = false;
+    }
+    function showAccountProfile() {
+        rightContent.showAccount();
     }
 
     RowLayout {
@@ -102,6 +114,7 @@ Item {
                         Layout.fillWidth: true
                     }
                     Button {
+                        id: helpButton
                         Layout.bottomMargin: 9
                         Layout.maximumHeight: 36
                         Layout.maximumWidth: 36
@@ -119,6 +132,7 @@ Item {
                         onClicked: rightContent.showHelpView()
                     }
                     Button {
+                        id: settingsButton
                         Layout.bottomMargin: 9
                         Layout.maximumHeight: 36
                         Layout.maximumWidth: 36
@@ -163,6 +177,7 @@ Item {
 
                             onClosed: {
                                 parent.checked = false;
+                                parent.focus = false;
                             }
                             onOpened: {
                                 parent.checked = true;
@@ -342,6 +357,7 @@ Item {
                     if (index !== undefined && index >= 0) {
                         accounts.currentIndex = index;
                     }
+                    resetTopLeftBarButtonFocus()
                     rightContent.currentIndex = 0;
                 }
                 function showBugReport() {

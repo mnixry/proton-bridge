@@ -169,7 +169,7 @@ endif()
 set( CMAKE_EXPORT_COMPILE_COMMANDS ON )
 
 set_target_properties(bridge-gui PROPERTIES
-        WIN32_EXECUTABLE TRUE
+        WIN32_EXECUTABLE TRUE #this needs to be FALSE in order for standard output to work on windows
         MACOSX_BUNDLE TRUE)
 
 install(TARGETS bridge-gui
