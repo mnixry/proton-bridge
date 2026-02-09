@@ -74,13 +74,20 @@ func MapUserPlan(planName string) string {
 		return Business
 	case "planbiz2024":
 		return Business
+	case "mailbiz2024":
+		return Business
+	case "mailbiz2025":
+		return Business
+	case "bundlebiz2025":
+		return Business
 	case "bundlepro2022":
 		return Business
 	case "bundlepro2024":
 		return Business
+	case "enterprise2022":
+		return Business
 	case "duo2024":
 		return Group
-
 	default:
 		return Other
 	}
