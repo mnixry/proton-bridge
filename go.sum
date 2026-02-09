@@ -32,6 +32,10 @@ github.com/ProtonMail/bcrypt v0.0.0-20211005172633-e235017c1baf h1:yc9daCCYUefEs
 github.com/ProtonMail/bcrypt v0.0.0-20211005172633-e235017c1baf/go.mod h1:o0ESU9p83twszAU8LBeJKFAAMX14tISa0yk4Oo5TOqo=
 github.com/ProtonMail/gluon v0.17.1-0.20260225115619-c0f05c033a4a h1:x1Q9Fx8/SKO7JcJQvDCXY61h8SMgrJ2uOIR+nMn/eHo=
 github.com/ProtonMail/gluon v0.17.1-0.20260225115619-c0f05c033a4a/go.mod h1:0wi1rRLBe6aF8UTddl0CT2A4ri7jTBvrHr8RW6X2Ecc=
+github.com/ProtonMail/gluon v0.17.1-0.20260311142303-569ba3734a4d h1:c+SdArKxLWnnS3PgHFyep/LFBLV1N/qYoW9hKYeuYE8=
+github.com/ProtonMail/gluon v0.17.1-0.20260311142303-569ba3734a4d/go.mod h1:0wi1rRLBe6aF8UTddl0CT2A4ri7jTBvrHr8RW6X2Ecc=
+github.com/ProtonMail/gluon v0.17.1-0.20260312144349-c5fe60f25164 h1:yyN5nKKLokVSiUlQS+hl+APkkVv+9P2hRgphYIYQK7g=
+github.com/ProtonMail/gluon v0.17.1-0.20260312144349-c5fe60f25164/go.mod h1:0wi1rRLBe6aF8UTddl0CT2A4ri7jTBvrHr8RW6X2Ecc=
 github.com/ProtonMail/go-autostart v0.0.0-20260210134425-40a9013f5ef4 h1:YYaX0Mg9fjVhyllnuyRLCiu5JJpvO1wF8X1bdBa8xMk=
 github.com/ProtonMail/go-autostart v0.0.0-20260210134425-40a9013f5ef4/go.mod h1:oTGdE7/DlWIr23G0IKW3OXK9wZ5Hw1GGiaJFccTvZi4=
 github.com/ProtonMail/go-crypto v0.0.0-20230321155629-9a39f2531310/go.mod h1:8TI4H3IbrackdNgv+92dI+rhpCaLqM0IfpgCgenFvRE=
