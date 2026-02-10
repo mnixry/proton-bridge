@@ -8,7 +8,7 @@ require (
 	github.com/0xAX/notificator v0.0.0-20220220101646-ee9b8921e557
 	github.com/Masterminds/semver/v3 v3.2.0
 	github.com/ProtonMail/gluon v0.17.1-0.20260112123503-2046c95ca745
-	github.com/ProtonMail/go-autostart v0.0.0-20210130080809-00ed301c8e9a
+	github.com/ProtonMail/go-autostart v0.0.0-20260210134425-40a9013f5ef4
 	github.com/ProtonMail/go-proton-api v0.4.1-0.20260109112619-daf7af47921d
 	github.com/ProtonMail/gopenpgp/v2 v2.9.0-proton
 	github.com/PuerkitoBio/goquery v1.8.1
@@ -137,7 +137,6 @@ require (
 )
 
 replace (
-	github.com/ProtonMail/go-autostart => github.com/ProtonMail/go-autostart v0.0.0-20250402094843-326608c16033
 	github.com/emersion/go-message => github.com/ProtonMail/go-message v0.13.1-0.20240919135104-3bc88e6a9423
 	github.com/emersion/go-smtp => github.com/ProtonMail/go-smtp v0.0.0-20231109081432-2b3d50599865
 	github.com/go-ctap/winhello => github.com/ProtonMail/winhello v0.0.0-20250918145518-a739b7dc2e56
