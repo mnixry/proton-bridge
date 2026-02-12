@@ -18,6 +18,7 @@ APP_FULL_NAME:=Proton Mail Bridge
 APP_VENDOR:=Proton AG
 SRC_ICO:=bridge.ico
 SRC_ICNS:=Bridge.icns
+SRC_ICNS_TAHOE:=Assets.car # For macOS26+ the new icon format is used with the `Assets.car` binary. The binary can be re-generated using the `generate_mac_tahoe_icon.sh` script.
 SRC_SVG:=bridge.svg
 EXE_NAME:=proton-bridge
 REVISION:=$(shell "${ROOT_DIR}/utils/get_revision.sh" rev)
@@ -174,6 +175,7 @@ ${DEPLOY_DIR}/darwin: install-libfido2 ${EXE_TARGET} build-launcher
 	mv ${EXE_TARGET} ${DARWINAPP_CONTENTS}/MacOS/${BRIDGE_EXE_NAME}
 	perl -i -pe"s/>${BRIDGE_GUI_EXE_NAME}/>${LAUNCHER_EXE}/g" ${DARWINAPP_CONTENTS}/Info.plist
 	cp ./dist/${SRC_ICNS} ${DARWINAPP_CONTENTS}/Resources/${SRC_ICNS}
+	cp ./dist/${SRC_ICNS_TAHOE} ${DARWINAPP_CONTENTS}/Resources/${SRC_ICNS_TAHOE}
 	cp LICENSE ${DARWINAPP_CONTENTS}/Resources/
 	rm -rf "${DARWINAPP_CONTENTS}/Frameworks/QtWebEngine.framework"
 	rm -rf "${DARWINAPP_CONTENTS}/Frameworks/QtWebView.framework"

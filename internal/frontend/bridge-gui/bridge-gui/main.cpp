@@ -81,16 +81,13 @@ void initQtApplication() {
     QGuiApplication::setOrganizationName(PROJECT_VENDOR);
     QGuiApplication::setOrganizationDomain("proton.ch");
     QGuiApplication::setQuitOnLastWindowClosed(false);
-#ifdef Q_OS_MACOS
-    // on macOS, the app icon as it appears in the dock and file system is defined by in the app bundle plist, not here.
-    // We still use this copy (lock icon in white rectangle), so that devs that use the bridge-gui exe directly get a decent looking icon in the dock.
-    // Qt does not support the native .icns format, so we use a PNG file.
-    QGuiApplication::setWindowIcon(QIcon(":bridgeMacOS.svg"));
-#else
-    // On non macOS platform, this icon (without the white rectangle background, is used in the OS decoration elements (title bar, task bar, etc...)
-    // It's not use as the executable icon.
+
+#ifndef Q_OS_MACOS
+
+    //MacOS icons are provided via Info.plist
     QGuiApplication::setWindowIcon(QIcon(":bridge.svg"));
-#endif // #ifdef Q_OS_MACOS
+
+#endif // #ifndef Q_OS_MACOS
 }
 
 //****************************************************************************************************************************************************
