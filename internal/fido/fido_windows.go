@@ -20,6 +20,7 @@
 package fido
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -34,6 +35,13 @@ func AuthWithHardwareKeyCLI(_ CLIProvider, client *proton.Client, auth proton.Au
 }
 
 func AuthWithHardwareKeyGUI(client *proton.Client, auth proton.Auth, onCLI bool) error {
+	if winhello.InitError != nil {
+		if errors.Is(winhello.InitError, winhello.ErrWindowsVersionNotSupported) {
+			return ErrorUnsupportedWindowsVersion
+		}
+		return winhello.InitError
+	}
+
 	fidoAuthData, err := extractFidoAuthData(auth)
 	if err != nil {
 		return fmt.Errorf("could not extract security key authentication data: %w", err)

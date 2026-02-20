@@ -160,18 +160,22 @@ func (f *frontendCLI) loginAccount(c *ishell.Context) {
 
 	var hvDetails *proton.APIHVDetails
 	hvDetails, hvErr := hv.VerifyAndExtractHvRequest(err)
-	if hvErr != nil || hvDetails != nil {
-		if hvErr != nil {
-			f.printAndLogError("Cannot login:", hv.ExtractionErrorMsg)
-			f.bridge.ReportMessageWithContext("Unable to extract HV request details", map[string]any{
-				"error": err.Error(),
-			})
-			return
-		}
-		f.promptHvURL(hvDetails)
-		client, auth, err = f.bridge.LoginAuth(context.Background(), loginName, []byte(password), hvDetails)
+	if hvErr != nil {
+		f.printAndLogError("Cannot login:", hv.ExtractionErrorMsg)
+		f.bridge.ReportMessageWithContext("Unable to extract HV request details", map[string]any{
+			"error": err.Error(),
+		})
+		return
 	}
-
+	if hvDetails != nil {
+		f.promptHvURL(hvDetails)
+		client, auth, err = f.bridge.LoginAuth(
+			context.Background(),
+			loginName,
+			[]byte(password),
+			hvDetails,
+		)
+	}
 	if err != nil {
 		f.printAndLogError("Cannot login: ", err)
 		return
@@ -195,21 +199,36 @@ func (f *frontendCLI) loginAccount(c *ishell.Context) {
 
 		if len(auth.TwoFA.FIDO2.RegisteredKeys) == 0 {
 			f.printAndLogError("Cannot login: Security key login is required, but no registered keys were provided.")
+			return
 		}
 		if err := fido.AuthWithHardwareKeyCLI(f, client, auth); err != nil {
-			f.printAndLogError("Cannot login: ", err)
+			if errors.Is(err, fido.ErrorUnsupportedWindowsVersion) {
+				f.printAndLogError("Hardware keys aren't supported on this version of Windows.\n" +
+					"To sign in on this device, you'll need to update Windows or add an authenticator app to your account")
+			} else {
+				f.printAndLogError("Cannot login: ", err)
+			}
 			return
 		}
 
 	case proton.HasFIDO2AndTOTP:
-		if u2fLoginEnabled && len(auth.TwoFA.FIDO2.RegisteredKeys) > 0 && f.yesNoQuestion("Do you want to use a security key for Two-factor authentication") {
-			if err := fido.AuthWithHardwareKeyCLI(f, client, auth); err != nil {
+		useFIDO := u2fLoginEnabled && len(auth.TwoFA.FIDO2.RegisteredKeys) > 0 && f.yesNoQuestion("Do you want to use a security key for Two-factor authentication")
+		if useFIDO {
+			err := fido.AuthWithHardwareKeyCLI(f, client, auth)
+			if errors.Is(err, fido.ErrorUnsupportedWindowsVersion) {
+				f.printAndLogError("Hardware keys aren't supported on this version of Windows.\n" +
+					"To continue signing in, use a code from your authenticator app.")
+				err = f.loginTOTP(c, client)
+			}
+			if err != nil {
 				f.printAndLogError("Cannot login: ", err)
 				return
 			}
-		} else if err := f.loginTOTP(c, client); err != nil {
-			f.printAndLogError("Cannot login: ", err)
-			return
+		} else {
+			if err := f.loginTOTP(c, client); err != nil {
+				f.printAndLogError("Cannot login: ", err)
+				return
+			}
 		}
 	}
 
@@ -228,11 +247,11 @@ func (f *frontendCLI) loginAccount(c *ishell.Context) {
 	userID, err := f.bridge.LoginUser(context.Background(), client, auth, keyPass, hvDetails)
 
 	hvDetails, hvErr = hv.VerifyAndExtractHvRequest(err)
-	if hvDetails != nil || hvErr != nil {
-		if hvErr != nil {
-			f.printAndLogError("Cannot login: ", hvErr)
-			return
-		}
+	if hvErr != nil {
+		f.printAndLogError("Cannot login: ", hvErr)
+		return
+	}
+	if hvDetails != nil {
 		f.loginAccountHv(c, loginName, password, keyPass, hvDetails)
 		return
 	}

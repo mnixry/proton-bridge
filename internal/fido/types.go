@@ -17,7 +17,13 @@
 
 package fido
 
+import "errors"
+
 type CLIProvider interface {
 	PromptAndWaitReturn(string)
 	ReadSecurityKeyPin() string
 }
+
+var (
+	ErrorUnsupportedWindowsVersion = errors.New("windows version unsupported")
+)

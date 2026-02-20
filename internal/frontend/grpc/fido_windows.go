@@ -21,7 +21,9 @@ package grpc
 
 import (
 	"context"
+	"errors"
 	"fmt"
+
 	"github.com/ProtonMail/go-proton-api"
 
 	"github.com/ProtonMail/gluon/async"
@@ -42,6 +44,20 @@ func (s *Service) LoginFido(_ context.Context, login *LoginRequest) (*emptypb.Em
 		}
 
 		if err := fido.AuthWithHardwareKeyGUI(s.authClient, s.auth, false); err != nil {
+			if errors.Is(err, fido.ErrorUnsupportedWindowsVersion) {
+				if s.auth.TwoFA.Enabled == proton.HasFIDO2AndTOTP {
+					_ = s.SendEvent(NewLoginError(LoginErrorType_FIDO_ERROR,
+						fmt.Sprintf("Hardware keys aren't supported on this version of Windows.\n"+
+							"To continue signing in, use a code from your authenticator app.")))
+					_ = s.SendEvent(NewLoginTfaRequestedEvent(login.Username))
+					return
+				}
+
+				_ = s.SendEvent(NewLoginError(LoginErrorType_FIDO_ERROR, fmt.Sprintf("Hardware keys aren't supported on this version of Windows.\n"+
+					"To sign in on this device, you'll need to update Windows or add an authenticator app to your account")))
+				s.loginClean()
+				return
+			}
 			_ = s.SendEvent(NewLoginError(LoginErrorType_FIDO_ERROR, fmt.Sprintf("Security key authentication failed: %s", err)))
 			s.loginClean()
 			return
