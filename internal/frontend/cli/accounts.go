@@ -32,6 +32,7 @@ import (
 	"github.com/ProtonMail/proton-bridge/v3/internal/unleash"
 	"github.com/ProtonMail/proton-bridge/v3/internal/vault"
 	"github.com/abiosoft/ishell"
+	"github.com/sirupsen/logrus"
 )
 
 func (f *frontendCLI) listAccounts(_ *ishell.Context) {
@@ -123,6 +124,12 @@ func (f *frontendCLI) showAccountAddressInfo(user bridge.UserInfo, address strin
 
 func (f *frontendCLI) promptHvURL(details *proton.APIHVDetails) {
 	hvURL := hv.FormatHvURL(details)
+
+	log.WithField("hvURL", hvURL).WithFields(logrus.Fields{
+		"hvMethods": details.Methods,
+		"hvToken":   details.Token,
+	}).Info("HV request details")
+
 	fmt.Print("\nHuman Verification requested. Please open the URL below in a browser and press ENTER when the challenge has been completed.\n\n", hvURL+"\n")
 	f.ReadLine()
 	fmt.Println("Authenticating ...")

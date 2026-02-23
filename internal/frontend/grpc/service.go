@@ -665,6 +665,10 @@ func (s *Service) handleHvRequest(err error) {
 
 	s.hvDetails = hvDet
 	hvChallengeURL := hv.FormatHvURL(hvDet)
+	logrus.WithField("hvURL", hvChallengeURL).WithFields(logrus.Fields{
+		"hvMethods": s.hvDetails.Methods,
+		"hvToken":   s.hvDetails.Token,
+	}).Info("HV request details")
 	_ = s.SendEvent(NewLoginHvRequestedEvent(hvChallengeURL))
 }
 
