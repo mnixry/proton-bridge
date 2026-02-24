@@ -50,7 +50,10 @@ func (s SyncMessageBuilder) BuildMessage(
 		return syncservice.BuildResult{}, err
 	}
 
-	update, err := newMessageCreatedUpdate(apiLabels, full.MessageMetadata, buffer.Bytes())
+	literal := make([]byte, buffer.Len())
+	copy(literal, buffer.Bytes())
+
+	update, err := newMessageCreatedUpdate(apiLabels, full.MessageMetadata, literal)
 	if err != nil {
 		return syncservice.BuildResult{}, err
 	}

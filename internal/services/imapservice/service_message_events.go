@@ -18,7 +18,6 @@
 package imapservice
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -174,7 +173,7 @@ func onMessageCreated(
 	apiLabels := s.labels.GetLabelMap()
 
 	if err := s.identityState.WithAddrKR(message.AddressID, func(_, addrKR *crypto.KeyRing) error {
-		res := buildRFC822(apiLabels, full, addrKR, new(bytes.Buffer))
+		res := buildRFC822(apiLabels, full, addrKR)
 
 		if res.err != nil {
 			s.log.WithError(err).Error("Failed to build RFC822 message")
@@ -235,7 +234,7 @@ func onMessageUpdateDraftOrSent(ctx context.Context, s *Service, event proton.Me
 	apiLabels := s.labels.GetLabelMap()
 
 	if err := s.identityState.WithAddrKR(event.Message.AddressID, func(_, addrKR *crypto.KeyRing) error {
-		res := buildRFC822(apiLabels, full, addrKR, new(bytes.Buffer))
+		res := buildRFC822(apiLabels, full, addrKR)
 
 		if res.err != nil {
 			logrus.WithError(err).Error("Failed to build RFC822 message")

@@ -38,8 +38,10 @@ type DownloadRequest struct {
 	ids []string
 }
 
-type DownloadStageInput = StageInputConsumer[DownloadRequest]
-type DownloadStageOutput = StageOutputProducer[BuildRequest]
+type (
+	DownloadStageInput  = StageInputConsumer[DownloadRequest]
+	DownloadStageOutput = StageOutputProducer[BuildRequest]
+)
 
 // DownloadStage downloads the messages and attachments. It auto-throttles the download of the messages based on
 // whether we run into 429|5xx codes.
@@ -272,7 +274,6 @@ func autoDownloadRate[T any, R any](
 
 				return msg, err
 			})
-
 		if err != nil {
 			return nil, err
 		}

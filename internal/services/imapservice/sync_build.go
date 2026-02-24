@@ -20,6 +20,7 @@ package imapservice
 import (
 	"bytes"
 	"html/template"
+	"sync"
 	"time"
 
 	"github.com/ProtonMail/gluon/imap"
@@ -30,6 +31,12 @@ import (
 	"github.com/ProtonMail/proton-bridge/v3/pkg/message"
 	"github.com/bradenaw/juniper/xslices"
 )
+
+var eventBuildBufferPool = sync.Pool{ //nolint:gochecknoglobals
+	New: func() any {
+		return new(bytes.Buffer)
+	},
+}
 
 type buildRes struct {
 	messageID string
@@ -50,23 +57,31 @@ func defaultMessageJobOpts() message.JobOptions {
 	}
 }
 
-func buildRFC822(apiLabels map[string]proton.Label, full proton.FullMessage, addrKR *crypto.KeyRing, buffer *bytes.Buffer) *buildRes {
+func buildRFC822(apiLabels map[string]proton.Label, full proton.FullMessage, addrKR *crypto.KeyRing) *buildRes {
+	buf := eventBuildBufferPool.Get().(*bytes.Buffer) //nolint:forcetypeassert
+	buf.Reset()
+	buf.Grow(full.Size)
+
 	var (
 		update *imap.MessageCreated
 		err    error
 	)
 
-	buffer.Grow(full.Size)
-
-	if buildErr := message.DecryptAndBuildRFC822Into(addrKR, full.Message, full.AttData, defaultMessageJobOpts(), buffer); buildErr != nil {
+	if buildErr := message.DecryptAndBuildRFC822Into(addrKR, full.Message, full.AttData, defaultMessageJobOpts(), buf); buildErr != nil {
 		update = newMessageCreatedFailedUpdate(apiLabels, full.MessageMetadata, buildErr)
 		err = buildErr
-	} else if created, parseErr := newMessageCreatedUpdate(apiLabels, full.MessageMetadata, buffer.Bytes()); parseErr != nil {
-		update = newMessageCreatedFailedUpdate(apiLabels, full.MessageMetadata, parseErr)
-		err = parseErr
 	} else {
-		update = created
+		literal := make([]byte, buf.Len())
+		copy(literal, buf.Bytes())
+		if created, parseErr := newMessageCreatedUpdate(apiLabels, full.MessageMetadata, literal); parseErr != nil {
+			update = newMessageCreatedFailedUpdate(apiLabels, full.MessageMetadata, parseErr)
+			err = parseErr
+		} else {
+			update = created
+		}
 	}
+
+	eventBuildBufferPool.Put(buf)
 
 	return &buildRes{
 		messageID: full.ID,
