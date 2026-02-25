@@ -18,6 +18,7 @@
 package bridge_test
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -26,7 +27,6 @@ import (
 	"github.com/ProtonMail/proton-bridge/v3/internal/bridge"
 	"github.com/ProtonMail/proton-bridge/v3/internal/services/observability"
 	"github.com/stretchr/testify/require"
-	"golang.org/x/net/context"
 )
 
 func TestBridge_Observability(t *testing.T) {
