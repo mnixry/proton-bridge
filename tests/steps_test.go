@@ -45,6 +45,7 @@ func (s *scenario) steps(ctx *godog.ScenarioContext) {
 	// ==== SETUP ====
 	ctx.Step(`^there exists an account with username "([^"]*)" and password "([^"]*)"$`, s.thereExistsAnAccountWithUsernameAndPassword)
 	ctx.Step(`^there exists a disabled account with username "([^"]*)" and password "([^"]*)"$`, s.thereExistsAnAccountWithUsernameAndPasswordWithDisablePrimary)
+	ctx.Step(`^there exists an account with username "([^"]*)" and password "([^"]*)" with an RSA key of (\d+) bits$`, s.thereExistsAnAccountWithUsernameAndPasswordWithAnRSAKeyOfBits)
 	ctx.Step(`^the account "([^"]*)" has additional address "([^"]*)"$`, s.theAccountHasAdditionalAddress)
 	ctx.Step(`^the account "([^"]*)" has additional disabled address "([^"]*)"$`, s.theAccountHasAdditionalDisabledAddress)
 	ctx.Step(`^the account "([^"]*)" has additional address "([^"]*)" without keys$`, s.theAccountHasAdditionalAddressWithoutKeys)

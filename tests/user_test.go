@@ -41,11 +41,15 @@ import (
 )
 
 func (s *scenario) thereExistsAnAccountWithUsernameAndPassword(username, password string) error {
-	return s.createUserAccount(username, password, false)
+	return s.createUserAccount(username, password, false, 2048)
 }
 
 func (s *scenario) thereExistsAnAccountWithUsernameAndPasswordWithDisablePrimary(username, password string) error {
-	return s.createUserAccount(username, password, true)
+	return s.createUserAccount(username, password, true, 2048)
+}
+
+func (s *scenario) thereExistsAnAccountWithUsernameAndPasswordWithAnRSAKeyOfBits(username, password string, rsaLength int) error {
+	return s.createUserAccount(username, password, false, rsaLength)
 }
 
 func (s *scenario) theAccountHasAdditionalAddress(username, address string) error {
@@ -601,7 +605,7 @@ func (s *scenario) addAdditionalAddressToAccount(username, address string, disab
 	})
 }
 
-func (s *scenario) createUserAccount(username, password string, disabled bool) error {
+func (s *scenario) createUserAccount(username, password string, disabled bool, rsaLength int) error {
 	// Create the user and generate its default address (with keys).
 
 	if len(username) == 0 || username[0] == '-' {
@@ -612,10 +616,12 @@ func (s *scenario) createUserAccount(username, password string, disabled bool) e
 		panic("password must be non-empty and not start with minus")
 	}
 
+	rsaKeyLength := fmt.Sprintf("RSA%d", rsaLength)
+
 	args := []string{
 		"--name", username,
 		"--password", password,
-		"--gen-keys", "RSA2048",
+		"--gen-keys", rsaKeyLength,
 	}
 
 	if disabled {
