@@ -30,7 +30,7 @@ main(){
     GOTOOLCHAIN=auto go run golang.org/x/vuln/cmd/govulncheck@latest -json ./... > vulns.json
 
     jq -r '.finding | select( (.osv != null) and (.trace[0].function != null) ) | .osv ' < vulns.json > vulns_osv_ids.txt
-
+    ignore GO-2026-4559 "BRIDGE-483 /x/net/http missing nil check can cause panic with sending HTTP/2 frames"
     has_vulns
 
     echo
