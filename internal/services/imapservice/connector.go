@@ -481,14 +481,26 @@ func (s *Connector) MoveMessages(ctx context.Context, _ connector.IMAPStateWrite
 		isAllMailOrScheduled(mboxToID) {
 		return false, connector.ErrOperationNotAllowed
 	}
+	shouldExpungeOldLocation := func() bool {
+		rdLabels := s.labels.Read()
+		defer rdLabels.Close()
+
+		if v, ok := rdLabels.GetLabel(string(mboxFromID)); ok && v.Type == proton.LabelTypeLabel {
+			return true
+		}
+
+		if v, ok := rdLabels.GetLabel(string(mboxToID)); ok && (v.Type == proton.LabelTypeFolder || v.Type == proton.LabelTypeSystem) {
+			return true
+		}
+
+		return false
+	}()
 
 	if err := s.client.LabelMessages(ctx, usertypes.MapTo[imap.MessageID, string](messageIDs), string(mboxToID)); err != nil {
 		return false, fmt.Errorf("labeling messages: %w", err)
 	}
 
-	shouldExpungeOldLocation := s.isMailboxOfTypeLabel(string(mboxFromID))
-
-	if shouldExpungeOldLocation {
+	if s.isMailboxOfTypeLabel(string(mboxFromID)) {
 		if err := s.client.UnlabelMessages(ctx, usertypes.MapTo[imap.MessageID, string](messageIDs), string(mboxFromID)); err != nil {
 			return false, fmt.Errorf("unlabeling messages: %w", err)
 		}
