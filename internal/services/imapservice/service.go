@@ -95,6 +95,8 @@ type Service struct {
 	observabilitySender  observability.Sender
 	labelConflictManager *LabelConflictManager
 	LabelConflictChecker *LabelConflictChecker
+
+	featureFlagProvider unleash.FeatureFlagValueProvider
 }
 
 func NewService(
@@ -127,7 +129,7 @@ func NewService(
 
 	labelConflictManager := NewLabelConflictManager(serverManager, gluonIDProvider, client, reporter, featureFlagProvider)
 	syncUpdateApplier := NewSyncUpdateApplier(labelConflictManager)
-	syncMessageBuilder := NewSyncMessageBuilder(rwIdentity)
+	syncMessageBuilder := NewSyncMessageBuilder(rwIdentity, featureFlagProvider)
 	syncReporter := newSyncReporter(identityState.User.ID, eventPublisher, time.Second)
 
 	service := &Service{
@@ -163,6 +165,8 @@ func NewService(
 
 		observabilitySender:  observabilitySender,
 		labelConflictManager: labelConflictManager,
+
+		featureFlagProvider: featureFlagProvider,
 	}
 
 	service.LabelConflictChecker = NewConflictChecker(service, reporter, gluonIDProvider, serverManager)
@@ -542,6 +546,7 @@ func (s *Service) buildConnectors() (map[string]*Connector, error) {
 			s.syncStateProvider,
 			s.serverManager,
 			s.gluonIDProvider,
+			s.featureFlagProvider,
 		)
 
 		return connectors, nil
@@ -561,6 +566,7 @@ func (s *Service) buildConnectors() (map[string]*Connector, error) {
 			s.syncStateProvider,
 			s.serverManager,
 			s.gluonIDProvider,
+			s.featureFlagProvider,
 		)
 	}
 

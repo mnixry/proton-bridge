@@ -159,6 +159,7 @@ func addNewAddressSplitMode(ctx context.Context, s *Service, addrID string) erro
 		s.syncStateProvider,
 		s.serverManager,
 		s.gluonIDProvider,
+		s.featureFlagProvider,
 	)
 
 	if err := s.serverManager.AddIMAPUser(ctx, connector, connector.addrID, s.gluonIDProvider, s.syncStateProvider); err != nil {

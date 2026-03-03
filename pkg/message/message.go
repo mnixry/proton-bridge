@@ -20,7 +20,29 @@
 package message
 
 import (
+	"sync/atomic"
+
 	"github.com/sirupsen/logrus"
 )
 
 var log = logrus.WithField("pkg", "pkg/message") //nolint:gochecknoglobals
+
+var SplitHeaderBodyV2Disabled SplitHeaderBodyV2DisabledWrapper //nolint:gochecknoglobals
+
+type SplitHeaderBodyV2DisabledWrapper struct {
+	value atomic.Bool
+}
+
+func (s *SplitHeaderBodyV2DisabledWrapper) Load() bool {
+	return s.value.Load()
+}
+
+func (s *SplitHeaderBodyV2DisabledWrapper) Swap(newVal bool) {
+	old := s.value.Swap(newVal)
+	if old != newVal {
+		log.WithFields(logrus.Fields{
+			"old": old,
+			"new": newVal,
+		}).Warn("SplitHeaderBodyV2Disabled value has been changed")
+	}
+}

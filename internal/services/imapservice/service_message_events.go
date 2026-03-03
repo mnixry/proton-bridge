@@ -31,7 +31,9 @@ import (
 	obsMetrics "github.com/ProtonMail/proton-bridge/v3/internal/services/imapservice/observabilitymetrics/evtloopmsgevents"
 	obsMetricsSynchronization "github.com/ProtonMail/proton-bridge/v3/internal/services/imapservice/observabilitymetrics/syncmsgevents"
 	"github.com/ProtonMail/proton-bridge/v3/internal/services/observability"
+	"github.com/ProtonMail/proton-bridge/v3/internal/unleash"
 	"github.com/ProtonMail/proton-bridge/v3/internal/usertypes"
+	bmessage "github.com/ProtonMail/proton-bridge/v3/pkg/message"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/exp/maps"
 )
@@ -173,6 +175,7 @@ func onMessageCreated(
 	apiLabels := s.labels.GetLabelMap()
 
 	if err := s.identityState.WithAddrKR(message.AddressID, func(_, addrKR *crypto.KeyRing) error {
+		bmessage.SplitHeaderBodyV2Disabled.Swap(s.featureFlagProvider.GetFlagValue(unleash.SplitMessageHeaderBodyV2Disabled))
 		res := buildRFC822(apiLabels, full, addrKR)
 
 		if res.err != nil {
@@ -234,6 +237,7 @@ func onMessageUpdateDraftOrSent(ctx context.Context, s *Service, event proton.Me
 	apiLabels := s.labels.GetLabelMap()
 
 	if err := s.identityState.WithAddrKR(event.Message.AddressID, func(_, addrKR *crypto.KeyRing) error {
+		bmessage.SplitHeaderBodyV2Disabled.Swap(s.featureFlagProvider.GetFlagValue(unleash.SplitMessageHeaderBodyV2Disabled))
 		res := buildRFC822(apiLabels, full, addrKR)
 
 		if res.err != nil {
