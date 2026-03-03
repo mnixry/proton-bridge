@@ -210,8 +210,8 @@ func (f *frontendCLI) loginAccount(c *ishell.Context) {
 		}
 		if err := fido.AuthWithHardwareKeyCLI(f, client, auth); err != nil {
 			if errors.Is(err, fido.ErrorUnsupportedWindowsVersion) {
-				f.printAndLogError("Hardware keys aren't supported on this version of Windows.\n" +
-					"To sign in on this device, you'll need to update Windows or add an authenticator app to your account")
+				f.printAndLogError("Hardware security keys are not supported in this version of Windows.\n" +
+					"To continue signing in, use a code from your authenticator app.")
 			} else {
 				f.printAndLogError("Cannot login: ", err)
 			}
@@ -223,8 +223,8 @@ func (f *frontendCLI) loginAccount(c *ishell.Context) {
 		if useFIDO {
 			err := fido.AuthWithHardwareKeyCLI(f, client, auth)
 			if errors.Is(err, fido.ErrorUnsupportedWindowsVersion) {
-				f.printAndLogError("Hardware keys aren't supported on this version of Windows.\n" +
-					"To continue signing in, use a code from your authenticator app.")
+				f.printAndLogError("Hardware security keys are not supported in this version of Windows.\n" +
+					"To sign in on this device, update Windows or add an authenticator app to your account.")
 				err = f.loginTOTP(c, client)
 			}
 			if err != nil {
@@ -288,7 +288,6 @@ func (f *frontendCLI) loginTOTP(c *ishell.Context, client *proton.Client) error 
 func (f *frontendCLI) loginAccountHv(c *ishell.Context, loginName string, password string, keyPass []byte, hvDetails *proton.APIHVDetails) {
 	f.promptHvURL(hvDetails)
 	client, auth, err := f.bridge.LoginAuth(context.Background(), loginName, []byte(password), hvDetails)
-
 	if err != nil {
 		f.printAndLogError("Cannot login: ", err)
 		return
@@ -308,7 +307,6 @@ func (f *frontendCLI) loginAccountHv(c *ishell.Context, loginName string, passwo
 	}
 
 	userID, err := f.bridge.LoginUser(context.Background(), client, auth, keyPass, hvDetails)
-
 	if err != nil {
 		f.processAPIError(err)
 		return
