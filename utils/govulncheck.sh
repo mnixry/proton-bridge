@@ -31,6 +31,8 @@ main(){
 
     jq -r '.finding | select( (.osv != null) and (.trace[0].function != null) ) | .osv ' < vulns.json > vulns_osv_ids.txt
     ignore GO-2026-4559 "BRIDGE-483 /x/net/http missing nil check can cause panic with sending HTTP/2 frames"
+    ignore GO-2026-4550 "CIRCL has incorrect calculation in secp384r1 CombinedMult"
+
     has_vulns
 
     echo
