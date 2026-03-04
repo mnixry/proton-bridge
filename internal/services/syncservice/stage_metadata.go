@@ -220,9 +220,15 @@ func (m *metadataIterator) Next(maxDownloadMem uint64, metadataPageSize int, max
 			nextSize := m.expectedSize + uint64(meta.Size) //nolint:gosec // disable G115
 			if nextSize >= maxDownloadMem || len(m.downloadReqIDs) >= maxMessages {
 				m.expectedSize = 0
-				m.remaining = m.remaining[idx:]
 				downloadReqIDs := m.downloadReqIDs
 				m.downloadReqIDs = make([]string, 0, metadataPageSize)
+
+				if len(downloadReqIDs) == 0 {
+					downloadReqIDs = []string{meta.ID}
+					m.remaining = m.remaining[idx+1:]
+				} else {
+					m.remaining = m.remaining[idx:]
+				}
 
 				return DownloadRequest{childJob: m.stage.newChildJob(downloadReqIDs[len(downloadReqIDs)-1], int64(len(downloadReqIDs))), ids: downloadReqIDs}, true, nil
 			}

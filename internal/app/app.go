@@ -85,6 +85,9 @@ const (
 	flagSoftwareRenderer    = "software-renderer"
 	flagSetSoftwareRenderer = "set-software-renderer"
 	flagSetHardwareRenderer = "set-hardware-renderer"
+
+	flagVersion      = "version"
+	flagVersionShort = "v"
 )
 
 // Hidden flags.
@@ -184,6 +187,12 @@ func New() *cli.App {
 			Value:              false,
 			DisableDefaultText: true,
 		},
+		&cli.BoolFlag{
+			Name:               flagVersion,
+			Aliases:            []string{flagVersionShort},
+			Usage:              "Show the current version of the Proton Mail Bridge",
+			DisableDefaultText: true,
+		},
 
 		// Hidden flags
 		&cli.BoolFlag{
@@ -232,6 +241,11 @@ func run(c *cli.Context) error {
 	version, err := semver.NewVersion(constants.Version)
 	if err != nil {
 		return fmt.Errorf("could not create version: %w", err)
+	}
+
+	if c.Bool(flagVersion) {
+		fmt.Printf("Proton Mail Bridge %s\n", version.String())
+		return nil
 	}
 
 	// Create a user agent that will be used for all requests.

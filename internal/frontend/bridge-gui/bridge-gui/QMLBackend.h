@@ -181,6 +181,7 @@ signals: // Signal used by the Qt property system. Many of them are unused but r
     void dockIconVisibleChanged(bool value); ///<Signal for the change of the 'dockIconVisible' property.
     void trayIconVisibleChanged(bool value); ///< Signal for the change of the 'trayIconVisible' property.
     void receivedUserNotification(bridgepp::UserNotification const& notification); ///< Signal to display the userNotification modal
+    void loginFlowStarted() const; ///< Signal to inform that a login flow has started
 
 
 public slots: // slot for signals received from QML -> To be forwarded to Bridge via RPC Client calls.

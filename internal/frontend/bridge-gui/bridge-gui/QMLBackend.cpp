@@ -836,6 +836,9 @@ void QMLBackend::login(QString const &username, QString const &password) const {
             throw Exception("User requested bridge-gui to crash by trying to log as coco@bandicoot",
                 "This error exists for test purposes and should be ignored.", __func__, tailOfLatestBridgeLog(app().sessionID()));
         }
+
+        emit loginFlowStarted();
+
         app().grpc().login(username, password);
     )
 }

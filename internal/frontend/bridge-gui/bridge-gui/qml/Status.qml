@@ -29,12 +29,19 @@ Item {
     implicitHeight: children[0].implicitHeight + children[0].anchors.topMargin + children[0].anchors.bottomMargin
     implicitWidth: children[0].implicitWidth + children[0].anchors.leftMargin + children[0].anchors.rightMargin
 
+    function hasNoInternet() {
+      if(!root.activeNotification) {
+        return false;
+      }
+
+      return root.activeNotification === root.notifications.noInternet;
+    }
+
     NotificationFilter {
         id: notificationFilter
         blacklist: root.notificationBlacklist
         source: root.notifications ? root.notifications.all : undefined
         whitelist: root.notificationWhitelist
-
         onTopmostChanged: {
             if (!topmost) {
                 image.source = "/qml/icons/ic-connected.svg";
@@ -43,6 +50,7 @@ Item {
                 label.color = root.colorScheme.signal_success;
                 return;
             }
+
             image.source = topmost.icon;
             label.text = topmost.brief;
             switch (topmost.type) {
@@ -88,6 +96,14 @@ Item {
             text: qsTr("Connected")
             verticalAlignment: Text.AlignVCenter
             wrapMode: Text.WordWrap
+          }
+          Spinner {
+            source: "/qml/icons/Loader_16.svg"
+            colorScheme: root.colorScheme
+            color: root.colorScheme.text_norm
+            Layout.alignment: Qt.AlignVCenter
+            running: true
+            visible: hasNoInternet()
         }
     }
 }

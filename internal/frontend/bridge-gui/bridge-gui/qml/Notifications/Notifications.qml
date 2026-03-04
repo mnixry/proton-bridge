@@ -662,28 +662,24 @@ QtObject {
         }
     }
     property Notification onlyPaidUsers: Notification {
-        property var pricingLink: "https://proton.me/mail/pricing"
-
         brief: qsTr("Upgrade your account")
-        description: qsTr("Bridge is exclusive to our mail paid plans. Upgrade your account to use Bridge.")
+        description: qsTr("Bridge is exclusive to our mail paid plans.")
+
+        linkText: qsTr("Upgrade your account to use Bridge!")
+        linkUrl: "https://proton.me/mail/pricing"
+
         group: Notifications.Group.Configuration
         icon: "./icons/ic-exclamation-circle-filled.svg"
         type: Notification.NotificationType.Danger
 
-        action: [
-            Action {
-                text: qsTr("Upgrade")
-
-                onTriggered: {
-                    Backend.openExternalLink(root.onlyPaidUsers.pricingLink);
-                    root.onlyPaidUsers.active = false;
-                }
-            }
-        ]
-
         Connections {
             function onLoginFreeUserError() {
                 root.onlyPaidUsers.active = true;
+            }
+            function onLoginFlowStarted() {
+                if (root.onlyPaidUsers.active) {
+                    root.onlyPaidUsers.active = false;
+                }
             }
 
             target: Backend
