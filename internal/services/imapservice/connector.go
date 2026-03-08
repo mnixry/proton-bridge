@@ -403,6 +403,9 @@ func (s *Connector) RemoveMessagesFromMailbox(ctx context.Context, _ connector.I
 		}
 	}
 
+	// Messages can be perma deleted only from 'Trash' or 'Drafts'.
+	// 'Drafts' is included here because some clients like Outlook on Windows, when editing mails on web->client->web->client,
+	// to apply the state they delete the previous message and create a new one.
 	if mboxID == proton.TrashLabel || mboxID == proton.DraftsLabel {
 		const ChunkSize = 150
 		var msgToPermaDelete []string
@@ -445,11 +448,15 @@ func (s *Connector) RemoveMessagesFromMailbox(ctx context.Context, _ connector.I
 						continue
 					}
 
+					// If we remove a message from either 'Drafts' or 'Trash' treat it as it has been already unlabelled
+					if id == string(mboxID) {
+						continue
+					}
+
 					if label.Type == proton.LabelTypeSystem && (id == proton.AllDraftsLabel ||
 						id == proton.AllMailLabel ||
 						id == proton.AllSentLabel ||
-						id == proton.AllScheduledLabel ||
-						id == proton.TrashLabel) {
+						id == proton.AllScheduledLabel) {
 						continue
 					}
 
@@ -457,7 +464,19 @@ func (s *Connector) RemoveMessagesFromMailbox(ctx context.Context, _ connector.I
 				}
 
 				if len(remainingLabels) == 0 {
+					logrus.WithFields(logrus.Fields{
+						"messageID":    m.ID,
+						"mailboxID":    mboxID,
+						"labels id(s)": m.LabelIDs,
+					}).Info("Message has been marked for deletion")
 					msgToPermaDelete = append(msgToPermaDelete, m.ID)
+				} else {
+					logrus.WithFields(logrus.Fields{
+						"messageID":       m.ID,
+						"mailboxID":       mboxID,
+						"labels id(s)":    m.LabelIDs,
+						"remainingLabels": remainingLabels,
+					}).Info("Message has not been marked for deletion due to remaining labels.")
 				}
 			}
 		}
@@ -797,7 +816,6 @@ func (s *Connector) createDraftWithParser(ctx context.Context, parser *parser.Pa
 			ExternalID: message.ExternalID,
 		},
 	})
-
 	if err != nil {
 		return proton.Message{}, fmt.Errorf("failed to create draft: %w", err)
 	}
