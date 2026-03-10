@@ -31,6 +31,7 @@ import (
 	"github.com/ProtonMail/gluon/async"
 	imapEvents "github.com/ProtonMail/gluon/events"
 	"github.com/ProtonMail/gluon/imap"
+	"github.com/ProtonMail/gluon/imap/connectionlimiter"
 	"github.com/ProtonMail/gluon/reporter"
 	"github.com/ProtonMail/gluon/store"
 	"github.com/ProtonMail/gluon/store/fallback_v0"
@@ -43,10 +44,25 @@ import (
 )
 
 const (
-	rollingCounterNewConnectionThreshold = 300
-	rollingCounterNumberOfBuckets        = 6
-	rollingCounterBucketRotationInterval = time.Second * 10
+	rollingCounterObservabilityThreshold   = 300
+	rollingCounterConnectionLimitThreshold = 400
+	rollingCounterNumberOfBuckets          = 6
+	rollingCounterBucketRotationInterval   = time.Second * 10
 )
+
+//nolint:gochecknoglobals
+var defaultClientLimits = connectionlimiter.NewLimits(map[connectionlimiter.Client]int{
+	connectionlimiter.ClientAppleMail:   60,
+	connectionlimiter.ClientOutlook:     0,
+	connectionlimiter.ClientThunderbird: 0,
+}, 0)
+
+//nolint:gochecknoglobals
+var fallbackClientLimits = connectionlimiter.NewLimits(map[connectionlimiter.Client]int{
+	connectionlimiter.ClientAppleMail:   25,
+	connectionlimiter.ClientOutlook:     0,
+	connectionlimiter.ClientThunderbird: 0,
+}, 0)
 
 var logIMAP = logrus.WithField("pkg", "server/imap") //nolint:gochecknoglobals
 
@@ -135,8 +151,9 @@ func newIMAPServer(
 		gluon.WithUIDValidityGenerator(uidValidityGenerator),
 		gluon.WithPanicHandler(panicHandler),
 		gluon.WithObservabilitySender(observability.NewAdapter(observabilitySender), int(observability.GluonImapError), int(observability.GluonMessageError), int(observability.GluonOtherError)),
-		gluon.WithConnectionRollingCounter(rollingCounterNewConnectionThreshold, rollingCounterNumberOfBuckets, rollingCounterBucketRotationInterval),
+		gluon.WithConnectionRollingCounter(rollingCounterConnectionLimitThreshold, rollingCounterObservabilityThreshold, rollingCounterNumberOfBuckets, rollingCounterBucketRotationInterval),
 		gluon.WithFeatureFlagProvider(featureFlagProvider),
+		gluon.WithConnectionLimiter(defaultClientLimits, fallbackClientLimits),
 	}
 
 	if disableIMAPAuthenticate {
