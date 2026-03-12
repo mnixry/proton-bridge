@@ -3,6 +3,12 @@
 Changelog [format](http://keepachangelog.com/en/1.0.0/)
 
 
+## Margit Bridge 3.23.1
+
+### Fixed
+* BRIDGE-488: Restore previous RemoveFromMailbox behavior (< 3.23.0). Drafts moved to trash should not be perma-deleted.
+
+
 ## Margit Bridge 3.23.0
 
 ### Added
