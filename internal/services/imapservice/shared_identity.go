@@ -95,11 +95,15 @@ func (r *rwIdentity) WithAddrKR(addrID string, fn func(userKR *crypto.KeyRing, a
 	return r.identity.WithAddrKR(addrID, r.keyPassProvider.KeyPass(), fn)
 }
 
+// We are copying the current state of the identity and keypass to avoid a possible race condition that can occur when changing addresses.
 func (r *rwIdentity) WithAddrKRs(fn func(*crypto.KeyRing, map[string]*crypto.KeyRing) error) error {
 	r.lock.RLock()
-	defer r.lock.RUnlock()
 
-	return r.identity.WithAddrKRs(r.keyPassProvider.KeyPass(), fn)
+	identitySnapshot := r.identity.Clone()
+	keyPass := append([]byte(nil), r.keyPassProvider.KeyPass()...)
+	r.lock.RUnlock()
+
+	return identitySnapshot.WithAddrKRs(keyPass, fn)
 }
 
 func (r *rwIdentity) CheckAuth(email string, password []byte) (string, error) {
