@@ -377,12 +377,12 @@ func (bridge *Bridge) init(tlsReporter TLSReporter) error {
 	bridge.api.AddStatusObserver(func(status proton.Status) {
 		logPkg.Info("API status changed: ", status)
 
-		switch {
-		case status == proton.StatusUp:
+		switch status {
+		case proton.StatusUp:
 			bridge.publish(events.ConnStatusUp{})
 			bridge.tasks.Once(bridge.onStatusUp)
 
-		case status == proton.StatusDown:
+		case proton.StatusDown:
 			bridge.publish(events.ConnStatusDown{})
 			bridge.tasks.Once(bridge.onStatusDown)
 		}

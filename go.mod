@@ -7,9 +7,9 @@ toolchain go1.24.13
 require (
 	github.com/0xAX/notificator v0.0.0-20220220101646-ee9b8921e557
 	github.com/Masterminds/semver/v3 v3.2.0
-	github.com/ProtonMail/gluon v0.17.1-0.20260312144349-c5fe60f25164
+	github.com/ProtonMail/gluon v0.17.1-0.20260318113247-fdbe905cd072
 	github.com/ProtonMail/go-autostart v0.0.0-20260210134425-40a9013f5ef4
-	github.com/ProtonMail/go-proton-api v0.4.1-0.20260303150810-b518e6d5a5ba
+	github.com/ProtonMail/go-proton-api v0.4.1-0.20260318105919-7382f532e3f4
 	github.com/ProtonMail/gopenpgp/v2 v2.9.0-proton
 	github.com/PuerkitoBio/goquery v1.8.1
 	github.com/abiosoft/ishell v2.0.0+incompatible

@@ -144,7 +144,7 @@ func TestBridge_Sync(t *testing.T) {
 }
 
 // GODT-2215: This test no longer works since it's now possible to import messages into Gluon with bad ContentType header.
-func _TestBridge_Sync_BadMessage(t *testing.T) { //nolint:unused,deadcode
+func _TestBridge_Sync_BadMessage(t *testing.T) { //nolint:unused
 	withEnv(t, func(ctx context.Context, s *server.Server, netCtl *proton.NetCtl, locator bridge.Locator, storeKey []byte) {
 		userID, addrID, err := s.CreateUser("imap", password)
 		require.NoError(t, err)

@@ -873,7 +873,9 @@ func fixGODT3003Labels(
 			continue
 		}
 
-		if lbl.Type == proton.LabelTypeFolder {
+		//nolint:exhaustive
+		switch lbl.Type {
+		case proton.LabelTypeFolder:
 			if mbox.Name[0] != folderPrefix {
 				log.WithField("labelID", mbox.ID.ShortID()).Debug("Found folder without prefix, patching")
 				if err := write.PatchMailboxHierarchyWithoutTransforms(ctx, mbox.ID, xslices.Insert(mbox.Name, 0, folderPrefix)); err != nil {
@@ -882,7 +884,7 @@ func fixGODT3003Labels(
 
 				applied = true
 			}
-		} else if lbl.Type == proton.LabelTypeLabel {
+		case proton.LabelTypeLabel:
 			if mbox.Name[0] != labelPrefix {
 				log.WithField("labelID", mbox.ID.ShortID()).Debug("Found label without prefix, patching")
 				if err := write.PatchMailboxHierarchyWithoutTransforms(ctx, mbox.ID, xslices.Insert(mbox.Name, 0, labelPrefix)); err != nil {

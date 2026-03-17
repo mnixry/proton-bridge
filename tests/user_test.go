@@ -676,10 +676,10 @@ func (s *scenario) createUserAccount(username, password string, disabled bool, r
 
 func (s *scenario) accountHasPublicKeyAttachment(account, enabled string) error {
 	value := true
-	switch {
-	case enabled == "enabled":
+	switch enabled {
+	case "enabled":
 		value = true
-	case enabled == "disabled":
+	case "disabled":
 		value = false
 	default:
 		return errors.New("parameter should either be 'enabled' or 'disabled'")
@@ -693,10 +693,10 @@ func (s *scenario) accountHasPublicKeyAttachment(account, enabled string) error 
 
 func (s *scenario) accountHasSignExternalMessages(account, enabled string) error {
 	value := proton.SignExternalMessagesDisabled
-	switch {
-	case enabled == "enabled":
+	switch enabled {
+	case "enabled":
 		value = proton.SignExternalMessagesEnabled
-	case enabled == "disabled":
+	case "disabled":
 		value = proton.SignExternalMessagesDisabled
 	default:
 		return errors.New("parameter should either be 'enabled' or 'disabled'")
@@ -709,10 +709,10 @@ func (s *scenario) accountHasSignExternalMessages(account, enabled string) error
 
 func (s *scenario) accountHasDefaultDraftFormat(account, format string) error {
 	value := rfc822.TextPlain
-	switch {
-	case format == "plain":
+	switch format {
+	case "plain":
 		value = rfc822.TextPlain
-	case format == "HTML":
+	case "HTML":
 		value = rfc822.TextHTML
 	default:
 		return errors.New("parameter should either be 'plain' or 'HTML'")
@@ -725,10 +725,10 @@ func (s *scenario) accountHasDefaultDraftFormat(account, format string) error {
 
 func (s *scenario) accountHasDefaultPGPSchema(account, schema string) error {
 	value := proton.PGPInlineScheme
-	switch {
-	case schema == "inline":
+	switch schema {
+	case "inline":
 		value = proton.PGPInlineScheme
-	case schema == "MIME":
+	case "MIME":
 		value = proton.PGPMIMEScheme
 	default:
 		return errors.New("parameter should either be 'inline' or 'MIME'")

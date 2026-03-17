@@ -82,7 +82,7 @@ func (m *MetadataStage) run(ctx context.Context, metadataPageSize int, maxMessag
 	for {
 		job, err := m.input.Consume(ctx)
 		if err != nil {
-			if !(errors.Is(err, context.Canceled) || errors.Is(err, ErrNoMoreInput)) {
+			if !errors.Is(err, context.Canceled) && !errors.Is(err, ErrNoMoreInput) {
 				m.log.WithError(err).Error("Error trying to retrieve more work")
 			}
 			return

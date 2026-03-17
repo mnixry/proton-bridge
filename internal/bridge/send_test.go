@@ -467,8 +467,8 @@ SGVsbG8gd29ybGQK
 
 				// messages may not be in order
 				for _, message := range messages {
-					switch {
-					case message.Envelope.Subject == "A new message":
+					switch message.Envelope.Subject {
+					case "A new message":
 						// The message that was sent should now include an empty text/plain body part since there was none
 						// in the original message.
 						require.Equal(t, 2, len(message.BodyStructure.Parts))
@@ -479,7 +479,7 @@ SGVsbG8gd29ybGQK
 						require.Equal(t, "image", message.BodyStructure.Parts[1].MIMEType)
 						require.Equal(t, "jpeg", message.BodyStructure.Parts[1].MIMESubType)
 
-					case message.Envelope.Subject == "A new message Part2":
+					case "A new message Part2":
 						// This message already has a text body, should be unchanged
 						require.Equal(t, 2, len(message.BodyStructure.Parts))
 
@@ -488,14 +488,14 @@ SGVsbG8gd29ybGQK
 						require.Equal(t, "text", message.BodyStructure.Parts[0].MIMEType)
 						require.Equal(t, "html", message.BodyStructure.Parts[0].MIMESubType)
 
-					case message.Envelope.Subject == "A new message Part3":
+					case "A new message Part3":
 						// This message already has a text body, should be unchanged
 						require.Equal(t, 0, len(message.BodyStructure.Parts))
 
 						require.Equal(t, "text", message.BodyStructure.MIMEType)
 						require.Equal(t, "plain", message.BodyStructure.MIMESubType)
 
-					case message.Envelope.Subject == "A new message Part4":
+					case "A new message Part4":
 						// The message that was sent should now include an empty text/plain body part since even though
 						// there was only a text/plain attachment in the original message.
 						require.Equal(t, 2, len(message.BodyStructure.Parts))

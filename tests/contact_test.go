@@ -101,7 +101,7 @@ func (s *scenario) contactOfUserHasNoMessageFormat(email, user string) error {
 					return err
 				}
 			}
-			_, err = c.UpdateContact(ctx, contact.ContactMetadata.ID, proton.UpdateContactReq{Cards: contact.Cards})
+			_, err = c.UpdateContact(ctx, contact.ID, proton.UpdateContactReq{Cards: contact.Cards})
 			return err
 		})
 	})
@@ -131,7 +131,7 @@ func (s *scenario) contactOfUserHasMessageFormat(email, user, format string) err
 					return err
 				}
 			}
-			_, err = c.UpdateContact(ctx, contact.ContactMetadata.ID, proton.UpdateContactReq{Cards: contact.Cards})
+			_, err = c.UpdateContact(ctx, contact.ID, proton.UpdateContactReq{Cards: contact.Cards})
 			return err
 		})
 	})
@@ -157,7 +157,7 @@ func (s *scenario) contactOfUserHasNoEncryptionScheme(email, user string) error 
 					return err
 				}
 			}
-			_, err = c.UpdateContact(ctx, contact.ContactMetadata.ID, proton.UpdateContactReq{Cards: contact.Cards})
+			_, err = c.UpdateContact(ctx, contact.ID, proton.UpdateContactReq{Cards: contact.Cards})
 			return err
 		})
 	})
@@ -165,10 +165,10 @@ func (s *scenario) contactOfUserHasNoEncryptionScheme(email, user string) error 
 
 func (s *scenario) contactOfUserHasEncryptionScheme(email, user, scheme string) error {
 	value := proton.PGPInlineScheme
-	switch {
-	case scheme == "inline":
+	switch scheme {
+	case "inline":
 		value = proton.PGPInlineScheme
-	case scheme == "MIME":
+	case "MIME":
 		value = proton.PGPMIMEScheme
 	default:
 		return errors.New("parameter should either be 'inline' or 'MIME'")
@@ -192,7 +192,7 @@ func (s *scenario) contactOfUserHasEncryptionScheme(email, user, scheme string) 
 					return err
 				}
 			}
-			_, err = c.UpdateContact(ctx, contact.ContactMetadata.ID, proton.UpdateContactReq{Cards: contact.Cards})
+			_, err = c.UpdateContact(ctx, contact.ID, proton.UpdateContactReq{Cards: contact.Cards})
 			return err
 		})
 	})
@@ -218,7 +218,7 @@ func (s *scenario) contactOfUserHasNoSignature(email, user string) error {
 					return err
 				}
 			}
-			_, err = c.UpdateContact(ctx, contact.ContactMetadata.ID, proton.UpdateContactReq{Cards: contact.Cards})
+			_, err = c.UpdateContact(ctx, contact.ID, proton.UpdateContactReq{Cards: contact.Cards})
 			return err
 		})
 	})
@@ -226,10 +226,10 @@ func (s *scenario) contactOfUserHasNoSignature(email, user string) error {
 
 func (s *scenario) contactOfUserHasSignature(email, user, enabled string) error {
 	value := true
-	switch {
-	case enabled == "enabled":
+	switch enabled {
+	case "enabled":
 		value = true
-	case enabled == "disabled":
+	case "disabled":
 		value = false
 	default:
 		return errors.New("parameter should either be 'enabled' or 'disabled'")
@@ -253,7 +253,7 @@ func (s *scenario) contactOfUserHasSignature(email, user, enabled string) error 
 					return err
 				}
 			}
-			_, err = c.UpdateContact(ctx, contact.ContactMetadata.ID, proton.UpdateContactReq{Cards: contact.Cards})
+			_, err = c.UpdateContact(ctx, contact.ID, proton.UpdateContactReq{Cards: contact.Cards})
 			return err
 		})
 	})
@@ -279,7 +279,7 @@ func (s *scenario) contactOfUserHasNoEncryption(email, user string) error {
 					return err
 				}
 			}
-			_, err = c.UpdateContact(ctx, contact.ContactMetadata.ID, proton.UpdateContactReq{Cards: contact.Cards})
+			_, err = c.UpdateContact(ctx, contact.ID, proton.UpdateContactReq{Cards: contact.Cards})
 			return err
 		})
 	})
@@ -287,10 +287,10 @@ func (s *scenario) contactOfUserHasNoEncryption(email, user string) error {
 
 func (s *scenario) contactOfUserHasEncryption(email, user, enabled string) error {
 	value := true
-	switch {
-	case enabled == "enabled":
+	switch enabled {
+	case "enabled":
 		value = true
-	case enabled == "disabled":
+	case "disabled":
 		value = false
 	default:
 		return errors.New("parameter should either be 'enabled' or 'disabled'")
@@ -314,7 +314,7 @@ func (s *scenario) contactOfUserHasEncryption(email, user, enabled string) error
 					return err
 				}
 			}
-			_, err = c.UpdateContact(ctx, contact.ContactMetadata.ID, proton.UpdateContactReq{Cards: contact.Cards})
+			_, err = c.UpdateContact(ctx, contact.ID, proton.UpdateContactReq{Cards: contact.Cards})
 			return err
 		})
 	})
@@ -411,37 +411,37 @@ func (s *scenario) addContactKey(email, user string, pubKey string) error {
 					return err
 				}
 			}
-			_, err = c.UpdateContact(ctx, contact.ContactMetadata.ID, proton.UpdateContactReq{Cards: contact.Cards})
+			_, err = c.UpdateContact(ctx, contact.ID, proton.UpdateContactReq{Cards: contact.Cards})
 			return err
 		})
 	})
 }
 
 func stringToMimeType(value string) (rfc822.MIMEType, error) {
-	switch {
-	case value == "plain":
+	switch value {
+	case "plain":
 		return rfc822.TextPlain, nil
-	case value == "HTML":
+	case "HTML":
 		return rfc822.TextHTML, nil
 	}
 	return rfc822.TextPlain, errors.New("parameter should either be 'plain' or 'HTML'")
 }
 
 func stringToEncryptionScheme(value string) (proton.EncryptionScheme, error) {
-	switch {
-	case value == "inline":
+	switch value {
+	case "inline":
 		return proton.PGPInlineScheme, nil
-	case value == "MIME":
+	case "MIME":
 		return proton.PGPMIMEScheme, nil
 	}
 	return proton.PGPInlineScheme, errors.New("parameter should either be 'inline' or 'MIME'")
 }
 
 func stringToBool(value string) (bool, error) {
-	switch {
-	case value == "enabled":
+	switch value {
+	case "enabled":
 		return true, nil
-	case value == "disabled":
+	case "disabled":
 		return false, nil
 	}
 	return false, errors.New("parameter should either be 'enabled' or 'disabled'")

@@ -73,6 +73,7 @@ func (s *Service) SetUserSplitMode(_ context.Context, splitMode *UserSplitModeRe
 		return nil, status.Errorf(codes.NotFound, "user not found %v", splitMode.UserID)
 	}
 
+	//nolint:gosec //disable G118
 	go func() {
 		defer async.HandlePanic(s.panicHandler)
 		defer func() { _ = s.SendEvent(NewUserToggleSplitModeFinishedEvent(splitMode.UserID)) }()
@@ -125,7 +126,7 @@ func (s *Service) LogoutUser(_ context.Context, userID *wrapperspb.StringValue) 
 	if _, err := s.bridge.GetUserInfo(userID.Value); err != nil {
 		return nil, status.Errorf(codes.NotFound, "user not found %v", userID.Value)
 	}
-
+	//nolint:gosec //disable G118
 	go func() {
 		defer async.HandlePanic(s.panicHandler)
 
@@ -141,6 +142,7 @@ func (s *Service) RemoveUser(_ context.Context, userID *wrapperspb.StringValue) 
 	defer async.HandlePanic(s.panicHandler)
 	s.log.WithField("UserID", userID.Value).Debug("RemoveUser")
 
+	//nolint:gosec //disable G118
 	go func() {
 		defer async.HandlePanic(s.panicHandler)
 

@@ -1021,50 +1021,50 @@ func clientIsFlagApplied(client *client.Client, seq int, flag string, applied bo
 }
 
 func clientChangeMessageState(client *client.Client, seq int, messageState string, isUID bool) error {
-	switch {
-	case messageState == "read":
+	switch messageState {
+	case "read":
 		_, err := clientStore(client, seq, seq, isUID, imap.FormatFlagsOp(imap.AddFlags, true), imap.SeenFlag)
 		if err != nil {
 			return err
 		}
 
-	case messageState == "unread":
+	case "unread":
 		_, err := clientStore(client, seq, seq, isUID, imap.FormatFlagsOp(imap.RemoveFlags, true), imap.SeenFlag)
 		if err != nil {
 			return err
 		}
 
-	case messageState == "starred":
+	case "starred":
 		_, err := clientStore(client, seq, seq, isUID, imap.FormatFlagsOp(imap.AddFlags, true), imap.FlaggedFlag)
 		if err != nil {
 			return err
 		}
 
-	case messageState == "unstarred":
+	case "unstarred":
 		_, err := clientStore(client, seq, seq, isUID, imap.FormatFlagsOp(imap.RemoveFlags, true), imap.FlaggedFlag)
 		if err != nil {
 			return err
 		}
 
-	case messageState == "forwarded":
+	case "forwarded":
 		_, err := clientStore(client, seq, seq, isUID, imap.FormatFlagsOp(imap.AddFlags, true), "Forwarded")
 		if err != nil {
 			return err
 		}
 
-	case messageState == "unforwarded":
+	case "unforwarded":
 		_, err := clientStore(client, seq, seq, isUID, imap.FormatFlagsOp(imap.RemoveFlags, true), "Forwarded")
 		if err != nil {
 			return err
 		}
 
-	case messageState == "replied":
+	case "replied":
 		_, err := clientStore(client, seq, seq, isUID, imap.FormatFlagsOp(imap.AddFlags, true), imap.AnsweredFlag)
 		if err != nil {
 			return err
 		}
 
-	case messageState == "unreplied":
+	case "unreplied":
 		_, err := clientStore(client, seq, seq, isUID, imap.FormatFlagsOp(imap.RemoveFlags, true), imap.AnsweredFlag)
 		if err != nil {
 			return err
@@ -1075,12 +1075,13 @@ func clientChangeMessageState(client *client.Client, seq int, messageState strin
 }
 
 func clientChangeAllMessageState(client *client.Client, messageState string) error {
-	if messageState == "read" {
+	switch messageState {
+	case "read":
 		_, err := clientStore(client, 1, int(client.Mailbox().Messages), false, imap.FormatFlagsOp(imap.AddFlags, true), imap.SeenFlag)
 		if err != nil {
 			return err
 		}
-	} else if messageState == "unread" {
+	case "unread":
 		_, err := clientStore(client, 1, int(client.Mailbox().Messages), false, imap.FormatFlagsOp(imap.RemoveFlags, true), imap.SeenFlag)
 		if err != nil {
 			return err

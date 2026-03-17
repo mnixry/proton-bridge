@@ -92,7 +92,7 @@ func (m *LabelConflictManager) generateMailboxFetcher(connectors []*Connector) m
 func (m *LabelConflictManager) generateMailboxMessageCountFetcher(connectors []*Connector) mailboxMessageCountFetcherFn {
 	return func(ctx context.Context, id imap.InternalMailboxID) (int, error) {
 		var countSum int
-		var errs []error
+		errs := make([]error, 0, len(connectors))
 		for _, conn := range connectors {
 			count, err := conn.GetMailboxMessageCount(ctx, id)
 			countSum += count
@@ -239,7 +239,7 @@ func (r *labelConflictResolverImpl) ResolveConflict(ctx context.Context, label p
 
 func combineIMAPUpdateFns(updateFunctions []func() []imap.Update) func() []imap.Update {
 	return func() []imap.Update {
-		var updates []imap.Update
+		updates := make([]imap.Update, 0, len(updateFunctions))
 		for _, fn := range updateFunctions {
 			updates = append(updates, fn()...)
 		}

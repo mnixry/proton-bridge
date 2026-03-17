@@ -102,7 +102,7 @@ func (b *BuildStage) run(ctx context.Context) {
 	for {
 		req, err := b.input.Consume(ctx)
 		if err != nil {
-			if !(errors.Is(err, ErrNoMoreInput) || errors.Is(err, context.Canceled)) {
+			if !errors.Is(err, ErrNoMoreInput) && !errors.Is(err, context.Canceled) {
 				b.log.WithError(err).Error("Exiting state with error")
 			}
 

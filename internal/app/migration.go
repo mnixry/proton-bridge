@@ -224,23 +224,23 @@ func migrateOldAccount(userID string, store *credentials.Store, v *vault.Vault) 
 
 func migratePrefsToVault(vault *vault.Vault, b []byte) error {
 	var prefs struct {
-		IMAPPort int  `json:"user_port_imap,,string"`
-		SMTPPort int  `json:"user_port_smtp,,string"`
-		SMTPSSL  bool `json:"user_ssl_smtp,,string"`
+		IMAPPort int  `json:"user_port_imap,string"`
+		SMTPPort int  `json:"user_port_smtp,string"`
+		SMTPSSL  bool `json:"user_ssl_smtp,string"`
 
-		AutoUpdate    bool            `json:"autoupdate,,string"`
+		AutoUpdate    bool            `json:"autoupdate,string"`
 		UpdateChannel updater.Channel `json:"update_channel"`
-		UpdateRollout float64         `json:"rollout,,string"`
+		UpdateRollout float64         `json:"rollout,string"`
 
-		FirstStart  bool            `json:"first_time_start,,string"`
+		FirstStart  bool            `json:"first_time_start,string"`
 		ColorScheme string          `json:"color_scheme"`
 		LastVersion *semver.Version `json:"last_used_version"`
-		Autostart   bool            `json:"autostart,,string"`
+		Autostart   bool            `json:"autostart,string"`
 
-		AllowProxy        bool `json:"allow_proxy,,string"`
-		FetchWorkers      int  `json:"fetch_workers,,string"`
-		AttachmentWorkers int  `json:"attachment_workers,,string"`
-		ShowAllMail       bool `json:"is_all_mail_visible,,string"`
+		AllowProxy        bool `json:"allow_proxy,string"`
+		FetchWorkers      int  `json:"fetch_workers,string"`
+		AttachmentWorkers int  `json:"attachment_workers,string"`
+		ShowAllMail       bool `json:"is_all_mail_visible,string"`
 
 		Cookies string `json:"cookies"`
 	}

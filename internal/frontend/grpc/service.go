@@ -63,7 +63,7 @@ const (
 )
 
 // Service is the RPC service struct.
-type Service struct { // nolint:structcheck
+type Service struct {
 	UnimplementedBridgeServer
 
 	grpcServer         *grpc.Server //  the gGRPC server

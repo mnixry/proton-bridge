@@ -161,7 +161,7 @@ func (s *sessionInfo) size() int64 {
 }
 
 func (s *sessionInfo) deleteFiles() (failureCount int) {
-	var allLogs []logFileInfo
+	allLogs := make([]logFileInfo, 0, len(s.launcherLogs)+len(s.guiLogs)+len(s.bridgeLogs))
 	allLogs = append(allLogs, s.launcherLogs...)
 	allLogs = append(allLogs, s.guiLogs...)
 	allLogs = append(allLogs, s.bridgeLogs...)

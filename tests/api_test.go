@@ -93,7 +93,7 @@ func newLiveAPI(hostURL string) API {
 }
 
 func (api *liveAPI) GetHostURL() string {
-	return api.Server.GetProxyURL()
+	return api.GetProxyURL()
 }
 
 func (api *liveAPI) GetDomain() string {

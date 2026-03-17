@@ -62,8 +62,8 @@ func (s SyncMessageBuilder) BuildMessage(
 	}
 
 	return syncservice.BuildResult{
-		AddressID: full.Message.AddressID,
-		MessageID: full.Message.ID,
+		AddressID: full.AddressID,
+		MessageID: full.ID,
 		Update:    update,
 	}, nil
 }

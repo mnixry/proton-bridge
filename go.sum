@@ -36,6 +36,8 @@ github.com/ProtonMail/gluon v0.17.1-0.20260311142303-569ba3734a4d h1:c+SdArKxLWn
 github.com/ProtonMail/gluon v0.17.1-0.20260311142303-569ba3734a4d/go.mod h1:0wi1rRLBe6aF8UTddl0CT2A4ri7jTBvrHr8RW6X2Ecc=
 github.com/ProtonMail/gluon v0.17.1-0.20260312144349-c5fe60f25164 h1:yyN5nKKLokVSiUlQS+hl+APkkVv+9P2hRgphYIYQK7g=
 github.com/ProtonMail/gluon v0.17.1-0.20260312144349-c5fe60f25164/go.mod h1:0wi1rRLBe6aF8UTddl0CT2A4ri7jTBvrHr8RW6X2Ecc=
+github.com/ProtonMail/gluon v0.17.1-0.20260318113247-fdbe905cd072 h1:ds3mxoZBMqMCwEc/f+zlY2ylKIpqwr3mGgUrrchJ4m0=
+github.com/ProtonMail/gluon v0.17.1-0.20260318113247-fdbe905cd072/go.mod h1:0wi1rRLBe6aF8UTddl0CT2A4ri7jTBvrHr8RW6X2Ecc=
 github.com/ProtonMail/go-autostart v0.0.0-20260210134425-40a9013f5ef4 h1:YYaX0Mg9fjVhyllnuyRLCiu5JJpvO1wF8X1bdBa8xMk=
 github.com/ProtonMail/go-autostart v0.0.0-20260210134425-40a9013f5ef4/go.mod h1:oTGdE7/DlWIr23G0IKW3OXK9wZ5Hw1GGiaJFccTvZi4=
 github.com/ProtonMail/go-crypto v0.0.0-20230321155629-9a39f2531310/go.mod h1:8TI4H3IbrackdNgv+92dI+rhpCaLqM0IfpgCgenFvRE=
@@ -55,6 +57,8 @@ github.com/ProtonMail/go-proton-api v0.4.1-0.20260302154546-b88a7763a6a5 h1:vtUI
 github.com/ProtonMail/go-proton-api v0.4.1-0.20260302154546-b88a7763a6a5/go.mod h1:G5BHSvsVcM+P8LXgKA2BPa9kh86Gbt26x4ZRXSKelKg=
 github.com/ProtonMail/go-proton-api v0.4.1-0.20260303150810-b518e6d5a5ba h1:UO3+kL9AHcn/jrwqhuMYe6s8LvYwsOVScn/t0WVV5qU=
 github.com/ProtonMail/go-proton-api v0.4.1-0.20260303150810-b518e6d5a5ba/go.mod h1:G5BHSvsVcM+P8LXgKA2BPa9kh86Gbt26x4ZRXSKelKg=
+github.com/ProtonMail/go-proton-api v0.4.1-0.20260318105919-7382f532e3f4 h1:tQyHsAYn8zpVnhbL+P4vqwCM5LPdr3HwhHpdBZi+AmE=
+github.com/ProtonMail/go-proton-api v0.4.1-0.20260318105919-7382f532e3f4/go.mod h1:G5BHSvsVcM+P8LXgKA2BPa9kh86Gbt26x4ZRXSKelKg=
 github.com/ProtonMail/go-smtp v0.0.0-20231109081432-2b3d50599865 h1:EP1gnxLL5Z7xBSymE9nSTM27nRYINuvssAtDmG0suD8=
 github.com/ProtonMail/go-smtp v0.0.0-20231109081432-2b3d50599865/go.mod h1:qm27SGYgoIPRot6ubfQ/GpiPy/g3PaZAVRxiO/sDUgQ=
 github.com/ProtonMail/go-srp v0.0.7 h1:Sos3Qk+th4tQR64vsxGIxYpN3rdnG9Wf9K4ZloC1JrI=

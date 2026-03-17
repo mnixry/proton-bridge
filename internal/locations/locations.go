@@ -86,6 +86,8 @@ func (l *Locations) getLicenseFilePath() string {
 	// automatically updated (app started from differenet location).
 	// For all those cases, first let's check LICENSE next to the binary.
 	path := filepath.Join(filepath.Dir(os.Args[0]), "LICENSE")
+
+	//nolint:gosec //disable G703
 	if _, err := os.Stat(path); err == nil {
 		return path
 	}
@@ -101,6 +103,8 @@ func (l *Locations) getLicenseFilePath() string {
 		return "/usr/share/licenses/protonmail-" + l.configName + "/LICENSE"
 	case platform.MACOS: //nolint:goconst
 		path := filepath.Join(filepath.Dir(os.Args[0]), "..", "Resources", "LICENSE")
+
+		//nolint:gosec //disable G703
 		if _, err := os.Stat(path); err == nil {
 			return path
 		}
@@ -112,6 +116,7 @@ func (l *Locations) getLicenseFilePath() string {
 		return "/Applications/Proton Mail Bridge.app/Contents/Resources/LICENSE"
 	case platform.WINDOWS:
 		path := filepath.Join(filepath.Dir(os.Args[0]), "LICENSE.txt")
+		//nolint:gosec //disable G703
 		if _, err := os.Stat(path); err == nil {
 			return path
 		}

@@ -47,9 +47,9 @@ func (f *frontendCLI) debugMailboxState(c *ishell.Context) {
 	}
 
 	f.Println("\n\nSome missing messages were detected. Bridge can download these messages for you")
-	f.Println("in a directory which you can later send to the developers for analysis.\n")
+	f.Println("in a directory which you can later send to the developers for analysis.")
 	f.Println(bold("Note that the Messages will be stored unencrypted on disk.") + " If you do not wish")
-	f.Println("to continue, input no in the prompt below.\n")
+	f.Println("to continue, input no in the prompt below.")
 
 	if !f.yesNoQuestion("Would you like to proceed") {
 		return

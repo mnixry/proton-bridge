@@ -143,7 +143,7 @@ func (s *scenario) getLastCallMultipartForm(method, path string) (*http.Request,
 
 	buf := new(bytes.Buffer)
 
-	if _, err := buf.WriteString(fmt.Sprintf("%s %s HTTP/1.1\r\n", call.Method, call.URL.Path)); err != nil {
+	if _, err := fmt.Fprintf(buf, "%s %s HTTP/1.1\r\n", call.Method, call.URL.Path); err != nil {
 		return nil, fmt.Errorf("failed to write request line: %w", err)
 	}
 

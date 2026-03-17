@@ -1222,10 +1222,11 @@ func TestCreateSendReq_MultiRecipients(t *testing.T) {
 	var totalFromSessionKey = 0
 	for _, pkg := range req.Packages {
 		var wantBody string
-		switch {
-		case pkg.MIMEType == rfc822.TextHTML:
+		//nolint:exhaustive
+		switch pkg.MIMEType {
+		case rfc822.TextHTML:
 			wantBody = string(richBody)
-		case pkg.MIMEType == rfc822.TextPlain:
+		case rfc822.TextPlain:
 			wantBody = string(plainBody)
 		default:
 			wantBody = string(mimeBody)

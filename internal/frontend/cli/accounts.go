@@ -468,7 +468,7 @@ func (f *frontendCLI) badEventFeedback(doResync bool) {
 	}
 
 	if err := f.bridge.SendBadEventUserFeedback(context.Background(), f.badUserID, doResync); err != nil {
-		f.Printf("Error: failed to send %s feedback: %w", action, err)
+		f.Printf("Error: failed to send %s feedback: %v", action, err)
 		return
 	}
 

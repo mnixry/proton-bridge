@@ -86,7 +86,7 @@ func (d *DownloadStage) run(ctx context.Context) {
 	for {
 		request, err := d.input.Consume(ctx)
 		if err != nil {
-			if !(errors.Is(err, ErrNoMoreInput) || errors.Is(err, context.Canceled)) {
+			if !errors.Is(err, ErrNoMoreInput) && !errors.Is(err, context.Canceled) {
 				d.log.WithError(err).Error("Exiting state with error")
 			}
 			return
