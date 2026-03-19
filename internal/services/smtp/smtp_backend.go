@@ -106,10 +106,12 @@ func (s *smtpSession) Rcpt(to string) error {
 
 func (s *smtpSession) Data(r io.Reader) error {
 	err := s.accounts.SendMail(context.Background(), s.userID, s.authID, s.from, s.to, r)
-
 	if err != nil {
-		logrus.WithField("pkg", "smtp").WithError(err).Error("Send mail failed.")
+		logrus.WithFields(logrus.Fields{
+			"pkg":  "smtp",
+			"user": s.userID,
+		}).WithError(err).Error("Send mail failed.")
+		return mapError(err)
 	}
-
-	return err
+	return nil
 }

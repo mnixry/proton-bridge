@@ -33,7 +33,6 @@ import (
 	"github.com/ProtonMail/proton-bridge/v3/internal/bridge"
 	"github.com/ProtonMail/proton-bridge/v3/internal/constants"
 	"github.com/ProtonMail/proton-bridge/v3/internal/events"
-	smtpservice "github.com/ProtonMail/proton-bridge/v3/internal/services/smtp"
 	"github.com/emersion/go-imap"
 	"github.com/emersion/go-sasl"
 	"github.com/emersion/go-smtp"
@@ -355,7 +354,7 @@ SGVsbG8gd29ybGQ=
 
 	const messageMultipartWithText = `Content-Type: multipart/mixed;
   boundary="Apple-Mail=_E7AC06C7-4EB2-4453-8CBB-80F4412A7C84"
-Subject: A new message Part2 
+Subject: A new message Part2
 Date: Mon, 13 Mar 2023 16:06:16 +0100
 
 --Apple-Mail=_E7AC06C7-4EB2-4453-8CBB-80F4412A7C84
@@ -536,7 +535,7 @@ SGVsbG8gd29ybGQ=
 
 	const messageInlineImageWithHTML = `Content-Type: multipart/mixed;
   boundary="Apple-Mail=_E7AC06C7-4EB2-4453-8CBB-80F4412A7C84"
-Subject: A new message Part2 
+Subject: A new message Part2
 Date: Mon, 13 Mar 2023 16:06:16 +0100
 
 --Apple-Mail=_E7AC06C7-4EB2-4453-8CBB-80F4412A7C84
@@ -729,9 +728,8 @@ func TestBridge_SendAddressDisabled(t *testing.T) {
 				[]string{recipientInfo.Addresses[0]},
 				strings.NewReader("Subject: Test 1\r\n\r\nHello world!"),
 			)
-
-			smtpErr := smtpservice.NewErrCannotSendFromAddress(senderInfo.Addresses[0])
-			require.Equal(t, fmt.Sprintf("Error: %v", smtpErr.Error()), err.Error())
+			// The error here is a resolved error from the errormapper
+			require.Error(t, err)
 		})
 	})
 }

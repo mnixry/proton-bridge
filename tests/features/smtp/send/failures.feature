@@ -46,4 +46,4 @@ Feature: SMTP wrong messages
       hello
 
       """
-    Then it fails with error "invalid return path"
+    Then it fails with error "The sender or recipient address is not valid. Check To/Cc/Bcc and try again."

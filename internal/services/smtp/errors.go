@@ -20,12 +20,27 @@ package smtp
 import (
 	"errors"
 	"fmt"
+
+	"github.com/ProtonMail/go-proton-api"
 )
 
-var ErrInvalidRecipient = errors.New("invalid recipient")
-var ErrInvalidReturnPath = errors.New("invalid return path")
-var ErrNoSuchUser = errors.New("no such user")
-var ErrTooManyErrors = errors.New("too many failed requests, please try again later")
+var (
+	ErrInvalidRecipient             = errors.New("invalid recipient")
+	ErrInvalidReturnPath            = errors.New("invalid return path")
+	ErrNoSuchUser                   = errors.New("no such user")
+	ErrTooManyErrors                = errors.New("too many failed requests, please try again later")
+	ErrSendMessageOperation         = errors.New("smtp: send message")
+	ErrGetRecipientsOperation       = errors.New("smtp: get recipients")
+	ErrGetSendPreferencesOperation  = errors.New("smtp: get send preferences")
+	ErrLookupRecipientPublicKey     = errors.New("smtp: lookup recipient public key")
+	ErrRecipientAddressDoesNotExist = errors.New("smtp: recipient address does not exist")
+
+	ErrCannotSendFromAddressKind = errors.New("smtp: cannot send from address")
+	ErrSenderAddressNotOwned     = errors.New("smtp: sender address not owned by user")
+	ErrUnsupportedOutgoingMIME   = errors.New("smtp: unsupported outgoing MIME type")
+)
+
+const errCodeAddressDoesNotExist proton.Code = 33102
 
 type ErrCannotSendFromAddress struct {
 	address string
@@ -37,4 +52,11 @@ func NewErrCannotSendFromAddress(address string) *ErrCannotSendFromAddress {
 
 func (e ErrCannotSendFromAddress) Error() string {
 	return fmt.Sprintf("cannot send from address: %v", e.address)
+}
+
+func (e *ErrCannotSendFromAddress) Unwrap() error {
+	if e == nil {
+		return nil
+	}
+	return ErrCannotSendFromAddressKind
 }
