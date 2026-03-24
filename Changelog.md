@@ -3,6 +3,27 @@
 Changelog [format](http://keepachangelog.com/en/1.0.0/)
 
 
+## Nescio Bridge 3.24.0
+
+### Added
+* BRIDGE-464: Add builder option for Gluon to support IMAP connection limiting.
+* BRIDGE-480: Added a new package for mapping errors and error chains into a single error.
+* BRIDGE-426: Added a GODEBUG flag to support RSA keys < 1024 bits.
+* BRIDGE-479: Added a SplitHeaderBody variant with performance improvements.
+
+### Changed
+* BRIDGE-487: Updated go version to 1.26.1 .
+* BRIDGE-498: Updated golangci-lint to v2.11.3.
+* BRIDGE-456: Optimize message building and decrpytion process with buffer pooling and improve RFC822 handling.
+* BRIDGE-482: Updated texts in error messages regarding Hardware Keys authentication flow on Windows.
+
+### Fixed
+* BRIDGE-382: Attempt to fix flaky Windows tests & a possible race condition fix in shared_identity.
+* BRIDGE-488: Revert old pre 3.23.0 RemoveFromMailbox behavior.
+* BRIDGE-481: Fixed username not being show on specific OSes in FIDO authentication flow.
+* BRIDGE-485: Fixed messages not being expunged from old locations and separated it from the unlabeling logic.
+
+
 ## Laviolette Bridge 3.22.0
 
 ### Added
@@ -3092,4 +3113,3 @@ CSB-331 Fix sending error due to mixed case in sender address.
 * Additional for in app release notes.
     * `Release notes` in case of vulnerabilities.
     * `Fixed bugs` in case of vulnerabilities.
-
