@@ -134,7 +134,7 @@ func (u *Updater) InstallUpdateLegacy(ctx context.Context, downloader Downloader
 
 	if err := u.installer.InstallUpdate(update.Version, bytes.NewReader(b)); err != nil {
 		logrus.WithError(err).Error("Failed to install update")
-		return ErrInstall
+		return fmt.Errorf("%w: %w", ErrInstall, err)
 	}
 
 	return nil
@@ -171,7 +171,7 @@ func (u *Updater) InstallUpdate(ctx context.Context, downloader Downloader, rele
 
 	if err := u.installer.InstallUpdate(release.Version, bytes.NewReader(b)); err != nil {
 		logrus.WithError(err).Error("Failed to install update")
-		return ErrInstall
+		return fmt.Errorf("%w: %w", ErrInstall, err)
 	}
 
 	return nil
