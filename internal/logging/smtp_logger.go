@@ -30,11 +30,11 @@ func NewSMTPLogger() *SMTPErrorLogger {
 	return &SMTPErrorLogger{l: logrus.WithField("pkg", "log/SMTP")}
 }
 
-func (s *SMTPErrorLogger) Printf(format string, args ...interface{}) {
+func (s *SMTPErrorLogger) Printf(format string, args ...any) {
 	s.l.Errorf(format, args...)
 }
 
-func (s *SMTPErrorLogger) Println(args ...interface{}) {
+func (s *SMTPErrorLogger) Println(args ...any) {
 	s.l.Errorln(args...)
 }
 

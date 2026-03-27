@@ -553,7 +553,7 @@ func TestBridge_AddressMode(t *testing.T) {
 func TestBridge_LoginLogoutRepeated(t *testing.T) {
 	withEnv(t, func(ctx context.Context, s *server.Server, netCtl *proton.NetCtl, locator bridge.Locator, storeKey []byte) {
 		withBridge(ctx, t, s.GetHostURL(), netCtl, locator, storeKey, func(bridge *bridge.Bridge, _ *bridge.Mocks) {
-			for i := 0; i < 10; i++ {
+			for range 10 {
 				// Log the user in.
 				userID := must(bridge.LoginFull(ctx, username, password, nil, nil))
 

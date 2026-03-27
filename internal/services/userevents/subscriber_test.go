@@ -60,11 +60,9 @@ func TestChanneledSubscriber_CtxTimeoutDoesNotBlockFutureEvents(t *testing.T) {
 	wg.Wait()
 
 	// Simulate reception of another event
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	wg.Go(func() {
 		require.NoError(t, subscriber.handle(context.Background(), 40))
-	}()
+	})
 
 	event, ok = <-subscriber.OnEventCh()
 	require.True(t, ok)

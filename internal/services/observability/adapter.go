@@ -32,7 +32,7 @@ func NewAdapter(sender Sender) *Adapter {
 
 // VerifyAndParseGenericMetrics parses a metric provided as an interface into a proton.ObservabilityMetric type.
 // It's exported as it is also used in integration tests.
-func VerifyAndParseGenericMetrics(metric map[string]interface{}) (bool, proton.ObservabilityMetric) {
+func VerifyAndParseGenericMetrics(metric map[string]any) (bool, proton.ObservabilityMetric) {
 	name, ok := metric["Name"].(string)
 	if !ok {
 		return false, proton.ObservabilityMetric{}
@@ -61,7 +61,7 @@ func VerifyAndParseGenericMetrics(metric map[string]interface{}) (bool, proton.O
 	}
 }
 
-func (adapter *Adapter) AddMetrics(metrics ...map[string]interface{}) {
+func (adapter *Adapter) AddMetrics(metrics ...map[string]any) {
 	var typedMetrics []proton.ObservabilityMetric
 
 	for _, metric := range metrics {
@@ -75,7 +75,7 @@ func (adapter *Adapter) AddMetrics(metrics ...map[string]interface{}) {
 	}
 }
 
-func (adapter *Adapter) AddDistinctMetrics(errType interface{}, metrics ...map[string]interface{}) {
+func (adapter *Adapter) AddDistinctMetrics(errType any, metrics ...map[string]any) {
 	errTypeInt, ok := errType.(int)
 	if !ok {
 		return

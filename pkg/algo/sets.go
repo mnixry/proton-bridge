@@ -20,8 +20,8 @@ package algo
 import "reflect"
 
 // SetIntersection complexity: O(n^2), could be better but this is simple enough.
-func SetIntersection(a, b interface{}, eq func(a, b interface{}) bool) []interface{} {
-	set := make([]interface{}, 0)
+func SetIntersection(a, b any, eq func(a, b any) bool) []any {
+	set := make([]any, 0)
 	av := reflect.ValueOf(a)
 
 	for i := 0; i < av.Len(); i++ {
@@ -34,7 +34,7 @@ func SetIntersection(a, b interface{}, eq func(a, b interface{}) bool) []interfa
 	return set
 }
 
-func contains(a, e interface{}, eq func(a, b interface{}) bool) bool {
+func contains(a, e any, eq func(a, b any) bool) bool {
 	v := reflect.ValueOf(a)
 
 	for i := 0; i < v.Len(); i++ {

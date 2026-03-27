@@ -33,7 +33,7 @@ func generatedNotificationDisplayedMetric(status string, value int) proton.Obser
 		Name:      "bridge_remoteNotification_displayed_total",
 		Version:   1,
 		Timestamp: time.Now().Unix(),
-		Data: map[string]interface{}{
+		Data: map[string]any{
 			"Value": value,
 			"Labels": map[string]string{
 				"status": status,

@@ -102,7 +102,7 @@ func TestLogging_DefaultRotator(t *testing.T) {
 	require.Equal(t, 2, countFilesMatching(basePath+"*.log"))
 	require.Equal(t, 1, countFilesMatching(basePath+"_bri_001_*.log"))
 
-	for i := 0; i < 4; i++ {
+	for range 4 {
 		_, err = r.Write(fiveBytes)
 		require.NoError(t, err)
 	}
@@ -112,7 +112,7 @@ func TestLogging_DefaultRotator(t *testing.T) {
 	// total written: 35 bytes, i.e. 4 log files
 	logFileCount := countFilesMatching(basePath + "*.log")
 	require.Equal(t, 4, logFileCount)
-	for i := 0; i < logFileCount; i++ {
+	for i := range logFileCount {
 		require.Equal(t, 1, countFilesMatching(basePath+fmt.Sprintf("_bri_%03d_*.log", i)))
 	}
 
@@ -129,14 +129,14 @@ func TestLogging_DefaultRotatorWithPruning(t *testing.T) {
 	// fill the log dir while below the pruning quota
 	r, err := NewDefaultRotator(tmpDir, sessionID, "bri", 10, 40)
 	require.NoError(t, err)
-	for i := 0; i < 4; i++ {
+	for range 4 {
 		_, err = r.Write(tenBytes)
 		require.NoError(t, err)
 	}
 
 	// from now on at every rotation, (i.e. every write in this case), we will prune, then create a new file.
 	// we should always have 4 files, remaining after prune, plus the newly rotated file with the last written bytes.
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		_, err := r.Write(tenBytes)
 		require.NoError(t, err)
 		require.Equal(t, 5, countFilesMatching(basePath+"_bri_*.log"))

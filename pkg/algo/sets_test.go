@@ -28,29 +28,29 @@ type T struct {
 }
 
 func TestSetIntersection(t *testing.T) {
-	keysAreEqual := func(a, b interface{}) bool {
+	keysAreEqual := func(a, b any) bool {
 		return a.(T).k == b.(T).k //nolint:forcetypeassert
 	}
 
 	type args struct {
-		a  interface{}
-		b  interface{}
-		eq func(a, b interface{}) bool
+		a  any
+		b  any
+		eq func(a, b any) bool
 	}
 
 	tests := []struct {
 		name string
 		args args
-		want interface{}
+		want any
 	}{
 		{
 			name: "integer sets",
-			args: args{a: []int{1, 2, 3}, b: []int{3, 4, 5}, eq: func(a, b interface{}) bool { return a == b }},
+			args: args{a: []int{1, 2, 3}, b: []int{3, 4, 5}, eq: func(a, b any) bool { return a == b }},
 			want: []int{3},
 		},
 		{
 			name: "string sets",
-			args: args{a: []string{"1", "2", "3"}, b: []string{"3", "4", "5"}, eq: func(a, b interface{}) bool { return a == b }},
+			args: args{a: []string{"1", "2", "3"}, b: []string{"3", "4", "5"}, eq: func(a, b any) bool { return a == b }},
 			want: []string{"3"},
 		},
 		{

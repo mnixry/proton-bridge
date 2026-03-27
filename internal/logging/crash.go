@@ -30,7 +30,7 @@ import (
 )
 
 func DumpStackTrace(logsPath string, sessionID SessionID, appName AppName) crash.RecoveryAction {
-	return func(r interface{}) error {
+	return func(r any) error {
 		file := filepath.Join(logsPath, getStackTraceName(sessionID, appName, constants.Version, constants.Tag))
 
 		f, err := os.OpenFile(filepath.Clean(file), os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0o600)

@@ -21,6 +21,7 @@ import (
 	"crypto/x509"
 	"errors"
 	"fmt"
+	"slices"
 
 	"github.com/ProtonMail/proton-bridge/v3/pkg/algo"
 )
@@ -45,11 +46,5 @@ func certFingerprint(cert *x509.Certificate) string {
 func (p *TLSPinChecker) isCertFoundInKnownPins(cert *x509.Certificate) bool {
 	fingerprint := certFingerprint(cert)
 
-	for _, pin := range p.trustedPins {
-		if pin == fingerprint {
-			return true
-		}
-	}
-
-	return false
+	return slices.Contains(p.trustedPins, fingerprint)
 }

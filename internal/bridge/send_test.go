@@ -57,7 +57,7 @@ func TestBridge_Send(t *testing.T) {
 			recipientInfo, err := bridge.GetUserInfo(recipientUserID)
 			require.NoError(t, err)
 
-			for i := 0; i < 10; i++ {
+			for i := range 10 {
 				// Dial the server.
 				client, err := smtp.Dial(net.JoinHostPort(constants.Host, fmt.Sprint(bridge.GetSMTPPort())))
 				require.NoError(t, err)

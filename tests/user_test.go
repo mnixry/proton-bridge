@@ -116,7 +116,7 @@ func (s *scenario) theAccountHasCustomFolders(username string, count int) error 
 	defer cancel()
 
 	return s.t.withClient(ctx, username, func(ctx context.Context, client *proton.Client) error {
-		for idx := 0; idx < count; idx++ {
+		for range count {
 			if _, err := client.CreateLabel(ctx, proton.CreateLabelReq{
 				Name:  uuid.NewString(),
 				Type:  proton.LabelTypeFolder,
@@ -135,7 +135,7 @@ func (s *scenario) theAccountHasCustomLabels(username string, count int) error {
 	defer cancel()
 
 	return s.t.withClient(ctx, username, func(ctx context.Context, client *proton.Client) error {
-		for idx := 0; idx < count; idx++ {
+		for range count {
 			if _, err := client.CreateLabel(ctx, proton.CreateLabelReq{
 				Name:  uuid.NewString(),
 				Type:  proton.LabelTypeLabel,

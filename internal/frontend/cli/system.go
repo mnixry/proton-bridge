@@ -45,7 +45,7 @@ func (f *frontendCLI) printManual(_ *ishell.Context) {
 }
 
 func (f *frontendCLI) printCredits(_ *ishell.Context) {
-	for _, pkg := range strings.Split(bridge.Credits, ";") {
+	for pkg := range strings.SplitSeq(bridge.Credits, ";") {
 		f.Println(pkg)
 	}
 }

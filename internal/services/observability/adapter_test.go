@@ -26,11 +26,11 @@ import (
 )
 
 func Test_AdapterCustomMetrics(t *testing.T) {
-	customMetric := map[string]interface{}{
+	customMetric := map[string]any{
 		"Name":      "name",
 		"Version":   1,
 		"Timestamp": time.Now().Unix(),
-		"Data": map[string]interface{}{
+		"Data": map[string]any{
 			"Value": 1,
 			"Labels": map[string]string{
 				"error": "customError",

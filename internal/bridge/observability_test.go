@@ -48,7 +48,7 @@ func TestBridge_Observability(t *testing.T) {
 			time.Sleep(time.Millisecond * 50) // Wait for the metric to be sent
 			require.Equal(t, 1, len(s.GetObservabilityStatistics().Metrics))
 
-			for i := 0; i < 10; i++ {
+			for range 10 {
 				time.Sleep(time.Millisecond * 5) // Minor delay between each so our tests aren't flaky
 				bridge.PushObservabilityMetric(testMetric)
 			}
@@ -61,7 +61,7 @@ func TestBridge_Observability(t *testing.T) {
 
 			// Wait for the throttle duration to reset; i.e. so we have enough time to send a request immediately
 			time.Sleep(throttlePeriod)
-			for i := 0; i < 10; i++ {
+			for range 10 {
 				time.Sleep(time.Millisecond * 5)
 				bridge.PushObservabilityMetric(testMetric)
 			}
@@ -73,7 +73,7 @@ func TestBridge_Observability(t *testing.T) {
 			require.Equal(t, 21, len(s.GetObservabilityStatistics().Metrics))
 
 			// Spam the endpoint a bit
-			for i := 0; i < 300; i++ {
+			for i := range 300 {
 				if i < 200 {
 					time.Sleep(time.Millisecond * 10)
 				}

@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"os"
 	"runtime"
+	"slices"
 	"time"
 
 	"github.com/Masterminds/semver/v3"
@@ -136,9 +137,9 @@ func NewReporter(appName string, identifier Identifier) *Reporter {
 	}
 }
 
-func (r *Reporter) ReportException(i interface{}) error {
+func (r *Reporter) ReportException(i any) error {
 	SkipDuringUnwind()
-	return r.ReportExceptionWithContext(i, map[string]interface{}{
+	return r.ReportExceptionWithContext(i, map[string]any{
 		"build": constants.BuildTime,
 		"crash": os.Getenv(restarter.BridgeCrashCount),
 	})
@@ -146,10 +147,10 @@ func (r *Reporter) ReportException(i interface{}) error {
 
 func (r *Reporter) ReportMessage(msg string) error {
 	SkipDuringUnwind()
-	return r.ReportMessageWithContext(msg, make(map[string]interface{}))
+	return r.ReportMessageWithContext(msg, make(map[string]any))
 }
 
-func (r *Reporter) ReportExceptionWithContext(i interface{}, context map[string]interface{}) error {
+func (r *Reporter) ReportExceptionWithContext(i any, context map[string]any) error {
 	SkipDuringUnwind()
 
 	err := fmt.Errorf("recover: %v", i)
@@ -163,7 +164,7 @@ func (r *Reporter) ReportExceptionWithContext(i interface{}, context map[string]
 	})
 }
 
-func (r *Reporter) ReportMessageWithContext(msg string, context map[string]interface{}) error {
+func (r *Reporter) ReportMessageWithContext(msg string, context map[string]any) error {
 	SkipDuringUnwind()
 	return r.scopedReport(context, func(_ *sentry.Scope) {
 		SkipDuringUnwind()
@@ -175,7 +176,7 @@ func (r *Reporter) ReportMessageWithContext(msg string, context map[string]inter
 	})
 }
 
-func (r *Reporter) ReportWarningWithContext(msg string, context map[string]interface{}) error {
+func (r *Reporter) ReportWarningWithContext(msg string, context map[string]any) error {
 	SkipDuringUnwind()
 	return r.scopedReport(context, func(scope *sentry.Scope) {
 		scope.SetLevel(sentry.LevelWarning)
@@ -189,7 +190,7 @@ func (r *Reporter) ReportWarningWithContext(msg string, context map[string]inter
 }
 
 // Report reports a sentry crash with stacktrace from all goroutines.
-func (r *Reporter) scopedReport(context map[string]interface{}, doReport func(scope *sentry.Scope)) error {
+func (r *Reporter) scopedReport(context map[string]any, doReport func(scope *sentry.Scope)) error {
 	SkipDuringUnwind()
 
 	if os.Getenv("PROTONMAIL_ENV") == "dev" {
@@ -275,12 +276,7 @@ func filterOutPanicHandlers(frames []sentry.Frame) []sentry.Frame {
 }
 
 func isFunctionFilteredOut(function string) bool {
-	for _, skipFunction := range skippedFunctions {
-		if function == skipFunction {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(skippedFunctions, function)
 }
 
 func Flush(maxWaiTime time.Duration) {

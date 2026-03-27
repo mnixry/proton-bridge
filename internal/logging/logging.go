@@ -260,7 +260,7 @@ type logKey string
 
 const logrusFields = logKey("logrus")
 
-func WithLogrusField(ctx context.Context, key string, value interface{}) context.Context {
+func WithLogrusField(ctx context.Context, key string, value any) context.Context {
 	fields, ok := ctx.Value(logrusFields).(logrus.Fields)
 	if !ok || fields == nil {
 		fields = logrus.Fields{}

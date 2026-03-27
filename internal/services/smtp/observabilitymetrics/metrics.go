@@ -40,7 +40,7 @@ func generateSMTPErrorObservabilityMetric(errorType string) proton.Observability
 		Name:      smtpErrorsSchemaName,
 		Version:   smtpErrorsSchemaVersion,
 		Timestamp: time.Now().Unix(),
-		Data: map[string]interface{}{
+		Data: map[string]any{
 			"Value": 1,
 			"Labels": map[string]string{
 				"errorType": errorType,
@@ -86,7 +86,7 @@ func GenerateSMTPSendSuccess() proton.ObservabilityMetric {
 		Name:      smtpSendSuccessSchemaName,
 		Version:   smtpSendSuccessSchemaVersion,
 		Timestamp: time.Now().Unix(),
-		Data: map[string]interface{}{
+		Data: map[string]any{
 			"Value":  1,
 			"Labels": map[string]string{},
 		},
@@ -98,7 +98,7 @@ func GenerateSMTPSubmissionRequest(emailClient string, numberOfOpenIMAPConnectio
 		Name:      smtpSubmissionRequestSchemaName,
 		Version:   smtpSubmissionRequestSchemaVersion,
 		Timestamp: time.Now().Unix(),
-		Data: map[string]interface{}{
+		Data: map[string]any{
 			"Value": 1,
 			"Labels": map[string]string{
 				"numberOfOpenIMAPConnections":           observability.BucketIMAPConnections(numberOfOpenIMAPConnections),

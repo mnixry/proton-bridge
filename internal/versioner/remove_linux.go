@@ -16,7 +16,6 @@
 // along with Proton Mail Bridge. If not, see <https://www.gnu.org/licenses/>.
 
 //go:build linux
-// +build linux
 
 package versioner
 

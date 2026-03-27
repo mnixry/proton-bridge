@@ -33,7 +33,7 @@ func generateMessageEventFailureObservabilityMetric(eventType string) proton.Obs
 		Name:      messageEventErrorCaseSchemaName,
 		Version:   messageEventErrorCaseSchemaVersion,
 		Timestamp: time.Now().Unix(),
-		Data: map[string]interface{}{
+		Data: map[string]any{
 			"Value": 1,
 			"Labels": map[string]string{
 				"eventType": eventType,

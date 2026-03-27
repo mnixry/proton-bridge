@@ -148,7 +148,7 @@ func (d *DownloadStage) run(ctx context.Context) {
 
 		for msgIdx, v := range result {
 			numAttachments := len(v.Attachments)
-			for attIdx := 0; attIdx < numAttachments; attIdx++ {
+			for attIdx := range numAttachments {
 				attachmentIndices = append(attachmentIndices, attachmentMeta{
 					msgIdx: msgIdx,
 					attIdx: attIdx,
@@ -292,10 +292,7 @@ func (d DefaultDownloadRateModifier) Apply(wasSuccess bool, currentValue int, ma
 		return 2
 	}
 
-	parallelTasks := currentValue * 2
-	if parallelTasks > maxValue {
-		parallelTasks = maxValue
-	}
+	parallelTasks := min(currentValue*2, maxValue)
 
 	return parallelTasks
 }

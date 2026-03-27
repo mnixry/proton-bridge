@@ -50,7 +50,7 @@ func (sysVer SystemVersion) IsHostVersionEligible(log *logrus.Entry, host types.
 	}
 
 	hostVersionArrInt := make([]int, len(hostVersionArr))
-	for i := 0; i < len(hostVersionArr); i++ {
+	for i := range hostVersionArr {
 		hostNum, err := strconv.Atoi(hostVersionArr[i])
 		if err != nil {
 			// If we receive an alphanumeric version - we should continue with the update and stop checking for
@@ -89,7 +89,7 @@ func compareMinimumVersion(hostVersionArr []int, minVersion string) (bool, error
 	minVersionArr := strings.Split(minVersion, ".")
 	iterationDepth := min(len(hostVersionArr), len(minVersionArr))
 
-	for i := 0; i < iterationDepth; i++ {
+	for i := range iterationDepth {
 		hostNum := hostVersionArr[i]
 
 		minNum, err := strconv.Atoi(minVersionArr[i])
@@ -113,7 +113,7 @@ func compareMaximumVersion(hostVersionArr []int, maxVersion string) (bool, error
 	maxVersionArr := strings.Split(maxVersion, ".")
 	iterationDepth := min(len(maxVersionArr), len(hostVersionArr))
 
-	for i := 0; i < iterationDepth; i++ {
+	for i := range iterationDepth {
 		hostNum := hostVersionArr[i]
 
 		maxNum, err := strconv.Atoi(maxVersionArr[i])

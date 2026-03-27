@@ -126,7 +126,7 @@ func generateUserMetric(schemaName, plan, mailClient, dohEnabled, betaAccess str
 		Name:      schemaName,
 		Version:   1,
 		Timestamp: time.Now().Unix(),
-		Data: map[string]interface{}{
+		Data: map[string]any{
 			"Value": 1,
 			"Labels": map[string]string{
 				"plan":              plan,

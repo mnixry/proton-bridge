@@ -241,15 +241,11 @@ func (t *testCtx) initFrontendService(eventCh <-chan events.Event) error {
 
 	t.service = service
 
-	t.serviceWG.Add(1)
-
-	go func() {
-		defer t.serviceWG.Done()
-
+	t.serviceWG.Go(func() {
 		if err := service.Loop(); err != nil {
 			panic(err)
 		}
-	}()
+	})
 
 	return nil
 }
@@ -309,7 +305,7 @@ func (t *testCtx) initFrontendClient() error {
 	conn, err := grpc.NewClient(
 		target,
 		grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{RootCAs: cp, ServerName: "127.0.0.1"})),
-		grpc.WithUnaryInterceptor(func(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
+		grpc.WithUnaryInterceptor(func(ctx context.Context, method string, req, reply any, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
 			return invoker(metadata.AppendToOutgoingContext(ctx, "server-token", cfg.Token), method, req, reply, cc, opts...)
 		}),
 	)

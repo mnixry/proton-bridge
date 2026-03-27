@@ -69,7 +69,7 @@ func (f *frontendCLI) ReadSecurityKeyPin() string {
 	return f.readStringInAttempts("Security key PIN", f.ReadPassword, isNotEmpty)
 }
 
-func (f *frontendCLI) printAndLogError(args ...interface{}) {
+func (f *frontendCLI) printAndLogError(args ...any) {
 	log.Error(args...)
 	f.Println(args...)
 }

@@ -110,8 +110,8 @@ func GenerateAllHeartbeatMetricPermutations() []proton.ObservabilityMetric {
 	return metrics
 }
 
-func GenerateAllGluonMetrics() []map[string]interface{} {
-	var metrics []map[string]interface{}
+func GenerateAllGluonMetrics() []map[string]any {
+	var metrics []map[string]any
 	metrics = append(metrics,
 		gluonMetrics.GenerateFailedParseIMAPCommandMetric(),
 		gluonMetrics.GenerateFailedToCreateMailbox(),

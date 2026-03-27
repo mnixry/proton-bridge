@@ -61,7 +61,7 @@ func getSectionNumber(s string) (part []int) {
 		return
 	}
 
-	for _, number := range strings.Split(s, ".") {
+	for number := range strings.SplitSeq(s, ".") {
 		i64, err := strconv.ParseInt(number, 10, 64)
 		if err != nil {
 			panic(err)

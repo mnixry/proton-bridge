@@ -243,18 +243,21 @@ func newMessageStructFromIMAP(msg *imap.Message) MessageStruct {
 }
 
 func formatAddressList(list []*imap.Address) string {
-	var res string
+	var res strings.Builder
 	for idx, address := range list {
 		if address.PersonalName != "" {
-			res += address.PersonalName + " <" + address.Address() + ">"
+			res.WriteString(address.PersonalName)
+			res.WriteString(" <")
+			res.WriteString(address.Address())
+			res.WriteString(">")
 		} else {
-			res += address.Address()
+			res.WriteString(address.Address())
 		}
 		if idx < len(list)-1 {
-			res += "; "
+			res.WriteString("; ")
 		}
 	}
-	return res
+	return res.String()
 }
 
 func parseMessageSection(literal []byte, body string) MessageSection {

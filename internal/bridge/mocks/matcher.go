@@ -31,8 +31,8 @@ func NewRefreshContextMatcher(refreshFlag proton.RefreshFlag) *refreshContextMat
 	return &refreshContextMatcher{wantRefresh: refreshFlag}
 }
 
-func (m *refreshContextMatcher) Matches(x interface{}) bool {
-	context, ok := x.(map[string]interface{})
+func (m *refreshContextMatcher) Matches(x any) bool {
+	context, ok := x.(map[string]any)
 	if !ok {
 		return false
 	}
@@ -42,7 +42,7 @@ func (m *refreshContextMatcher) Matches(x interface{}) bool {
 		return false
 	}
 
-	el, ok := i.(map[string]interface{})
+	el, ok := i.(map[string]any)
 	if !ok {
 		return false
 	}
@@ -84,8 +84,8 @@ func NewClosedConnectionMatcher() *closedConnectionMatcher { //nolint:revive
 	return &closedConnectionMatcher{}
 }
 
-func (m *closedConnectionMatcher) Matches(x interface{}) bool {
-	context, ok := x.(map[string]interface{})
+func (m *closedConnectionMatcher) Matches(x any) bool {
+	context, ok := x.(map[string]any)
 	if !ok {
 		return false
 	}

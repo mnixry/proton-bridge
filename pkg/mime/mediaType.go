@@ -20,6 +20,7 @@ package pmmime
 import (
 	"errors"
 	"fmt"
+	"maps"
 	"strings"
 	"unicode"
 
@@ -55,8 +56,8 @@ func changeEncodingAndKeepLastParamDefinition(v string) (out string, err error) 
 		}
 
 		pmap := params
-		if idx := strings.Index(key, "*"); idx != -1 {
-			baseName := key[:idx]
+		if before, _, ok := strings.Cut(key, "*"); ok {
+			baseName := before
 			if continuation == nil {
 				continuation = make(map[string]map[string]string)
 			}
@@ -97,9 +98,7 @@ func changeEncodingAndKeepLastParamDefinition(v string) (out string, err error) 
 
 		// Fallback.
 		log.Errorln("Merge param", paramKey, ":", err)
-		for ck, cv := range contMap {
-			params[ck] = cv
-		}
+		maps.Copy(params, contMap)
 	}
 
 	// Merge ;

@@ -106,7 +106,7 @@ func generateHeartbeatMetric(plan, mailClient, dohEnabled, betaAccess, otherErro
 		Name:      genericHeartbeatSchemaName,
 		Version:   genericHeartbeatVersion,
 		Timestamp: time.Now().Unix(),
-		Data: map[string]interface{}{
+		Data: map[string]any{
 			"Value": 1,
 			"Labels": map[string]string{
 				"plan":                   plan,

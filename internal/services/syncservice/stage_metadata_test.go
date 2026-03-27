@@ -343,7 +343,7 @@ func testMsgID(i int) string {
 func setupMetadataSuccessRunWith429(tj *tjob, msgCount int, msgSize int) []proton.MessageMetadata {
 	msgs := make([]proton.MessageMetadata, msgCount)
 
-	for i := 0; i < msgCount; i++ {
+	for i := range msgCount {
 		msgs[i].ID = testMsgID(i)
 		msgs[i].Size = msgSize
 	}
@@ -428,7 +428,7 @@ type fixedMetadataClient struct {
 func newFixedMetadataClient(msgCount int) APIClient {
 	msgs := make([]proton.MessageMetadata, msgCount)
 
-	for i := 0; i < msgCount; i++ {
+	for i := range msgCount {
 		msgs[i].ID = testMsgID(i)
 		msgs[i].Size = 100
 	}

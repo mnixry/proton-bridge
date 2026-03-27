@@ -32,9 +32,9 @@ func newVisitor(root *Part, defaultRule VisitorRule) *Visitor {
 	}
 }
 
-type Visit func(*Part) (interface{}, error)
+type Visit func(*Part) (any, error)
 
-type VisitorRule func(*Part, Visit) (interface{}, error)
+type VisitorRule func(*Part, Visit) (any, error)
 
 type visitorRule struct {
 	re *regexp.Regexp
@@ -53,11 +53,11 @@ func (v *Visitor) RegisterRule(contentTypeRegex string, fn VisitorRule) *Visitor
 	return v
 }
 
-func (v *Visitor) Visit() (interface{}, error) {
+func (v *Visitor) Visit() (any, error) {
 	return v.visit(v.root)
 }
 
-func (v *Visitor) visit(p *Part) (interface{}, error) {
+func (v *Visitor) visit(p *Part) (any, error) {
 	t, _, err := p.ContentType()
 	if err != nil {
 		return nil, err

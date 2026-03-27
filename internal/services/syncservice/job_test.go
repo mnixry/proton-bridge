@@ -105,7 +105,7 @@ func TestJob_MultipleChildrenReportError(t *testing.T) {
 	startCh := make(chan struct{})
 
 	wg := sync.WaitGroup{}
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		wg.Add(1)
 		go func() {
 			job := tj.job.newChildJob("1", 0)
@@ -137,15 +137,13 @@ func TestJob_ChildFailureCancelsAllOtherChildJobs(t *testing.T) {
 
 	tj.job.begin()
 	wg := sync.WaitGroup{}
-	for i := 0; i < 10; i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+	for range 10 {
+		wg.Go(func() {
 			job := tj.job.newChildJob("1", 0)
 			<-job.getContext().Done()
 			require.ErrorIs(t, job.getContext().Err(), context.Canceled)
 			require.True(t, job.checkCancelled())
-		}()
+		})
 	}
 	go func() {
 		failJob.onError(jobErr)
@@ -168,7 +166,7 @@ func TestJob_CtxCancelCancelsAllChildren(t *testing.T) {
 	tj := newTestJob(ctx, mockCtrl, "u", getTestLabels())
 
 	wg := sync.WaitGroup{}
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		wg.Add(1)
 		go func() {
 			job := tj.job.newChildJob("1", 0)

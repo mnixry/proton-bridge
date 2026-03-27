@@ -38,7 +38,7 @@ func TestTLSReporter_DoubleReport(t *testing.T) {
 	r := NewTLSReporter("hostURL", "appVersion", useragent.New(), TrustedAPIPins)
 
 	// Report the same issue many times.
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		r.ReportCertIssue(reportServer.URL, "myhost", "443", tls.ConnectionState{})
 	}
 
@@ -48,7 +48,7 @@ func TestTLSReporter_DoubleReport(t *testing.T) {
 	}, time.Second, time.Millisecond)
 
 	// If we then report something else many times.
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		r.ReportCertIssue(reportServer.URL, "anotherhost", "443", tls.ConnectionState{})
 	}
 

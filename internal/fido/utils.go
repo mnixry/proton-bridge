@@ -27,18 +27,18 @@ import (
 )
 
 type authData struct {
-	AllowCredentials    []interface{}
+	AllowCredentials    []any
 	ClientDataJSONBytes []byte
 	RpID                string
 }
 
 func extractFidoAuthData(auth proton.Auth) (authData, error) {
-	authOptions, ok := auth.TwoFA.FIDO2.AuthenticationOptions.(map[string]interface{})
+	authOptions, ok := auth.TwoFA.FIDO2.AuthenticationOptions.(map[string]any)
 	if !ok {
 		return authData{}, fmt.Errorf("invalid authentication options format")
 	}
 
-	publicKey, ok := authOptions["publicKey"].(map[string]interface{})
+	publicKey, ok := authOptions["publicKey"].(map[string]any)
 	if !ok {
 		return authData{}, fmt.Errorf("no publicKey found in authentication options")
 	}
@@ -48,18 +48,18 @@ func extractFidoAuthData(auth proton.Auth) (authData, error) {
 		return authData{}, fmt.Errorf("could not find rpId in authentication options")
 	}
 
-	challengeArray, ok := publicKey["challenge"].([]interface{})
+	challengeArray, ok := publicKey["challenge"].([]any)
 	if !ok {
 		return authData{}, fmt.Errorf("no challenge found in authentication options")
 	}
 	challenge := sliceAnyToByteArray(challengeArray)
 
-	allowCredentials, ok := publicKey["allowCredentials"].([]interface{})
+	allowCredentials, ok := publicKey["allowCredentials"].([]any)
 	if !ok || len(allowCredentials) == 0 {
 		return authData{}, fmt.Errorf("no allowed credentials found in authentication options")
 	}
 
-	clientDataJSON := map[string]interface{}{
+	clientDataJSON := map[string]any{
 		"type":      "webauthn.get",
 		"challenge": base64.URLEncoding.WithPadding(base64.NoPadding).EncodeToString(challenge),
 		"origin":    "https://" + rpID,

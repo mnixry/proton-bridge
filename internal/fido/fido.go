@@ -84,14 +84,14 @@ func IsPinSupported() (bool, error) {
 	return deviceHasOption(dev, clientPinOption)
 }
 
-func constructCredentialIDs(allowCredentials []interface{}) ([][]byte, error) {
+func constructCredentialIDs(allowCredentials []any) ([][]byte, error) {
 	var credentialIDs [][]byte //nolint:prealloc
 	for _, cred := range allowCredentials {
-		credMap, ok := cred.(map[string]interface{})
+		credMap, ok := cred.(map[string]any)
 		if !ok {
 			continue
 		}
-		idArray, ok := credMap["id"].([]interface{})
+		idArray, ok := credMap["id"].([]any)
 		if !ok {
 			continue
 		}

@@ -148,11 +148,9 @@ func (s *Service) Run(settingsGetter settingsGetter) {
 	s.distinctionUtility.setSettingsGetter(settingsGetter)
 	s.distinctionUtility.runHeartbeat()
 
-	s.wg.Add(1)
-	go func() {
-		defer s.wg.Done()
+	s.wg.Go(func() {
 		s.start()
-	}()
+	})
 }
 
 // When new data is received, we determine if we can immediately send the request.

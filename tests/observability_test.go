@@ -39,10 +39,7 @@ func (s *scenario) userHeartbeatPermutationsObservability(username string) error
 
 	return s.t.withClientPass(context.Background(), username, s.t.getUserByName(username).userPass, func(ctx context.Context, c *proton.Client) error {
 		for i := 0; i < len(metrics); i += batchSize {
-			end := i + batchSize
-			if end > metricLen {
-				end = metricLen
-			}
+			end := min(i+batchSize, metricLen)
 
 			batch := proton.ObservabilityBatch{Metrics: metrics[i:end]}
 			if err := c.SendObservabilityBatch(ctx, batch); err != nil {

@@ -30,22 +30,22 @@ func TestHandler(t *testing.T) {
 		var s string
 
 		h := NewHandler(
-			func(r interface{}) error {
+			func(r any) error {
 				s += fmt.Sprintf("1: %v\n", r)
 				return nil
 			},
-			func(r interface{}) error {
+			func(r any) error {
 				s += fmt.Sprintf("2: %v\n", r)
 				return nil
 			},
 		)
 
 		h.
-			AddRecoveryAction(func(r interface{}) error {
+			AddRecoveryAction(func(r any) error {
 				s += fmt.Sprintf("3: %v\n", r)
 				return nil
 			}).
-			AddRecoveryAction(func(r interface{}) error {
+			AddRecoveryAction(func(r any) error {
 				s += fmt.Sprintf("4: %v\n", r)
 				return nil
 			})

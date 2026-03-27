@@ -35,7 +35,7 @@ func generateStageBuildFailureObservabilityMetric(errorType string) proton.Obser
 		Name:      errorCaseSchemaName,
 		Version:   errorCaseSchemaVersion,
 		Timestamp: time.Now().Unix(),
-		Data: map[string]interface{}{
+		Data: map[string]any{
 			"Value": 1,
 			"Labels": map[string]string{
 				"errorType": errorType,
@@ -59,7 +59,7 @@ func GenerateMessageBuiltSuccessMetric() proton.ObservabilityMetric {
 		Name:      successCaseSchemaName,
 		Version:   successCaseSchemaVersion,
 		Timestamp: time.Now().Unix(),
-		Data: map[string]interface{}{
+		Data: map[string]any{
 			"Value":  1,
 			"Labels": map[string]string{},
 		},

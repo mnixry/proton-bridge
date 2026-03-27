@@ -16,7 +16,6 @@
 // along with Proton Mail Bridge. If not, see <https://www.gnu.org/licenses/>.
 
 //go:build !windows && !darwin
-// +build !windows,!darwin
 
 package theme
 

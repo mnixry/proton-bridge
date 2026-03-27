@@ -301,7 +301,7 @@ func buildBodies(p *parser.Parser) (richBody, plainBody string, err error) {
 // parts of the given content type if alternatives exist.
 func collectBodyParts(p *parser.Parser, preferredContentType string) (parser.Parts, error) {
 	v := p.
-		NewVisitor(func(p *parser.Part, visit parser.Visit) (interface{}, error) {
+		NewVisitor(func(p *parser.Part, visit parser.Visit) (any, error) {
 			childParts, err := collectChildParts(p, visit)
 			if err != nil {
 				return nil, err
@@ -309,7 +309,7 @@ func collectBodyParts(p *parser.Parser, preferredContentType string) (parser.Par
 
 			return joinChildParts(childParts), nil
 		}).
-		RegisterRule("multipart/alternative", func(p *parser.Part, visit parser.Visit) (interface{}, error) {
+		RegisterRule("multipart/alternative", func(p *parser.Part, visit parser.Visit) (any, error) {
 			childParts, err := collectChildParts(p, visit)
 			if err != nil {
 				return nil, err
@@ -317,14 +317,14 @@ func collectBodyParts(p *parser.Parser, preferredContentType string) (parser.Par
 
 			return bestChoice(childParts, preferredContentType), nil
 		}).
-		RegisterRule("text/plain", func(p *parser.Part, _ parser.Visit) (interface{}, error) {
+		RegisterRule("text/plain", func(p *parser.Part, _ parser.Visit) (any, error) {
 			if p.IsAttachment() {
 				return parser.Parts{}, nil
 			}
 
 			return parser.Parts{p}, nil
 		}).
-		RegisterRule("text/html", func(p *parser.Part, _ parser.Visit) (interface{}, error) {
+		RegisterRule("text/html", func(p *parser.Part, _ parser.Visit) (any, error) {
 			if p.IsAttachment() {
 				return parser.Parts{}, nil
 			}
@@ -529,8 +529,8 @@ func parseMessageHeader(h message.Header, allowInvalidAddressLists bool) (Messag
 			m.XForward = regexp.MustCompile("<(.*)>").ReplaceAllString(fields.Value(), "$1")
 
 		case "references":
-			for _, ref := range strings.Fields(fields.Value()) {
-				for _, ref := range strings.Split(ref, ",") {
+			for ref := range strings.FieldsSeq(fields.Value()) {
+				for ref := range strings.SplitSeq(ref, ",") {
 					m.References = append(m.References, strings.Trim(ref, "<>"))
 				}
 			}
@@ -669,7 +669,7 @@ func patchInlineImages(p *parser.Parser) error {
 		prevContentTypeMap   map[string]string
 	)
 
-	for i := 0; i < len(children); i++ {
+	for i := range children {
 		curPart := children[i]
 
 		contentType, contentTypeMap, err := curPart.ContentType()
@@ -770,7 +770,7 @@ type inlinePatchInlineImageOnly struct {
 func (i inlinePatchInlineImageOnly) Patch() {
 	contentID := uuid.NewString()
 	// Convert previous part to text/html && inject image.
-	newBody := []byte(fmt.Sprintf(`<html><body><img src="cid:%v"/></body></html>`, contentID))
+	newBody := fmt.Appendf(nil, `<html><body><img src="cid:%v"/></body></html>`, contentID)
 
 	i.part.Header.Set("content-id", contentID)
 
@@ -791,7 +791,7 @@ func (i *inlinePatchBodyWithInlineImage) Patch() {
 	newBody := []byte(`<html><body><p>`)
 	newBody = append(newBody, patchNewLineWithHTMLBreaks(i.textPart.Body)...)
 	newBody = append(newBody, []byte(`</p>`)...)
-	newBody = append(newBody, []byte(fmt.Sprintf(`<img src="cid:%v"/>`, contentID))...)
+	newBody = append(newBody, fmt.Appendf(nil, `<img src="cid:%v"/>`, contentID)...)
 	newBody = append(newBody, []byte(`</body></html>`)...)
 
 	i.textPart.Body = newBody

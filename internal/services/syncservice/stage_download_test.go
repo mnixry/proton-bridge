@@ -291,8 +291,7 @@ func TestDownloadStage_JobAbortsOnMessageDownloadError(t *testing.T) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 
-	jobCtx, jobCancel := context.WithCancel(context.Background())
-	defer jobCancel()
+	jobCtx := t.Context()
 
 	expectedErr := errors.New("fail")
 
@@ -331,8 +330,7 @@ func TestDownloadStage_JobAbortsOnAttachmentDownloadError(t *testing.T) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 
-	jobCtx, jobCancel := context.WithCancel(context.Background())
-	defer jobCancel()
+	jobCtx := t.Context()
 
 	expectedErr := errors.New("fail")
 
@@ -378,7 +376,7 @@ func buildDownloadStageData(tj *tjob, numMessages int, with422 bool) ([]string, 
 	result := make([]proton.FullMessage, numMessages)
 	msgIDs := make([]string, numMessages)
 
-	for i := 0; i < numMessages; i++ {
+	for i := range numMessages {
 		msgID := fmt.Sprintf("msg-%v", i)
 		msgIDs[i] = msgID
 		result[i] = proton.FullMessage{
@@ -420,7 +418,7 @@ func buildDownloadStageData(tj *tjob, numMessages int, with422 bool) ([]string, 
 	if with422 {
 		result422 := make([]proton.FullMessage, 0, numMessages/2)
 
-		for i := 0; i < numMessages; i++ {
+		for i := range numMessages {
 			if i%2 == 0 {
 				continue
 			}
@@ -446,7 +444,7 @@ func genDownloadStageAttachmentInfo(msg *proton.FullMessage, msgIdx int, count i
 	msg.Attachments = make([]proton.Attachment, count)
 	msg.AttData = make([][]byte, count)
 
-	for i := 0; i < count; i++ {
+	for i := range count {
 		data := fmt.Sprintf("msg-%v-att-%v", msgIdx, i)
 		msg.Attachments[i] = proton.Attachment{
 			ID:   data,
@@ -463,7 +461,7 @@ func autoScaleCoolDown() network.CoolDownProvider {
 
 func buildDownloadScaleData(count int) []string {
 	r := make([]string, count)
-	for i := 0; i < count; i++ {
+	for i := range count {
 		r[i] = fmt.Sprintf("m%v", i)
 	}
 

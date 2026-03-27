@@ -40,7 +40,7 @@ func BenchmarkVault(b *testing.B) {
 	require.NoError(b, s.SetCookies(bytes.Repeat([]byte("a"), 10_000)))
 
 	// Create 10 vault users.
-	for idx := 0; idx < 10; idx++ {
+	for range 10 {
 		user, err := s.AddUser(uuid.NewString(), "username", "dummy@proton.me", "authUID", "authRef", []byte("keyPass"))
 		require.NoError(b, err)
 

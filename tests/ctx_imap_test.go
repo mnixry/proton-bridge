@@ -49,7 +49,7 @@ func (t *testCtx) getIMAPClient(clientID string) (string, *client.Client) {
 
 func eventuallyDial(addr string) (cli *client.Client, err error) {
 	var sleep = 1 * time.Second
-	for i := 0; i < 5; i++ {
+	for range 5 {
 		cli, err := client.Dial(addr)
 		if err == nil {
 			return cli, nil

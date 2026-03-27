@@ -31,7 +31,7 @@ type File struct {
 type Release struct {
 	ReleaseCategory   ReleaseCategory `json:"CategoryName"`
 	Version           *semver.Version
-	SystemVersion     versioncompare.SystemVersion `json:"SystemVersion,omitempty"`
+	SystemVersion     versioncompare.SystemVersion `json:"SystemVersion"`
 	RolloutProportion float64
 	MinAuto           *semver.Version `json:"MinAuto,omitempty"`
 	ReleaseNotesPage  string

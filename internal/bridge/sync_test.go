@@ -775,7 +775,7 @@ func clientFetch(client *client.Client, mailbox string, extraItems ...imap.Fetch
 }
 
 func clientStore(client *client.Client, from, to int, isUID bool, item imap.StoreItem, flags ...string) error {
-	var storeFunc func(seqset *imap.SeqSet, item imap.StoreItem, value interface{}, ch chan *imap.Message) error
+	var storeFunc func(seqset *imap.SeqSet, item imap.StoreItem, value any, ch chan *imap.Message) error
 
 	if isUID {
 		storeFunc = client.UidStore
@@ -786,7 +786,7 @@ func clientStore(client *client.Client, from, to int, isUID bool, item imap.Stor
 	return storeFunc(
 		&imap.SeqSet{Set: []imap.Seq{{Start: uint32(from), Stop: uint32(to)}}},
 		item,
-		xslices.Map(flags, func(flag string) interface{} { return flag }),
+		xslices.Map(flags, func(flag string) any { return flag }),
 		nil,
 	)
 }

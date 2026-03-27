@@ -655,8 +655,8 @@ func extractHeaderPartEnd(body []byte) int {
 	}
 
 	headerSection := body[:headerEnd]
-	lines := bytes.Split(headerSection, []byte{'\n'})
-	for _, line := range lines {
+	lines := bytes.SplitSeq(headerSection, []byte{'\n'})
+	for line := range lines {
 		colonIdx := bytes.IndexByte(line, byte(':'))
 		if colonIdx <= 0 {
 			continue
@@ -681,7 +681,7 @@ func extractHeaderPartEnd(body []byte) int {
 func indexMBOXHeaderLine(body []byte) int {
 	headerEnd := extractHeaderPartEnd(body)
 
-	for i := 0; i < headerEnd; i++ {
+	for i := range headerEnd {
 		if i != 0 && body[i] != '\n' {
 			continue
 		}

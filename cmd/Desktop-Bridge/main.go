@@ -103,15 +103,13 @@ func getFlagValue(argList []string, flag string) (string, bool) {
 	eqPrefix1 := "-" + flag + "="
 	eqPrefix2 := "--" + flag + "="
 
-	for i := 0; i < len(argList); i++ {
+	for i := range argList {
 		arg := argList[i]
-		if strings.HasPrefix(arg, eqPrefix1) {
-			val := strings.TrimPrefix(arg, eqPrefix1)
-			return val, len(val) > 0
+		if after, ok := strings.CutPrefix(arg, eqPrefix1); ok {
+			return after, len(after) > 0
 		}
-		if strings.HasPrefix(arg, eqPrefix2) {
-			val := strings.TrimPrefix(arg, eqPrefix2)
-			return val, len(val) > 0
+		if after, ok := strings.CutPrefix(arg, eqPrefix2); ok {
+			return after, len(after) > 0
 		}
 		if (arg == "-"+flag || arg == "--"+flag) && i+1 < len(argList) {
 			return argList[i+1], true

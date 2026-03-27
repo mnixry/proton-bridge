@@ -170,7 +170,7 @@ func clientSend(client *smtp.Client, from, to, message string) error {
 		return err
 	}
 
-	for _, to := range strings.Split(to, ", ") {
+	for to := range strings.SplitSeq(to, ", ") {
 		if err := client.Rcpt(to); err != nil {
 			return err
 		}

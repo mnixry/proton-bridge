@@ -23,7 +23,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type RecoveryAction func(interface{}) error
+type RecoveryAction func(any) error
 
 type Handler struct {
 	actions []RecoveryAction
@@ -38,7 +38,7 @@ func (h *Handler) AddRecoveryAction(action RecoveryAction) *Handler {
 	return h
 }
 
-func (h *Handler) HandlePanic(r interface{}) {
+func (h *Handler) HandlePanic(r any) {
 	sentry.SkipDuringUnwind()
 
 	if r == nil {

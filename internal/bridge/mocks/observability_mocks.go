@@ -50,21 +50,21 @@ func (mr *MockObservabilitySenderRecorder) AddDistinctMetrics(errType observabil
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock,
 		"AddDistinctMetrics",
-		reflect.TypeOf((*MockObservabilitySender)(nil).AddDistinctMetrics),
+		reflect.TypeFor[func(errType observability.DistinctionMetricTypeEnum, _ ...proton.ObservabilityMetric)](),
 		errType)
 }
 
 func (mr *MockObservabilitySenderRecorder) AddMetrics(metrics ...proton.ObservabilityMetric) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddMetrics", reflect.TypeOf((*MockObservabilitySender)(nil).AddMetrics), metrics)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddMetrics", reflect.TypeFor[func(metrics ...proton.ObservabilityMetric)](), metrics)
 }
 
 func (mr *MockObservabilitySenderRecorder) AddTimeLimitedMetric(metricType observability.DistinctionMetricTypeEnum, metric proton.ObservabilityMetric) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddTimeLimitedMetric", reflect.TypeOf((*MockObservabilitySender)(nil).AddTimeLimitedMetric), metricType, metric)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddTimeLimitedMetric", reflect.TypeFor[func(metricType observability.DistinctionMetricTypeEnum, metric proton.ObservabilityMetric)](), metricType, metric)
 }
 
 func (mr *MockObservabilitySenderRecorder) GetEmailClient() {
 	mr.mock.ctrl.T.Helper()
-	mr.mock.ctrl.Call(mr.mock, "GetEmailClient", reflect.TypeOf((*MockObservabilitySender)(nil).GetEmailClient))
+	mr.mock.ctrl.Call(mr.mock, "GetEmailClient", reflect.TypeFor[func() string]())
 }

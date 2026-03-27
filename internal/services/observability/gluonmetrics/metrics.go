@@ -33,7 +33,7 @@ func GenerateNewOpenedIMAPConnectionsExceedThreshold(emailClient, totalOpenIMAPC
 		Name:      newIMAPConnectionThresholdExceededSchemaName,
 		Version:   newIMAPConnectionThresholdExceededVersion,
 		Timestamp: time.Now().Unix(),
-		Data: map[string]interface{}{
+		Data: map[string]any{
 			"Value": 1,
 			"Labels": map[string]string{
 				"mailClient":                                   emailClient,

@@ -74,7 +74,7 @@ func sanitizeFilenameUnix(input string) string {
 	sanitizedParts := make([]string, 0, strings.Count(result, ".")+1)
 
 	// trim out space and dots inside each split part
-	for _, part := range strings.Split(result, ".") {
+	for part := range strings.SplitSeq(result, ".") {
 		part = strings.TrimSpace(part)
 		if len(part) == 0 {
 			continue
@@ -121,7 +121,7 @@ func sanitizeFilenameWindows(input string) string {
 	sanitizedParts := make([]string, 0, strings.Count(result, ".")+1)
 
 	// trim out space and dots inside each split part
-	for _, part := range strings.Split(result, ".") {
+	for part := range strings.SplitSeq(result, ".") {
 		part = strings.TrimSpace(part)
 		if len(part) == 0 {
 			continue

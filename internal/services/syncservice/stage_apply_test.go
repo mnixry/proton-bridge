@@ -69,8 +69,7 @@ func TestApplyStage_JobWithNoMessagesIsFinalized(t *testing.T) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 
-	jobCtx, jobCancel := context.WithCancel(context.Background())
-	defer jobCancel()
+	jobCtx := t.Context()
 
 	tj := newTestJob(jobCtx, mockCtrl, "", map[string]proton.Label{})
 	tj.syncReporter.EXPECT().OnProgress(gomock.Any(), gomock.Any())
@@ -103,8 +102,7 @@ func TestApplyStage_ErrorOnApplyIsReportedAndJobFails(t *testing.T) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 
-	jobCtx, jobCancel := context.WithCancel(context.Background())
-	defer jobCancel()
+	jobCtx := t.Context()
 
 	buildResults := []BuildResult{
 		{

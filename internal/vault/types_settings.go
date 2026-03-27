@@ -66,11 +66,7 @@ const DefaultMaxSyncMemory = 2 * 1024 * uint64(1024*1024)
 func GetDefaultSyncWorkerCount() int {
 	const minSyncWorkers = 16
 
-	syncWorkers := runtime.NumCPU() * 4
-
-	if syncWorkers < minSyncWorkers {
-		syncWorkers = minSyncWorkers
-	}
+	syncWorkers := max(runtime.NumCPU()*4, minSyncWorkers)
 
 	return syncWorkers
 }

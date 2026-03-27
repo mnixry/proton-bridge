@@ -58,9 +58,9 @@ func TestInsertReadRemove(t *testing.T) {
 
 		nJobs := 100
 		nWorkers := 3
-		jobs := make(chan interface{}, nJobs)
-		done := make(chan interface{})
-		for i := 0; i < nWorkers; i++ {
+		jobs := make(chan any, nJobs)
+		done := make(chan any)
+		for range nWorkers {
 			go func() {
 				for {
 					_, more := <-jobs
@@ -74,11 +74,11 @@ func TestInsertReadRemove(t *testing.T) {
 			}()
 		}
 
-		for i := 0; i < nJobs; i++ {
+		for range nJobs {
 			jobs <- nil
 		}
 		close(jobs)
-		for i := 0; i < nWorkers; i++ {
+		for range nWorkers {
 			<-done
 		}
 

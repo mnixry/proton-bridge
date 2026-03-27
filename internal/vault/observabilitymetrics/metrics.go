@@ -34,7 +34,7 @@ func generateVaultErrorObservabilityMetric(errorType string) proton.Observabilit
 		Version:     vaultErrorsSchemaVersion,
 		Timestamp:   time.Now().Unix(),
 		ShouldCache: true,
-		Data: map[string]interface{}{
+		Data: map[string]any{
 			"Value": 1,
 			"Labels": map[string]string{
 				"errorType": errorType,

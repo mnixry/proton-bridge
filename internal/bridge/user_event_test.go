@@ -48,7 +48,6 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
-	"golang.org/x/exp/slices"
 )
 
 func TestBridge_User_RefreshEvent(t *testing.T) {
@@ -281,7 +280,7 @@ func TestBridge_User_MessageLabelDeleted_NoBadEvent(t *testing.T) {
 
 			// Create and delete 10 labels for the user, generating delete events.
 			withClient(ctx, t, s, "user", password, func(ctx context.Context, c *proton.Client) {
-				for i := 0; i < 10; i++ {
+				for range 10 {
 					label, err := c.CreateLabel(ctx, proton.CreateLabelReq{
 						Name:  uuid.NewString(),
 						Color: "#f66",
@@ -997,7 +996,7 @@ func userContinueEventProcess(
 
 func eventuallyDial(addr string) (cli *client.Client, err error) {
 	var sleep = 1 * time.Second
-	for i := 0; i < 5; i++ {
+	for range 5 {
 		cli, err := client.Dial(addr)
 		if err == nil {
 			return cli, nil
