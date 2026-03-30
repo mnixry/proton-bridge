@@ -302,7 +302,6 @@ func (s *Service) sendMail(ctx context.Context, req *sendMailReq) error {
 		if apiErr := new(proton.APIError); errors.As(err, &apiErr) {
 			log.WithError(apiErr).WithField("Details", apiErr.DetailsToString()).Error("failed to send message")
 		}
-
 		return err
 	}
 

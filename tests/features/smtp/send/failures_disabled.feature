@@ -20,5 +20,5 @@ Feature: SMTP wrong messages
 
       Hello
       """
-    And it fails with error "Error: cannot send from address: [user:disabled]@[domain]"
+    And it fails with error "Error: You cannot send from this address. Check that it is enabled in your email client or Bridge settings."
 

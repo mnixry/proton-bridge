@@ -23,6 +23,7 @@ import (
 	"errors"
 	"fmt"
 	"runtime"
+	"sync"
 
 	"github.com/ProtonMail/gluon/async"
 	"github.com/ProtonMail/gluon/logging"
@@ -35,13 +36,21 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+var buildBufferPool = sync.Pool{ //nolint:gochecknoglobals
+	New: func() any {
+		return new(bytes.Buffer)
+	},
+}
+
 type BuildRequest struct {
 	childJob
 	batch []proton.FullMessage
 }
 
-type BuildStageInput = StageInputConsumer[BuildRequest]
-type BuildStageOutput = StageOutputProducer[ApplyRequest]
+type (
+	BuildStageInput  = StageInputConsumer[BuildRequest]
+	BuildStageOutput = StageOutputProducer[ApplyRequest]
+)
 
 // BuildStage is in charge of decrypting and converting the downloaded messages from the previous stage into
 // RFC822 compliant messages which can then be sent to the IMAP server.
@@ -93,7 +102,7 @@ func (b *BuildStage) run(ctx context.Context) {
 	for {
 		req, err := b.input.Consume(ctx)
 		if err != nil {
-			if !(errors.Is(err, ErrNoMoreInput) || errors.Is(err, context.Canceled)) {
+			if !errors.Is(err, ErrNoMoreInput) && !errors.Is(err, context.Canceled) {
 				b.log.WithError(err).Error("Exiting state with error")
 			}
 
@@ -154,7 +163,14 @@ func (b *BuildStage) run(ctx context.Context) {
 						return BuildResult{}, nil
 					}
 
-					res, err := req.job.messageBuilder.BuildMessage(req.job.labels, msg, kr, new(bytes.Buffer))
+					buf := buildBufferPool.Get().(*bytes.Buffer) //nolint:forcetypeassert
+					buf.Reset()
+
+					// Note the buffer grows inside the BuildMessage function
+					res, err := req.job.messageBuilder.BuildMessage(req.job.labels, msg, kr, buf)
+
+					buildBufferPool.Put(buf)
+
 					if err != nil {
 						req.job.log.WithError(err).WithField("msgID", msg.ID).Error("Failed to build message (sync)")
 
@@ -163,7 +179,6 @@ func (b *BuildStage) run(ctx context.Context) {
 						}
 
 						b.observabilitySender.AddDistinctMetrics(observability.SyncError, obsMetrics.GenerateFailedToBuildMetric())
-						// We could sync a placeholder message here, but for now we skip it entirely.
 						return BuildResult{}, nil
 					}
 
@@ -227,7 +242,7 @@ func chunkSyncBuilderBatch(batch []proton.FullMessage, maxMemory uint64) [][]pro
 
 		nextMemSize := expectedMemUsage + dataSize
 		if nextMemSize >= maxMemory {
-			chunks = append(chunks, batch[lastIndex:index])
+			chunks = append(chunks, copySlice(batch[lastIndex:index]))
 			lastIndex = index
 			expectedMemUsage = dataSize
 		} else {
@@ -238,8 +253,15 @@ func chunkSyncBuilderBatch(batch []proton.FullMessage, maxMemory uint64) [][]pro
 	}
 
 	if lastIndex < len(batch) {
-		chunks = append(chunks, batch[lastIndex:])
+		chunks = append(chunks, copySlice(batch[lastIndex:]))
 	}
 
 	return chunks
+}
+
+func copySlice[T any](src []T) []T {
+	dst := make([]T, len(src))
+	copy(dst, src)
+
+	return dst
 }

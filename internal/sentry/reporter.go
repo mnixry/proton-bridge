@@ -20,7 +20,6 @@ package sentry
 import (
 	"errors"
 	"fmt"
-	"log"
 	"os"
 	"runtime"
 	"time"
@@ -56,6 +55,8 @@ func init() { //nolint:gochecknoinits
 		ServerName:     GetProtectedHostname(),
 		Environment:    constants.BuildEnv,
 		MaxBreadcrumbs: 50,
+		Debug:          false,
+		DebugWriter:    logrus.WithField("pkg", "sentry-go").WriterLevel(logrus.WarnLevel),
 	}
 
 	if err := sentry.Init(options); err != nil {
@@ -66,11 +67,6 @@ func init() { //nolint:gochecknoinits
 		scope.SetFingerprint([]string{"{{ default }}"})
 		scope.SetUser(sentry.User{ID: GetProtectedHostname()})
 	})
-
-	sentry.Logger = log.New(
-		logrus.WithField("pkg", "sentry-go").WriterLevel(logrus.WarnLevel),
-		"", 0,
-	)
 }
 
 type hostInfoData struct {

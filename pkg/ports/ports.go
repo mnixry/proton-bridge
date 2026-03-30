@@ -31,7 +31,7 @@ const (
 
 // IsPortFree checks if the port is free to use.
 func IsPortFree(port int) bool {
-	if !(0 < port && port < maxPortNumber) {
+	if 0 >= port || port >= maxPortNumber {
 		return false
 	}
 	// First, check localhost only.

@@ -34,6 +34,7 @@ import (
 func (s *Service) LoginFido(_ context.Context, login *LoginRequest) (*emptypb.Empty, error) {
 	s.log.WithField("username", login.Username).Debug("LoginFido")
 
+	//nolint:gosec //disable G118
 	go func() {
 		defer async.HandlePanic(s.panicHandler)
 

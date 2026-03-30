@@ -30,9 +30,11 @@ import (
 )
 
 func toIMAPMailbox(label proton.Label, flags, permFlags, attrs imap.FlagSet) imap.Mailbox {
-	if label.Type == proton.LabelTypeLabel {
+	//nolint:exhaustive
+	switch label.Type {
+	case proton.LabelTypeLabel:
 		label.Path = append([]string{labelPrefix}, label.Path...)
-	} else if label.Type == proton.LabelTypeFolder {
+	case proton.LabelTypeFolder:
 		label.Path = append([]string{folderPrefix}, label.Path...)
 	}
 
@@ -64,7 +66,7 @@ func BuildFlagSetFromMessageMetadata(message proton.MessageMetadata) imap.FlagSe
 		flags.AddToSelf(imap.FlagDraft)
 	}
 
-	if message.IsRepliedAll == true || message.IsReplied == true { //nolint: gosimple
+	if message.IsRepliedAll || message.IsReplied {
 		flags.AddToSelf(imap.FlagAnswered)
 	}
 

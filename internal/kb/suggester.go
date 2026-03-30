@@ -18,14 +18,15 @@
 package kb
 
 import (
+	"cmp"
 	_ "embed"
 	"encoding/json"
 	"errors"
 	"regexp"
+	"slices"
 	"strings"
 
 	"github.com/bradenaw/juniper/xslices"
-	"golang.org/x/exp/slices"
 )
 
 var ErrArticleNotFound = errors.New("KB article not found")
@@ -79,7 +80,9 @@ func GetSuggestionsFromArticleList(userInput string, articles ArticleList) (Arti
 	}
 
 	articles = xslices.Filter(articles, func(article *Article) bool { return article.Score > 0 })
-	slices.SortFunc(articles, func(lhs, rhs *Article) bool { return lhs.Score > rhs.Score })
+	slices.SortFunc(articles, func(lhs, rhs *Article) int {
+		return cmp.Compare(rhs.Score, lhs.Score)
+	})
 
 	if len(articles) > 3 {
 		return articles[:3], nil

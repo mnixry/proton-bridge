@@ -76,7 +76,7 @@ func DecryptMessage(kr *crypto.KeyRing, msg proton.Message, attData [][]byte) De
 			continue
 		}
 
-		result.Attachments[i].Data.Grow(len(kps) + len(attData))
+		result.Attachments[i].Data.Grow(len(kps) + len(attData[i]))
 
 		if _, err := result.Attachments[i].Data.ReadFrom(stream); err != nil {
 			result.Attachments[i].Err = errors.Wrap(ErrDecryptionFailed, err.Error())

@@ -79,7 +79,15 @@ func forEachLine(br *bufio.Reader, fn func([]byte)) {
 }
 
 func readHeaderBody(b []byte) (*textproto.Header, []byte, error) {
-	rawHeader, body, err := splitHeaderBody(b)
+	var rawHeader, body []byte
+	var err error
+
+	if SplitHeaderBodyV2Disabled.Load() {
+		rawHeader, body, err = splitHeaderBody(b)
+	} else {
+		rawHeader, body, err = splitHeaderBodyV2(b)
+	}
+
 	if err != nil {
 		return nil, nil, err
 	}
@@ -118,13 +126,11 @@ func isHeaderValid(headerLines [][]byte) bool {
 	return true
 }
 
-func splitHeaderBody(b []byte) ([]byte, []byte, error) {
+func splitHeaderBody(b []byte) (header []byte, body []byte, err error) {
 	br := bufio.NewReader(bytes.NewReader(b))
 
-	var header []byte
-
 	for {
-		b, err := br.ReadBytes('\n')
+		b, err = br.ReadBytes('\n')
 		if err != nil {
 			if !errors.Is(err, io.EOF) {
 				panic(err)
@@ -140,10 +146,42 @@ func splitHeaderBody(b []byte) ([]byte, []byte, error) {
 		}
 	}
 
-	body, err := io.ReadAll(br)
+	body, err = io.ReadAll(br)
 	if err != nil && !errors.Is(err, io.EOF) {
 		return nil, nil, err
 	}
 
 	return header, body, nil
+}
+
+func splitHeaderBodyV2(b []byte) (header []byte, body []byte, err error) {
+	if i := bytes.Index(b, []byte("\r\n\r\n")); i >= 0 {
+		return b[:i+4], b[i+4:], nil
+	}
+
+	if i := bytes.Index(b, []byte("\n\n")); i >= 0 {
+		return b[:i+2], b[i+2:], nil
+	}
+
+	scanner := bufio.NewReader(bytes.NewReader(b))
+	var headerLen int
+	for {
+		line, err := scanner.ReadBytes('\n')
+		if err != nil {
+			if !errors.Is(err, io.EOF) {
+				return nil, nil, err
+			}
+			// EOF reached without a blank line i.e the entire input is a header.
+			break
+		}
+
+		headerLen += len(line)
+
+		if len(bytes.TrimSpace(line)) == 0 {
+			// Whitespace only separator line -> include in the header
+			return b[:headerLen], b[headerLen:], nil
+		}
+	}
+
+	return b, nil, nil
 }

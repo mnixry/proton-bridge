@@ -216,10 +216,12 @@ func newMessageStructFromIMAP(msg *imap.Message) MessageStruct {
 	}
 
 	var body string
-	switch {
-	case m.MIMEType == rfc822.TextPlain:
+
+	//nolint:exhaustive
+	switch m.MIMEType {
+	case rfc822.TextPlain:
 		body = strings.TrimSpace(string(m.PlainBody))
-	case m.MIMEType == rfc822.MultipartMixed:
+	case rfc822.MultipartMixed:
 		_, body, _ = strings.Cut(string(m.MIMEBody), "\r\n\r\n")
 	default:
 		body = strings.TrimSpace(string(m.RichBody))

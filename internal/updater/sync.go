@@ -241,6 +241,8 @@ func copyRecursively(srcDir, dstDir string) error {
 				return err
 			}
 			l.WithField("linkPath", linkPath).Debug("Creating symlink")
+
+			//nolint:gosec //disable G122
 			return os.Symlink(linkPath, dstPath)
 		}
 
@@ -262,6 +264,7 @@ func copyRecursively(srcDir, dstDir string) error {
 		}
 
 		// Create/overwrite regular file.
+		//nolint:gosec //disable G122
 		srcReader, err := os.Open(filepath.Clean(srcPath))
 		if err != nil {
 			l.WithError(err).Error("Failed to open source")

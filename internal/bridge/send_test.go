@@ -33,7 +33,6 @@ import (
 	"github.com/ProtonMail/proton-bridge/v3/internal/bridge"
 	"github.com/ProtonMail/proton-bridge/v3/internal/constants"
 	"github.com/ProtonMail/proton-bridge/v3/internal/events"
-	smtpservice "github.com/ProtonMail/proton-bridge/v3/internal/services/smtp"
 	"github.com/emersion/go-imap"
 	"github.com/emersion/go-sasl"
 	"github.com/emersion/go-smtp"
@@ -355,7 +354,7 @@ SGVsbG8gd29ybGQ=
 
 	const messageMultipartWithText = `Content-Type: multipart/mixed;
   boundary="Apple-Mail=_E7AC06C7-4EB2-4453-8CBB-80F4412A7C84"
-Subject: A new message Part2 
+Subject: A new message Part2
 Date: Mon, 13 Mar 2023 16:06:16 +0100
 
 --Apple-Mail=_E7AC06C7-4EB2-4453-8CBB-80F4412A7C84
@@ -467,8 +466,8 @@ SGVsbG8gd29ybGQK
 
 				// messages may not be in order
 				for _, message := range messages {
-					switch {
-					case message.Envelope.Subject == "A new message":
+					switch message.Envelope.Subject {
+					case "A new message":
 						// The message that was sent should now include an empty text/plain body part since there was none
 						// in the original message.
 						require.Equal(t, 2, len(message.BodyStructure.Parts))
@@ -479,7 +478,7 @@ SGVsbG8gd29ybGQK
 						require.Equal(t, "image", message.BodyStructure.Parts[1].MIMEType)
 						require.Equal(t, "jpeg", message.BodyStructure.Parts[1].MIMESubType)
 
-					case message.Envelope.Subject == "A new message Part2":
+					case "A new message Part2":
 						// This message already has a text body, should be unchanged
 						require.Equal(t, 2, len(message.BodyStructure.Parts))
 
@@ -488,14 +487,14 @@ SGVsbG8gd29ybGQK
 						require.Equal(t, "text", message.BodyStructure.Parts[0].MIMEType)
 						require.Equal(t, "html", message.BodyStructure.Parts[0].MIMESubType)
 
-					case message.Envelope.Subject == "A new message Part3":
+					case "A new message Part3":
 						// This message already has a text body, should be unchanged
 						require.Equal(t, 0, len(message.BodyStructure.Parts))
 
 						require.Equal(t, "text", message.BodyStructure.MIMEType)
 						require.Equal(t, "plain", message.BodyStructure.MIMESubType)
 
-					case message.Envelope.Subject == "A new message Part4":
+					case "A new message Part4":
 						// The message that was sent should now include an empty text/plain body part since even though
 						// there was only a text/plain attachment in the original message.
 						require.Equal(t, 2, len(message.BodyStructure.Parts))
@@ -536,7 +535,7 @@ SGVsbG8gd29ybGQ=
 
 	const messageInlineImageWithHTML = `Content-Type: multipart/mixed;
   boundary="Apple-Mail=_E7AC06C7-4EB2-4453-8CBB-80F4412A7C84"
-Subject: A new message Part2 
+Subject: A new message Part2
 Date: Mon, 13 Mar 2023 16:06:16 +0100
 
 --Apple-Mail=_E7AC06C7-4EB2-4453-8CBB-80F4412A7C84
@@ -729,9 +728,8 @@ func TestBridge_SendAddressDisabled(t *testing.T) {
 				[]string{recipientInfo.Addresses[0]},
 				strings.NewReader("Subject: Test 1\r\n\r\nHello world!"),
 			)
-
-			smtpErr := smtpservice.NewErrCannotSendFromAddress(senderInfo.Addresses[0])
-			require.Equal(t, fmt.Sprintf("Error: %v", smtpErr.Error()), err.Error())
+			// The error here is a resolved error from the errormapper
+			require.Error(t, err)
 		})
 	})
 }

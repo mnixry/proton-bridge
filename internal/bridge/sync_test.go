@@ -144,7 +144,7 @@ func TestBridge_Sync(t *testing.T) {
 }
 
 // GODT-2215: This test no longer works since it's now possible to import messages into Gluon with bad ContentType header.
-func _TestBridge_Sync_BadMessage(t *testing.T) { //nolint:unused,deadcode
+func _TestBridge_Sync_BadMessage(t *testing.T) { //nolint:unused
 	withEnv(t, func(ctx context.Context, s *server.Server, netCtl *proton.NetCtl, locator bridge.Locator, storeKey []byte) {
 		userID, addrID, err := s.CreateUser("imap", password)
 		require.NoError(t, err)
@@ -572,6 +572,7 @@ func TestBridge_MessageCreateDuringSync(t *testing.T) {
 			require.Eventually(t, func() bool {
 				// Finally check if the 20 messages are in INBOX.
 				status, err := client.Status("INBOX", []imap.StatusItem{imap.StatusMessages})
+
 				require.NoError(t, err)
 
 				return uint32(20) == status.Messages
@@ -648,15 +649,24 @@ func TestBridge_AddressOrderChangeDuringSyncInCombinedModeDoesNotTriggerBadEvent
 		require.NoError(t, err)
 
 		withBridge(ctx, t, s.GetHostURL(), netCtl, locator, storeKey, func(bridge *bridge.Bridge, _ *bridge.Mocks) {
-			userInfoChanged, done := chToType[events.Event, events.UserChanged](bridge.GetEvents(events.UserChanged{}))
-			defer done()
+			syncStartedCh, doneSyncStarted := chToType[events.Event, events.SyncStarted](bridge.GetEvents(events.SyncStarted{}))
+			defer func() {
+				doneSyncStarted()
+			}()
 
 			withClient(ctx, t, s, "user", password, func(ctx context.Context, c *proton.Client) {
-				createNumMessages(ctx, t, c, addrID, proton.InboxLabel, 300)
+				createNumMessages(ctx, t, c, addrID, proton.InboxLabel, 200)
 			})
 
 			_, err := bridge.LoginFull(ctx, "user", password, nil, nil)
 			require.NoError(t, err)
+			select {
+			case startedEvt := <-syncStartedCh:
+				require.Equal(t, userID, startedEvt.UserID)
+			case <-time.After(10 * time.Second):
+				t.Error("timeout waiting for SyncStarted event")
+				return
+			}
 
 			info, err := bridge.GetUserInfo(userID)
 			require.NoError(t, err)
@@ -676,15 +686,48 @@ func TestBridge_AddressOrderChangeDuringSyncInCombinedModeDoesNotTriggerBadEvent
 			// new message does not get combined into the event below. This ensures the newly created
 			// goes through the full code flow which triggered the original bad event.
 			time.Sleep(time.Second)
+
+			userInfoChanged, doneInfoChanged := chToType[events.Event, events.UserChanged](bridge.GetEvents(events.UserChanged{}))
+			userBadEvent, doneBadEvent := chToType[events.Event, events.UserBadEvent](bridge.GetEvents(events.UserBadEvent{}))
+			defer func() {
+				doneInfoChanged()
+				doneBadEvent()
+			}()
+
 			require.NoError(t, s.SetAddressOrder(userID, []string{addrID, addrID2}))
 
-			for i := 0; i < 2; i++ {
-				select {
-				case <-ctx.Done():
-					return
-				case e := <-userInfoChanged:
-					require.Equal(t, userID, e.UserID)
+			select {
+			case badEvt := <-userBadEvent:
+				t.Errorf("unexpected UserBadEvent: %+v", badEvt)
+				return
+			case changedEvt := <-userInfoChanged:
+				require.Equal(t, userID, changedEvt.UserID)
+			case <-time.After(30 * time.Second):
+				t.Error("timeout waiting for UserChanged event")
+				return
+			}
+
+			require.Eventually(t, func() bool {
+				info, err := bridge.GetUserInfo(userID)
+				if err != nil {
+					return false
 				}
+
+				return len(info.Addresses) == 2 &&
+					info.Addresses[0] == "user@proton.local" &&
+					info.Addresses[1] == "foo@"+s.GetDomain()
+			}, 30*time.Second, 200*time.Millisecond)
+
+			//  check if additional events are observed
+			select {
+			case badEvt := <-userBadEvent:
+				t.Errorf("unexpected UserBadEvent: %+v", badEvt)
+				return
+			case extraChangedEvt := <-userInfoChanged:
+				t.Errorf("unexpected extra UserChanged event: %+v", extraChangedEvt)
+				return
+			case <-time.After(5 * time.Second):
+				// No additional events observed, as expected.
 			}
 		})
 	})

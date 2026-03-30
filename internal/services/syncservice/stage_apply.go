@@ -60,7 +60,7 @@ func (a *ApplyStage) run(ctx context.Context) {
 	for {
 		req, err := a.input.Consume(ctx)
 		if err != nil {
-			if !(errors.Is(err, ErrNoMoreInput) || errors.Is(err, context.Canceled)) {
+			if !errors.Is(err, ErrNoMoreInput) && !errors.Is(err, context.Canceled) {
 				a.log.WithError(err).Error("Exiting state with error")
 			}
 

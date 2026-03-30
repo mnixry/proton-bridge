@@ -21,9 +21,11 @@ import (
 	"bytes"
 	"context"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"io"
 	"mime"
+	"net/http"
 	"net/mail"
 	"runtime"
 	"strings"
@@ -163,7 +165,7 @@ func (s *Service) smtpSendMail(ctx context.Context, authID string, from string, 
 			message,
 		)
 		if err != nil {
-			return fmt.Errorf("failed to send message: %w", err)
+			return fmt.Errorf("%w: %w", ErrSendMessageOperation, err)
 		}
 
 		// If the message was successfully sent, we can update the message ID in the record.
@@ -218,7 +220,7 @@ func (s *Service) sendWithKey(
 
 	default:
 		s.observabilitySender.AddDistinctMetrics(observability.SMTPError, observabilitymetrics.GenerateUnsupportedMIMEType())
-		return proton.Message{}, fmt.Errorf("unsupported MIME type: %v", message.MIMEType)
+		return proton.Message{}, fmt.Errorf("%w: %v", ErrUnsupportedOutgoingMIME, message.MIMEType)
 	}
 
 	draft, err := s.createDraft(ctx, addrKR, emails, from, to, parentID, message.InReplyTo, message.XForward, proton.DraftTemplate{
@@ -247,7 +249,7 @@ func (s *Service) sendWithKey(
 	recipients, err := s.getRecipients(ctx, s.client, userKR, settings, draft)
 	if err != nil {
 		s.observabilitySender.AddDistinctMetrics(observability.SMTPError, observabilitymetrics.GenerateFailedToGetRecipients())
-		return proton.Message{}, fmt.Errorf("failed to get recipients: %w", err)
+		return proton.Message{}, fmt.Errorf("%w: %w", ErrGetRecipientsOperation, err)
 	}
 
 	req, err := createSendReq(addrKR, message.MIMEBody, message.RichBody, message.PlainBody, recipients, attKeys)
@@ -391,7 +393,7 @@ func (s *Service) createDraft(
 	if idx := xslices.IndexFunc(emails, func(email string) bool {
 		return strings.EqualFold(email, usertypes.SanitizeEmail(template.Sender.Address))
 	}); idx < 0 {
-		return proton.Message{}, fmt.Errorf("address %q is not owned by user", template.Sender.Address)
+		return proton.Message{}, fmt.Errorf("%w: address %q is not owned by user", ErrSenderAddressNotOwned, template.Sender.Address)
 	} else { //nolint:revive
 		template.Sender.Address = constructEmail(template.Sender.Address, emails[idx])
 	}
@@ -530,7 +532,12 @@ func (s *Service) getRecipients(
 
 		pubKeys, recType, err := client.GetPublicKeys(ctx, recipient)
 		if err != nil {
-			return proton.SendPreferences{}, fmt.Errorf("failed to get public key for %v: %w", recipient, err)
+			var apiErr *proton.APIError
+			if errors.As(err, &apiErr) && apiErr != nil &&
+				apiErr.Status == http.StatusUnprocessableEntity && apiErr.Code == errCodeAddressDoesNotExist {
+				err = fmt.Errorf("%w: %w", ErrRecipientAddressDoesNotExist, err)
+			}
+			return proton.SendPreferences{}, fmt.Errorf("%w: failed to get public key for %s: %w", ErrLookupRecipientPublicKey, recipient, err)
 		}
 
 		contactSettings, err := getContactSettings(ctx, client, userKR, recipient)
@@ -541,7 +548,7 @@ func (s *Service) getRecipients(
 		return buildSendPrefs(contactSettings, settings, pubKeys, draft.MIMEType, recType == proton.RecipientTypeInternal)
 	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to get send preferences: %w", err)
+		return nil, fmt.Errorf("%w: %w", ErrGetSendPreferencesOperation, err)
 	}
 
 	recipients := make(recipients)

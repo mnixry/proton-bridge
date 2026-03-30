@@ -213,7 +213,7 @@ func NewMailAddressChangeLogoutEvent(email string) *StreamEvent {
 	return mailEvent(&MailEvent{Event: &MailEvent_AddressChangedLogout{AddressChangedLogout: &AddressChangedLogoutEvent{Address: email}}})
 }
 
-func NewMailApiCertIssue() *StreamEvent { //nolint:revive,stylecheck
+func NewMailApiCertIssue() *StreamEvent { //nolint:revive
 	return mailEvent(&MailEvent{Event: &MailEvent_ApiCertIssue{ApiCertIssue: &ApiCertIssueEvent{}}})
 }
 

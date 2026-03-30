@@ -58,7 +58,7 @@ Feature: SMTP initiation
       """
       Subject: test
       """
-    Then it fails with error "invalid recipient"
+    Then it fails with error "The sender or recipient address is not valid. Check To/Cc/Bcc and try again."
 
   Scenario: Allow BODY parameter of MAIL FROM command
     When SMTP client "1" sends MAIL FROM "<[user:user]@[domain]> BODY=7BIT"

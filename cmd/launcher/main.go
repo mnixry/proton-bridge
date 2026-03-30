@@ -310,6 +310,7 @@ func waitForProcessToFinish(exePath string) {
 			return
 		}
 
+		//nolint:gosec //disable 703
 		exeInfo, err := os.Stat(exePath)
 		if err != nil {
 			logrus.WithError(err).WithField("file", exeInfo).Error("Could not retrieve file info")

@@ -118,7 +118,7 @@ func (bridge *Bridge) CollectLogs() (proton.ReportBugAttachment, error) {
 
 func (bridge *Bridge) createTicket(ctx context.Context, report *ReportBugReq,
 	asyncAttach proton.AttachmentType, att proton.ReportBugAttachment) (string, error) {
-	var attachments []proton.ReportBugAttachment
+	attachments := make([]proton.ReportBugAttachment, 0, 1)
 	attachments = append(attachments, att)
 	res, err := bridge.api.ReportBug(ctx, proton.ReportBugReq{
 		OS:        report.OSType,
@@ -149,7 +149,7 @@ func (bridge *Bridge) createTicket(ctx context.Context, report *ReportBugReq,
 }
 
 func (bridge *Bridge) appendComment(ctx context.Context, token string, att proton.ReportBugAttachment) error {
-	var attachments []proton.ReportBugAttachment
+	attachments := make([]proton.ReportBugAttachment, 0, 1)
 	attachments = append(attachments, att)
 	return bridge.api.ReportBugAttachement(ctx, proton.ReportBugAttachmentReq{
 		Product: proton.ClientTypeEmail,

@@ -127,9 +127,11 @@ func TestBridge_Observability_UserMetric(t *testing.T) {
 	}
 
 	withEnv(t, func(ctx context.Context, s *server.Server, netCtl *proton.NetCtl, locator bridge.Locator, vaultKey []byte) {
-		userMetricPeriod := time.Millisecond * 600
-		heartbeatPeriod := time.Second * 10
+		// Keep a long heartbeat so that only user-metric pushes are tested not heartbeat ones.
+		userMetricPeriod := time.Second
+		heartbeatPeriod := time.Hour
 		throttlePeriod := time.Millisecond * 300
+
 		observability.ModifyUserMetricInterval(userMetricPeriod)
 		observability.ModifyThrottlePeriod(throttlePeriod)
 
@@ -137,28 +139,43 @@ func TestBridge_Observability_UserMetric(t *testing.T) {
 			require.NoError(t, getErr(bridge.LoginFull(ctx, username, password, nil, nil)))
 			bridge.ModifyObservabilityHeartbeatInterval(heartbeatPeriod)
 
-			time.Sleep(throttlePeriod)
-			require.Equal(t, 0, len(s.GetObservabilityStatistics().Metrics))
+			requireObservabilityMetricCountEventually(t, s, 0, 5*time.Second, 20*time.Millisecond)
 
 			bridge.PushDistinctObservabilityMetrics(observability.SyncError, testMetric)
-			time.Sleep(throttlePeriod)
 			// We're expecting two observability metrics to be sent, the actual metric + the user metric.
-			require.Equal(t, 2, len(s.GetObservabilityStatistics().Metrics))
+			requireObservabilityMetricCountEventually(t, s, 2, 5*time.Second, 20*time.Millisecond)
 
 			bridge.PushDistinctObservabilityMetrics(observability.SyncError, testMetric)
-			time.Sleep(throttlePeriod)
 			// We're expecting only a single metric to be sent, since the user metric update has been sent already within the predefined period.
-			require.Equal(t, 3, len(s.GetObservabilityStatistics().Metrics))
+			requireObservabilityMetricCountEventually(t, s, 3, 5*time.Second, 20*time.Millisecond)
+
+			time.Sleep(userMetricPeriod + throttlePeriod)
+			requireObservabilityMetricCountEventually(t, s, 3, 5*time.Second, 20*time.Millisecond) // check after timeout if no new events have been received
 
 			bridge.PushDistinctObservabilityMetrics(observability.SyncError, testMetric)
-			time.Sleep(throttlePeriod)
-			// Two metric updates should be sent again.
-			require.Equal(t, 5, len(s.GetObservabilityStatistics().Metrics))
+			requireObservabilityMetricCountEventually(t, s, 5, 5*time.Second, 20*time.Millisecond)
 
 			bridge.PushDistinctObservabilityMetrics(observability.SyncError, testMetric)
-			time.Sleep(throttlePeriod)
-			// Only a single one should be sent.
-			require.Equal(t, 6, len(s.GetObservabilityStatistics().Metrics))
+			requireObservabilityMetricCountEventually(t, s, 6, 5*time.Second, 20*time.Millisecond)
+
+			time.Sleep(userMetricPeriod + throttlePeriod)
+			requireObservabilityMetricCountEventually(t, s, 6, 5*time.Second, 20*time.Millisecond) // check after timeout if no new events have been received
+
+			bridge.PushDistinctObservabilityMetrics(observability.SyncError, testMetric)
+			requireObservabilityMetricCountEventually(t, s, 8, 5*time.Second, 20*time.Millisecond)
+
+			bridge.PushDistinctObservabilityMetrics(observability.SyncError, testMetric)
+			requireObservabilityMetricCountEventually(t, s, 9, 5*time.Second, 20*time.Millisecond)
 		})
 	})
+}
+
+// maxCooldownDuration & cooldownDuration always receive the same value, but I'd rather keep them as arguments rather than constants
+//
+//nolint:unparam
+func requireObservabilityMetricCountEventually(t *testing.T, s *server.Server, expected int, maxCooldownDuration, cooldownDuration time.Duration) {
+	t.Helper()
+	require.Eventually(t, func() bool {
+		return len(s.GetObservabilityStatistics().Metrics) == expected
+	}, maxCooldownDuration, cooldownDuration)
 }

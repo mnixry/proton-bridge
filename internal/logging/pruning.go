@@ -18,14 +18,15 @@
 package logging
 
 import (
+	"cmp"
 	"os"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"strings"
 
 	"github.com/bradenaw/juniper/xslices"
 	"golang.org/x/exp/maps"
-	"golang.org/x/exp/slices"
 )
 
 const (
@@ -96,7 +97,9 @@ func pruneLogs(logDir string, currentSessionID SessionID, pruningSize int64) (fa
 
 	// current session size if below max size, so we erase older session starting with the eldest until we go below maxFileSize
 	sortedSessions := maps.Values(sessionInfoList)
-	slices.SortFunc(sortedSessions, func(lhs, rhs *sessionInfo) bool { return lhs.sessionID < rhs.sessionID })
+	slices.SortFunc(sortedSessions, func(lhs, rhs *sessionInfo) int {
+		return cmp.Compare(lhs.sessionID, rhs.sessionID)
+	})
 	for _, sessionInfo := range sortedSessions {
 		totalSize -= sessionInfo.size()
 		failureCount += sessionInfo.deleteFiles()
@@ -144,7 +147,9 @@ func newSessionInfo(dir string, sessionID SessionID) (*sessionInfo, error) {
 		}
 	}
 
-	lessFunc := func(lhs, rhs logFileInfo) bool { return strings.Compare(lhs.filename, rhs.filename) < 0 }
+	lessFunc := func(lhs, rhs logFileInfo) int {
+		return strings.Compare(lhs.filename, rhs.filename)
+	}
 	slices.SortFunc(result.launcherLogs, lessFunc)
 	slices.SortFunc(result.guiLogs, lessFunc)
 	slices.SortFunc(result.bridgeLogs, lessFunc)
@@ -161,7 +166,7 @@ func (s *sessionInfo) size() int64 {
 }
 
 func (s *sessionInfo) deleteFiles() (failureCount int) {
-	var allLogs []logFileInfo
+	allLogs := make([]logFileInfo, 0, len(s.launcherLogs)+len(s.guiLogs)+len(s.bridgeLogs))
 	allLogs = append(allLogs, s.launcherLogs...)
 	allLogs = append(allLogs, s.guiLogs...)
 	allLogs = append(allLogs, s.bridgeLogs...)

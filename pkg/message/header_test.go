@@ -207,3 +207,204 @@ lorem`)
 	require.Equal(t, `Return-Path: <dummy@proton.me>`, lines[18])
 	require.Equal(t, `Delivered-To: test@proton.me`, lines[19])
 }
+
+func TestSplitHeaderBody(t *testing.T) {
+	testCases := []struct {
+		desc    string
+		input   []byte
+		headers []byte
+		body    []byte
+	}{
+		{
+			desc: "Standard CRLF separator — RFC 2822 compliant",
+			input: []byte(
+				"From: sender@example.com\r\n" +
+					"To: recipient@example.com\r\n" +
+					"Subject: Hello World\r\n" +
+					"Date: Fri, 06 Mar 2026 10:00:00 +0000\r\n" +
+					"MIME-Version: 1.0\r\n" +
+					"Content-Type: text/plain; charset=\"utf-8\"\r\n" +
+					"\r\n" +
+					"This is the body of the email.\r\n",
+			),
+			headers: []byte(
+				"From: sender@example.com\r\n" +
+					"To: recipient@example.com\r\n" +
+					"Subject: Hello World\r\n" +
+					"Date: Fri, 06 Mar 2026 10:00:00 +0000\r\n" +
+					"MIME-Version: 1.0\r\n" +
+					"Content-Type: text/plain; charset=\"utf-8\"\r\n" +
+					"\r\n",
+			),
+			body: []byte("This is the body of the email.\r\n"),
+		},
+		{
+			desc: "LF-only line endings (Unix MTA output)",
+			input: []byte(`From: sender@example.com
+To: recipient@example.com
+Subject: LF Only
+
+Body line one.
+Body line two.
+`),
+			headers: []byte(`From: sender@example.com
+To: recipient@example.com
+Subject: LF Only
+
+`),
+			body: []byte(`Body line one.
+Body line two.
+`),
+		},
+		{
+			desc: "Mixed CRLF and LF line endings",
+			input: []byte("From: sender@example.com\r\n" +
+				"To: recipient@example.com\n" +
+				"Subject: Mixed Endings\r\n" +
+				"\n" +
+				"Body here.\n"),
+			headers: []byte("From: sender@example.com\r\n" +
+				"To: recipient@example.com\n" +
+				"Subject: Mixed Endings\r\n" +
+				"\n"),
+			body: []byte("Body here.\n"),
+		},
+		{
+			desc: "Folded headers — long Subject and Received fields",
+			input: []byte("From: sender@example.com\r\n" +
+				"Subject: This is a very long subject line that has been folded\r\n" +
+				"\t across multiple lines per RFC 2822\r\n" +
+				"Received: from mail.example.com (mail.example.com [192.0.2.1])\r\n" +
+				"        by mx.example.com with ESMTP id abc123\r\n" +
+				"        for <recipient@example.com>; Fri, 06 Mar 2026 10:00:00 +0000\r\n" +
+				"\r\n" +
+				"Folded header body.\r\n"),
+			headers: []byte("From: sender@example.com\r\n" +
+				"Subject: This is a very long subject line that has been folded\r\n" +
+				"\t across multiple lines per RFC 2822\r\n" +
+				"Received: from mail.example.com (mail.example.com [192.0.2.1])\r\n" +
+				"        by mx.example.com with ESMTP id abc123\r\n" +
+				"        for <recipient@example.com>; Fri, 06 Mar 2026 10:00:00 +0000\r\n" +
+				"\r\n"),
+			body: []byte("Folded header body.\r\n"),
+		},
+		{
+			desc: "HTML body — Outlook rich text",
+			input: []byte("From: sender@outlook.com\r\n" +
+				"To: recipient@example.com\r\n" +
+				"Subject: HTML Email\r\n" +
+				"MIME-Version: 1.0\r\n" +
+				"Content-Type: text/html; charset=\"utf-8\"\r\n" +
+				"\r\n" +
+				"<html><body><p>Hello <b>World</b></p></body></html>\r\n"),
+			headers: []byte("From: sender@outlook.com\r\n" +
+				"To: recipient@example.com\r\n" +
+				"Subject: HTML Email\r\n" +
+				"MIME-Version: 1.0\r\n" +
+				"Content-Type: text/html; charset=\"utf-8\"\r\n" +
+				"\r\n"),
+			body: []byte("<html><body><p>Hello <b>World</b></p></body></html>\r\n"),
+		},
+		{
+			desc: "Multipart/alternative with plain text and HTML parts",
+			input: []byte("From: sender@icloud.com\r\n" +
+				"To: recipient@example.com\r\n" +
+				"Subject: Multipart Test\r\n" +
+				"MIME-Version: 1.0\r\n" +
+				"Content-Type: multipart/alternative; boundary=\"Apple-Mail=_BOUNDARY_001\"\r\n" +
+				"\r\n" +
+				"--Apple-Mail=_BOUNDARY_001\r\n" +
+				"Content-Type: text/plain; charset=utf-8\r\n" +
+				"\r\n" +
+				"Plain text part.\r\n" +
+				"--Apple-Mail=_BOUNDARY_001\r\n" +
+				"Content-Type: text/html; charset=utf-8\r\n" +
+				"\r\n" +
+				"<html><body><p>HTML part.</p></body></html>\r\n" +
+				"--Apple-Mail=_BOUNDARY_001--\r\n"),
+			headers: []byte("From: sender@icloud.com\r\n" +
+				"To: recipient@example.com\r\n" +
+				"Subject: Multipart Test\r\n" +
+				"MIME-Version: 1.0\r\n" +
+				"Content-Type: multipart/alternative; boundary=\"Apple-Mail=_BOUNDARY_001\"\r\n" +
+				"\r\n"),
+			body: []byte("--Apple-Mail=_BOUNDARY_001\r\n" +
+				"Content-Type: text/plain; charset=utf-8\r\n" +
+				"\r\n" +
+				"Plain text part.\r\n" +
+				"--Apple-Mail=_BOUNDARY_001\r\n" +
+				"Content-Type: text/html; charset=utf-8\r\n" +
+				"\r\n" +
+				"<html><body><p>HTML part.</p></body></html>\r\n" +
+				"--Apple-Mail=_BOUNDARY_001--\r\n"),
+		},
+		{
+			desc: "Empty body — headers only with blank separator",
+			input: []byte("From: noreply@example.com\r\n" +
+				"To: recipient@example.com\r\n" +
+				"Subject: Ping\r\n" +
+				"\r\n"),
+			headers: []byte("From: noreply@example.com\r\n" +
+				"To: recipient@example.com\r\n" +
+				"Subject: Ping\r\n" +
+				"\r\n"),
+			body: []byte{},
+		},
+		{
+			desc:    "Minimal valid email — only From and blank line separator",
+			input:   []byte("From: a@b.com\r\n\r\nHi.\r\n"),
+			headers: []byte("From: a@b.com\r\n\r\n"),
+			body:    []byte("Hi.\r\n"),
+		},
+		{
+			desc:    "Empty input",
+			input:   []byte{},
+			headers: []byte{},
+			body:    []byte{},
+		},
+		{
+			desc:    "Input is only the blank-line separator",
+			input:   []byte("\r\n"),
+			headers: []byte("\r\n"),
+			body:    []byte{},
+		},
+		{
+			desc:    "Input has header+body with CRLF",
+			input:   []byte("From: a@b.com\r\n" + "\r\n" + "Body text\r\n"),
+			headers: []byte("From: a@b.com\r\n\r\n"),
+			body:    []byte("Body text\r\n"),
+		},
+		{
+			desc:    "Input is only header",
+			input:   []byte("From: a@b.com\n" + "Subject: Hi\n"),
+			headers: []byte("From: a@b.com\nSubject: Hi\n"),
+			body:    []byte{},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+			rawHeader, rawBody, err := splitHeaderBodyV2(tc.input)
+			require.NoError(t, err)
+
+			if !bytes.Equal(tc.headers, rawHeader) {
+				t.Errorf("Expected: %q\n, got: %q", tc.headers, rawHeader)
+			}
+
+			if !bytes.Equal(tc.body, rawBody) {
+				t.Errorf("Expected: %q\n, got: %q", tc.body, rawBody)
+			}
+
+			rawHeaderOld, rawBodyOld, err := splitHeaderBody(tc.input)
+			require.NoError(t, err)
+
+			if !bytes.Equal(rawHeaderOld, rawHeader) {
+				t.Errorf("Header mismatch, want: %q\n, got: %q", rawHeaderOld, rawHeader)
+			}
+
+			if !bytes.Equal(rawBodyOld, rawBody) {
+				t.Errorf("Body mismatch, want: %q\n, got: %q", rawBodyOld, rawBody)
+			}
+		})
+	}
+}

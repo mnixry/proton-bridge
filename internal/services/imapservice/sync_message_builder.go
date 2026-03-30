@@ -23,15 +23,17 @@ import (
 	"github.com/ProtonMail/go-proton-api"
 	"github.com/ProtonMail/gopenpgp/v2/crypto"
 	"github.com/ProtonMail/proton-bridge/v3/internal/services/syncservice"
+	"github.com/ProtonMail/proton-bridge/v3/internal/unleash"
 	"github.com/ProtonMail/proton-bridge/v3/pkg/message"
 )
 
 type SyncMessageBuilder struct {
-	state *rwIdentity
+	state                    *rwIdentity
+	featureFlagValueProvider unleash.FeatureFlagValueProvider
 }
 
-func NewSyncMessageBuilder(rw *rwIdentity) *SyncMessageBuilder {
-	return &SyncMessageBuilder{state: rw}
+func NewSyncMessageBuilder(rw *rwIdentity, featureFlagValueProvider unleash.FeatureFlagValueProvider) *SyncMessageBuilder {
+	return &SyncMessageBuilder{state: rw, featureFlagValueProvider: featureFlagValueProvider}
 }
 
 func (s SyncMessageBuilder) WithKeys(f func(*crypto.KeyRing, map[string]*crypto.KeyRing) error) error {
@@ -45,19 +47,23 @@ func (s SyncMessageBuilder) BuildMessage(
 	buffer *bytes.Buffer,
 ) (syncservice.BuildResult, error) {
 	buffer.Grow(full.Size)
+	message.SplitHeaderBodyV2Disabled.Swap(s.featureFlagValueProvider.GetFlagValue(unleash.SplitMessageHeaderBodyV2Disabled))
 
 	if err := message.DecryptAndBuildRFC822Into(addrKR, full.Message, full.AttData, defaultMessageJobOpts(), buffer); err != nil {
 		return syncservice.BuildResult{}, err
 	}
 
-	update, err := newMessageCreatedUpdate(apiLabels, full.MessageMetadata, buffer.Bytes())
+	literal := make([]byte, buffer.Len())
+	copy(literal, buffer.Bytes())
+
+	update, err := newMessageCreatedUpdate(apiLabels, full.MessageMetadata, literal)
 	if err != nil {
 		return syncservice.BuildResult{}, err
 	}
 
 	return syncservice.BuildResult{
-		AddressID: full.Message.AddressID,
-		MessageID: full.Message.ID,
+		AddressID: full.AddressID,
+		MessageID: full.ID,
 		Update:    update,
 	}, nil
 }

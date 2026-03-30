@@ -18,10 +18,11 @@
 package safe
 
 import (
+	"cmp"
 	"sync"
 	"sync/atomic"
 
-	"golang.org/x/exp/slices"
+	"slices"
 )
 
 var nextMutexID uint64 // nolint:gochecknoglobals
@@ -83,8 +84,8 @@ func Lock(fn func(), m ...Mutex) {
 		panic("no mutexes provided")
 	}
 
-	slices.SortFunc(m, func(a, b Mutex) bool {
-		return a.getMutexID() < b.getMutexID()
+	slices.SortFunc(m, func(a, b Mutex) int {
+		return cmp.Compare(a.getMutexID(), b.getMutexID())
 	})
 
 	for _, m := range m {
@@ -128,8 +129,8 @@ func RLock(fn func(), m ...RWMutex) {
 		panic("no mutexes provided")
 	}
 
-	slices.SortFunc(m, func(a, b RWMutex) bool {
-		return a.getMutexID() < b.getMutexID()
+	slices.SortFunc(m, func(a, b RWMutex) int {
+		return cmp.Compare(a.getMutexID(), b.getMutexID())
 	})
 
 	for _, m := range m {

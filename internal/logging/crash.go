@@ -38,7 +38,7 @@ func DumpStackTrace(logsPath string, sessionID SessionID, appName AppName) crash
 			return err
 		}
 
-		if _, err := f.WriteString(fmt.Sprintf("Recover: %v", r)); err != nil {
+		if _, err := fmt.Fprintf(f, "Recover: %v", r); err != nil {
 			return err
 		}
 

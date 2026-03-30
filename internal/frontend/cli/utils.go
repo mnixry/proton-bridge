@@ -116,6 +116,5 @@ Recommendation:
   as usual.
 * If you don't trust your network operator, reconnect to Proton Mail over a VPN
   (such as ProtonVPN) which encrypts your Internet connection, or use
-  a different network to access Proton Mail.
-`)
+  a different network to access Proton Mail.`)
 }

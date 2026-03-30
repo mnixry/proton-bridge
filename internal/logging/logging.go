@@ -19,18 +19,19 @@ package logging
 
 import (
 	"bytes"
+	"cmp"
 	"context"
 	"errors"
 	"io"
 	"os"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"time"
 
 	"github.com/bradenaw/juniper/xslices"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/exp/maps"
-	"golang.org/x/exp/slices"
 )
 
 const (
@@ -142,7 +143,9 @@ func getOrderedLogFileListForBugReport(logsPath string, maxSessionCount int) ([]
 	}
 
 	sortedSessions := maps.Values(sessionInfoList)
-	slices.SortFunc(sortedSessions, func(lhs, rhs *sessionInfo) bool { return lhs.sessionID > rhs.sessionID })
+	slices.SortFunc(sortedSessions, func(lhs, rhs *sessionInfo) int {
+		return cmp.Compare(rhs.sessionID, lhs.sessionID)
+	})
 	count := len(sortedSessions)
 	if count > maxSessionCount {
 		sortedSessions = sortedSessions[:maxSessionCount]

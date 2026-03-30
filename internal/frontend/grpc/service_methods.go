@@ -381,6 +381,7 @@ func (s *Service) ReportBug(_ context.Context, report *ReportBugRequest) (*empty
 		"includeLogs": report.IncludeLogs,
 	}).Debug("ReportBug")
 
+	//nolint:gosec //disable G118
 	go func() {
 		defer async.HandlePanic(s.panicHandler)
 
@@ -455,6 +456,7 @@ func (s *Service) Login(_ context.Context, login *LoginRequest) (*emptypb.Empty,
 		s.useHvDetails = false
 	}
 
+	//nolint:gosec //disable G118
 	go func() {
 		defer async.HandlePanic(s.panicHandler)
 
@@ -536,6 +538,7 @@ func (s *Service) Login(_ context.Context, login *LoginRequest) (*emptypb.Empty,
 func (s *Service) Login2FA(_ context.Context, login *LoginRequest) (*emptypb.Empty, error) {
 	s.log.WithField("username", login.Username).Debug("Login2FA")
 
+	//nolint:gosec //disable G118
 	go func() {
 		defer async.HandlePanic(s.panicHandler)
 
@@ -708,6 +711,7 @@ func (s *Service) DiskCachePath(_ context.Context, _ *emptypb.Empty) (*wrappersp
 func (s *Service) SetDiskCachePath(_ context.Context, newPath *wrapperspb.StringValue) (*emptypb.Empty, error) {
 	s.log.WithField("path", newPath.Value).Debug("setDiskCachePath")
 
+	//nolint:gosec //disable G118
 	go func() {
 		defer async.HandlePanic(s.panicHandler)
 
@@ -781,6 +785,7 @@ func (s *Service) SetMailServerSettings(_ context.Context, settings *ImapSmtpSet
 		WithField("UseSSLForSMTP", settings.UseSSLForSmtp).
 		Debug("SetConnectionMode")
 
+	//nolint:gosec //disable G118
 	go func() {
 		defer async.HandlePanic(s.panicHandler)
 

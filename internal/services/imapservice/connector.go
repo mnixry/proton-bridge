@@ -36,6 +36,7 @@ import (
 	"github.com/ProtonMail/go-proton-api"
 	"github.com/ProtonMail/gopenpgp/v2/crypto"
 	"github.com/ProtonMail/proton-bridge/v3/internal/services/sendrecorder"
+	"github.com/ProtonMail/proton-bridge/v3/internal/unleash"
 	"github.com/ProtonMail/proton-bridge/v3/internal/usertypes"
 	"github.com/ProtonMail/proton-bridge/v3/pkg/message"
 	"github.com/ProtonMail/proton-bridge/v3/pkg/message/parser"
@@ -74,6 +75,8 @@ type Connector struct {
 
 	mailboxCountProvider mailboxCountProvider
 	gluonIDProvider      gluonIDProvider
+
+	featureFlagValueProvider unleash.FeatureFlagValueProvider
 }
 
 var errNoSenderAddressMatch = errors.New("no matching sender found in address list")
@@ -91,6 +94,7 @@ func NewConnector(
 	syncState *SyncState,
 	mailboxCountProvider mailboxCountProvider,
 	gluonIDProvider gluonIDProvider,
+	featureFlagProvider unleash.FeatureFlagValueProvider,
 ) *Connector {
 	userID := identityState.UserID()
 
@@ -125,8 +129,9 @@ func NewConnector(
 		sharedCache: NewSharedCached(),
 		syncState:   syncState,
 
-		mailboxCountProvider: mailboxCountProvider,
-		gluonIDProvider:      gluonIDProvider,
+		mailboxCountProvider:     mailboxCountProvider,
+		gluonIDProvider:          gluonIDProvider,
+		featureFlagValueProvider: featureFlagProvider,
 	}
 }
 
@@ -216,6 +221,9 @@ func (s *Connector) GetMessageLiteral(ctx context.Context, id imap.MessageID) ([
 
 	var literal []byte
 	err = s.identityState.WithAddrKR(msg.AddressID, func(_, addrKR *crypto.KeyRing) error {
+		// Store the current value of the kill-switch on whether we should fall back to using `splitHeaderBody` V1 instead of the new default V2.
+		message.SplitHeaderBodyV2Disabled.Swap(s.featureFlagValueProvider.GetFlagValue(unleash.SplitMessageHeaderBodyV2Disabled))
+
 		l, buildErr := message.DecryptAndBuildRFC822(addrKR, msg.Message, msg.AttData, defaultMessageJobOpts())
 		if buildErr != nil {
 			return buildErr
@@ -305,6 +313,8 @@ func (s *Connector) CreateMessage(ctx context.Context, _ connector.IMAPStateWrit
 		// Build the message as it is on the server.
 		if err := s.identityState.WithAddrKR(full.AddressID, func(_, addrKR *crypto.KeyRing) error {
 			var err error
+
+			message.SplitHeaderBodyV2Disabled.Swap(s.featureFlagValueProvider.GetFlagValue(unleash.SplitMessageHeaderBodyV2Disabled))
 
 			if literal, err = message.DecryptAndBuildRFC822(addrKR, full.Message, full.AttData, defaultMessageJobOpts()); err != nil {
 				return err
@@ -779,6 +789,8 @@ func (s *Connector) importMessage(
 			return fmt.Errorf("failed to fetch message: %w", err)
 		}
 
+		message.SplitHeaderBodyV2Disabled.Swap(s.featureFlagValueProvider.GetFlagValue(unleash.SplitMessageHeaderBodyV2Disabled))
+
 		if literal, err = message.DecryptAndBuildRFC822(primaryKey, full.Message, full.AttData, defaultMessageJobOpts()); err != nil {
 			return fmt.Errorf("failed to build message: %w", err)
 		}
@@ -861,7 +873,9 @@ func fixGODT3003Labels(
 			continue
 		}
 
-		if lbl.Type == proton.LabelTypeFolder {
+		//nolint:exhaustive
+		switch lbl.Type {
+		case proton.LabelTypeFolder:
 			if mbox.Name[0] != folderPrefix {
 				log.WithField("labelID", mbox.ID.ShortID()).Debug("Found folder without prefix, patching")
 				if err := write.PatchMailboxHierarchyWithoutTransforms(ctx, mbox.ID, xslices.Insert(mbox.Name, 0, folderPrefix)); err != nil {
@@ -870,7 +884,7 @@ func fixGODT3003Labels(
 
 				applied = true
 			}
-		} else if lbl.Type == proton.LabelTypeLabel {
+		case proton.LabelTypeLabel:
 			if mbox.Name[0] != labelPrefix {
 				log.WithField("labelID", mbox.ID.ShortID()).Debug("Found label without prefix, patching")
 				if err := write.PatchMailboxHierarchyWithoutTransforms(ctx, mbox.ID, xslices.Insert(mbox.Name, 0, labelPrefix)); err != nil {

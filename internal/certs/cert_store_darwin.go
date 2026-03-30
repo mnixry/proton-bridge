@@ -262,7 +262,7 @@ func wrapCGoCertCallReturningBool(certPEM []byte, fn func(*C.char, C.ulonglong) 
 	return fn((*C.char)(buffer), C.ulonglong(len(certDER)))
 }
 
-// wrapCGoCertCallReturningBool wrap call to a CGo function returning an error
+// wrapCGoCertCallReturningBool wrap call to a CGo function returning an error.
 func wrapCGoCertCallReturningError(certPEM []byte, fn func(*C.char, C.ulonglong) error) error {
 	certDER, err := certPEMToDER(certPEM)
 	if err != nil {

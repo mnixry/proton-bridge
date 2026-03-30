@@ -47,14 +47,14 @@ func (s *Service) LoginFido(_ context.Context, login *LoginRequest) (*emptypb.Em
 			if errors.Is(err, fido.ErrorUnsupportedWindowsVersion) {
 				if s.auth.TwoFA.Enabled == proton.HasFIDO2AndTOTP {
 					_ = s.SendEvent(NewLoginError(LoginErrorType_FIDO_ERROR,
-						fmt.Sprintf("Hardware keys aren't supported on this version of Windows.\n"+
+						fmt.Sprintf("Hardware security keys are not supported in this version of Windows.\n"+
 							"To continue signing in, use a code from your authenticator app.")))
 					_ = s.SendEvent(NewLoginTfaRequestedEvent(login.Username))
 					return
 				}
 
-				_ = s.SendEvent(NewLoginError(LoginErrorType_FIDO_ERROR, fmt.Sprintf("Hardware keys aren't supported on this version of Windows.\n"+
-					"To sign in on this device, you'll need to update Windows or add an authenticator app to your account")))
+				_ = s.SendEvent(NewLoginError(LoginErrorType_FIDO_ERROR, fmt.Sprintf("Hardware security keys are not supported in this version of Windows.\n"+
+					"To sign in on this device, update Windows or add an authenticator app to your account.")))
 				s.loginClean()
 				return
 			}

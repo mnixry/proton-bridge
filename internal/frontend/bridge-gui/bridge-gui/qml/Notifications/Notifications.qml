@@ -1283,6 +1283,7 @@ QtObject {
 
     property Notification fidoPinRequested: Notification {
         property string fidoPinInput: ""
+        property string username: ""
 
         title: qsTr("Enter security key PIN")
         description: qsTr("To continue, enter the PIN for your security key.")
@@ -1311,7 +1312,7 @@ QtObject {
             Action {
                 text: qsTr("Continue")
                 onTriggered: {
-                    Backend.loginFido("", Qt.btoa(root.fidoPinRequested.fidoPinInput));
+                    Backend.loginFido(root.fidoPinRequested.username, Qt.btoa(root.fidoPinRequested.fidoPinInput));
                     root.fidoPinRequested.reset();
                 }
             },
@@ -1324,7 +1325,8 @@ QtObject {
         ]
 
         Connections {
-            function onLoginFidoPinRequired(_) {
+            function onLoginFidoPinRequired(username) {
+                root.fidoPinRequested.username = username;
                 root.fidoPinRequested.clearAndFocusTextField();
                 root.fidoPinRequested.active = true;
             }
@@ -1334,7 +1336,8 @@ QtObject {
                 root.fidoPinRequested.description = qsTr("The PIN you entered is incorrect. Try again.");
                 root.fidoPinRequested.type = Notification.NotificationType.Warning;
             }
-            function onLoginFidoTouchRequested(_) {
+            function onLoginFidoTouchRequested(username) {
+                root.fidoPinRequested.username = username;
                 root.fidoPinRequested.reset();
             }
             function onLoginFinished(_) {
