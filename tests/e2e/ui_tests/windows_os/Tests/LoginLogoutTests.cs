@@ -14,7 +14,7 @@ namespace ProtonMailBridge.UI.Tests.Tests
         private readonly LoginWindow _loginWindow = new();
         private readonly HomeWindow _mainWindow = new();
         private readonly HomeResult _homeResult = new();
-        private readonly string FreeAccountErrorText = "Bridge is exclusive to our mail paid plans. Upgrade your account to use Bridge.";
+        private readonly string FreeAccountErrorText = "Bridge is exclusive to our mail paid plans.";
         private bool removeAccount = true;
 
         [Test]
