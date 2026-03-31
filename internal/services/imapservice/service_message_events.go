@@ -179,7 +179,7 @@ func onMessageCreated(
 		res := buildRFC822(apiLabels, full, addrKR)
 
 		if res.err != nil {
-			s.log.WithError(err).Error("Failed to build RFC822 message")
+			s.log.WithError(res.err).Error("Failed to build RFC822 message")
 
 			if err := s.syncStateProvider.AddFailedMessageID(ctx, message.ID); err != nil {
 				s.log.WithError(err).Error("Failed to add failed message ID to vault")
@@ -241,7 +241,7 @@ func onMessageUpdateDraftOrSent(ctx context.Context, s *Service, event proton.Me
 		res := buildRFC822(apiLabels, full, addrKR)
 
 		if res.err != nil {
-			logrus.WithError(err).Error("Failed to build RFC822 message")
+			s.log.WithError(res.err).Error("Failed to build RFC822 message")
 
 			if err := s.syncStateProvider.AddFailedMessageID(ctx, event.ID); err != nil {
 				s.log.WithError(err).Error("Failed to add failed message ID to vault")
