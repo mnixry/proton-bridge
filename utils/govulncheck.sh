@@ -30,7 +30,6 @@ main(){
     GOTOOLCHAIN=auto go run golang.org/x/vuln/cmd/govulncheck@latest -json ./... > vulns.json
 
     jq -r '.finding | select( (.osv != null) and (.trace[0].function != null) ) | .osv ' < vulns.json > vulns_osv_ids.txt
-    ignore GO-2026-4762 "BRIDGE-494 authorization bypass by improper validation of :path pseudo-header"
     has_vulns
 
     echo
