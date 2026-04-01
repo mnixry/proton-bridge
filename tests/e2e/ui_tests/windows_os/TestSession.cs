@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.IO;
 using System.Threading;
 using System.Management.Automation;
 using System.Management.Automation.Runspaces;
@@ -62,8 +63,11 @@ namespace ProtonMailBridge.UI.Tests
                 TestContext.Out.WriteLine(ex.ToString());
             }
 
-            // Give some time to properly exit the app
+            // Kill any remaining Bridge processes to prevent stale lock files
+            KillAllBridgeProcesses();
             Thread.Sleep(10000);
+            RemoveBridgeLockFile();
+
             try
             {
                 RemoveBridgeCredentials();
@@ -73,6 +77,46 @@ namespace ProtonMailBridge.UI.Tests
                 TestContext.Out.WriteLine($"Failed to remove Bridge credentials: {ex}");
             }
 
+        }
+
+        private static void KillAllBridgeProcesses()
+        {
+            string[] bridgeProcessNames = { "bridge-gui", "bridge", "proton-bridge" };
+            foreach (var processName in bridgeProcessNames)
+            {
+                try
+                {
+                    foreach (var process in Process.GetProcessesByName(processName))
+                    {
+                        TestContext.Out.WriteLine($"Killing remaining process: {processName} (PID: {process.Id})");
+                        process.Kill();
+                        process.WaitForExit(5000);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    TestContext.Out.WriteLine($"Failed to kill {processName}: {ex.Message}");
+                }
+            }
+        }
+
+        private static void RemoveBridgeLockFile()
+        {
+            try
+            {
+                string lockFilePath = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                    "protonmail", "bridge-v3", "bridge-v3-gui.lock");
+                if (File.Exists(lockFilePath))
+                {
+                    File.Delete(lockFilePath);
+                    TestContext.Out.WriteLine($"Removed stale lock file: {lockFilePath}");
+                }
+            }
+            catch (Exception ex)
+            {
+                TestContext.Out.WriteLine($"Failed to remove lock file: {ex.Message}");
+            }
         }
 
         public static void switchToFileExplorerWindow()
@@ -148,7 +192,7 @@ namespace ProtonMailBridge.UI.Tests
             string appExecutable = TestData.AppExecutable;
             Application.Launch(appExecutable);
             Wait.UntilInputIsProcessed(TestData.FiveSecondsTimeout);
-            Retry.WhileException( () =>
+            Retry.WhileException(() =>
             {
                 App = Application.Attach("bridge-gui.exe");
             }, TimeSpan.FromSeconds(60), null, true);
