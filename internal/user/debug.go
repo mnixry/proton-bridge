@@ -39,6 +39,7 @@ import (
 	"github.com/ProtonMail/proton-bridge/v3/internal/usertypes"
 	"github.com/ProtonMail/proton-bridge/v3/internal/vault"
 	bmessage "github.com/ProtonMail/proton-bridge/v3/pkg/message"
+	"github.com/ProtonMail/proton-bridge/v3/pkg/sanitizer"
 	"github.com/bradenaw/juniper/xmaps"
 	"github.com/bradenaw/juniper/xslices"
 	"github.com/emersion/go-message"
@@ -292,7 +293,8 @@ func getMetadataPath(path string) string {
 }
 
 func getAttachmentPathSuccess(path, id, name string) string {
-	return filepath.Join(path, fmt.Sprintf("attachment_%v_%v", id, name))
+	sanitizedFilename := sanitizer.Filename(name)
+	return filepath.Join(path, fmt.Sprintf("attachment_%v_%v", id, sanitizedFilename))
 }
 
 func getAttachmentPathFailure(path, id string) string {
@@ -381,7 +383,8 @@ func writeMetadata(outPath string, msg proton.Message) error {
 
 func decodeAttachment(outPath string, kr *crypto.KeyRing,
 	att proton.Attachment,
-	attData []byte) error {
+	attData []byte,
+) error {
 	kps, err := base64.StdEncoding.DecodeString(att.KeyPackets)
 	if err != nil {
 		return err
