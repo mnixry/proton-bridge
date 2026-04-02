@@ -49,7 +49,7 @@ type Downloader interface {
 
 type Installer interface {
 	IsAlreadyInstalled(*semver.Version) bool
-	InstallUpdate(*semver.Version, io.Reader) error
+	InstallUpdate(*semver.Version, io.Reader, bool) error
 }
 
 type Updater struct {
@@ -117,7 +117,7 @@ func (u *Updater) GetVersionInfo(ctx context.Context, downloader Downloader) (Ve
 	return releases, nil
 }
 
-func (u *Updater) InstallUpdateLegacy(ctx context.Context, downloader Downloader, update VersionInfoLegacy) error {
+func (u *Updater) InstallUpdateLegacy(ctx context.Context, downloader Downloader, update VersionInfoLegacy, removeTemporaryFolderDisabled bool) error {
 	if u.installer.IsAlreadyInstalled(update.Version) {
 		return ErrUpdateAlreadyInstalled
 	}
@@ -132,7 +132,7 @@ func (u *Updater) InstallUpdateLegacy(ctx context.Context, downloader Downloader
 		return fmt.Errorf("%w: %w", ErrDownloadVerify, err)
 	}
 
-	if err := u.installer.InstallUpdate(update.Version, bytes.NewReader(b)); err != nil {
+	if err := u.installer.InstallUpdate(update.Version, bytes.NewReader(b), removeTemporaryFolderDisabled); err != nil {
 		logrus.WithError(err).Error("Failed to install update")
 		return fmt.Errorf("%w: %w", ErrInstall, err)
 	}
@@ -140,7 +140,7 @@ func (u *Updater) InstallUpdateLegacy(ctx context.Context, downloader Downloader
 	return nil
 }
 
-func (u *Updater) InstallUpdate(ctx context.Context, downloader Downloader, release Release) error {
+func (u *Updater) InstallUpdate(ctx context.Context, downloader Downloader, release Release, removeTemporaryFolderDisabled bool) error {
 	if u.installer.IsAlreadyInstalled(release.Version) {
 		return ErrUpdateAlreadyInstalled
 	}
@@ -169,7 +169,7 @@ func (u *Updater) InstallUpdate(ctx context.Context, downloader Downloader, rele
 		return fmt.Errorf("%w: %w", ErrDownloadVerify, err)
 	}
 
-	if err := u.installer.InstallUpdate(release.Version, bytes.NewReader(b)); err != nil {
+	if err := u.installer.InstallUpdate(release.Version, bytes.NewReader(b), removeTemporaryFolderDisabled); err != nil {
 		logrus.WithError(err).Error("Failed to install update")
 		return fmt.Errorf("%w: %w", ErrInstall, err)
 	}

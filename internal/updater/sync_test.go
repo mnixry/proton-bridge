@@ -46,7 +46,7 @@ func TestSyncFolder(t *testing.T) {
 func checkCopyWorks(tb testing.TB, srcType, dstType string) {
 	r := require.New(tb)
 	dirName := "from_" + srcType + "_to_" + dstType
-	AppCacheDir := "/tmp"
+	AppCacheDir := os.TempDir()
 	srcDir := filepath.Join(AppCacheDir, "sync_src", dirName)
 	destDir := filepath.Join(AppCacheDir, "sync_dst", dirName)
 

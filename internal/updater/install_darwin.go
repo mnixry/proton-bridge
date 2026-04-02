@@ -27,25 +27,44 @@ import (
 	"github.com/ProtonMail/proton-bridge/v3/internal/versioner"
 	"github.com/ProtonMail/proton-bridge/v3/pkg/tar"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 )
 
 type InstallerDarwin struct{}
 
-func NewInstaller(*versioner.Versioner) *InstallerDarwin {
+func NewInstaller(_ *versioner.Versioner) *InstallerDarwin {
 	return &InstallerDarwin{}
 }
 
-func (i *InstallerDarwin) InstallUpdate(_ *semver.Version, r io.Reader) error {
+func (i *InstallerDarwin) InstallUpdate(_ *semver.Version, r io.Reader, removeTemporaryFolderDisabled bool) error {
 	gr, err := gzip.NewReader(r)
 	if err != nil {
 		return err
 	}
-	defer func() { _ = gr.Close() }()
+
+	defer func() {
+		_ = gr.Close()
+	}()
 
 	tempDir, err := os.MkdirTemp("", "proton-update-source")
 	if err != nil {
 		return errors.Wrap(err, "failed to get temporary update directory")
 	}
+
+	defer func() {
+		if !removeTemporaryFolderDisabled {
+			if err := os.RemoveAll(tempDir); err != nil {
+				logrus.WithFields(logrus.Fields{
+					"pkg": "bridge/updater",
+				}).WithError(err).Error("failed to remove temporary folder.")
+				return
+			}
+
+			logrus.WithFields(logrus.Fields{
+				"pkg": "bridge/updater",
+			}).Info("Temporary update folder removed successfully")
+		}
+	}()
 
 	if err := tar.UntarToDir(gr, tempDir); err != nil {
 		return errors.Wrap(err, "failed to unpack update package")
@@ -59,7 +78,8 @@ func (i *InstallerDarwin) InstallUpdate(_ *semver.Version, r io.Reader) error {
 	oldBundle := filepath.Dir(filepath.Dir(filepath.Dir(exePath)))
 	newBundle := filepath.Join(tempDir, filepath.Base(oldBundle))
 
-	return syncFolders(oldBundle, newBundle)
+	err = syncFolders(oldBundle, newBundle)
+	return err
 }
 
 func (i *InstallerDarwin) IsAlreadyInstalled(_ *semver.Version) bool {

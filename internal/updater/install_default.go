@@ -38,7 +38,7 @@ func NewInstaller(versioner *versioner.Versioner) *InstallerDefault {
 	}
 }
 
-func (i *InstallerDefault) InstallUpdate(version *semver.Version, r io.Reader) error {
+func (i *InstallerDefault) InstallUpdate(version *semver.Version, r io.Reader, _ bool) error {
 	return i.versioner.InstallNewVersion(version, r)
 }
 

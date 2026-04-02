@@ -53,8 +53,8 @@ type Autostarter interface {
 
 type Updater interface {
 	GetVersionInfoLegacy(context.Context, updater.Downloader, updater.Channel) (updater.VersionInfoLegacy, error)
-	InstallUpdateLegacy(context.Context, updater.Downloader, updater.VersionInfoLegacy) error
+	InstallUpdateLegacy(context.Context, updater.Downloader, updater.VersionInfoLegacy, bool) error
 	RemoveOldUpdates() error
 	GetVersionInfo(context.Context, updater.Downloader) (updater.VersionInfo, error)
-	InstallUpdate(context.Context, updater.Downloader, updater.Release) error
+	InstallUpdate(context.Context, updater.Downloader, updater.Release, bool) error
 }

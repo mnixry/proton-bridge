@@ -157,7 +157,7 @@ func (testUpdater *TestUpdater) GetVersionInfoLegacy(_ context.Context, _ update
 	return testUpdater.latest, nil
 }
 
-func (testUpdater *TestUpdater) InstallUpdateLegacy(_ context.Context, _ updater.Downloader, _ updater.VersionInfoLegacy) error {
+func (testUpdater *TestUpdater) InstallUpdateLegacy(_ context.Context, _ updater.Downloader, _ updater.VersionInfoLegacy, _ bool) error {
 	return nil
 }
 
@@ -179,6 +179,6 @@ func (testUpdater *TestUpdater) GetVersionInfo(_ context.Context, _ updater.Down
 	return testUpdater.releases, nil
 }
 
-func (testUpdater *TestUpdater) InstallUpdate(_ context.Context, _ updater.Downloader, _ updater.Release) error {
+func (testUpdater *TestUpdater) InstallUpdate(_ context.Context, _ updater.Downloader, _ updater.Release, _ bool) error {
 	return nil
 }

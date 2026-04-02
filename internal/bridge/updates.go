@@ -25,6 +25,7 @@ import (
 	"github.com/ProtonMail/gluon/reporter"
 	"github.com/ProtonMail/proton-bridge/v3/internal/events"
 	"github.com/ProtonMail/proton-bridge/v3/internal/safe"
+	"github.com/ProtonMail/proton-bridge/v3/internal/unleash"
 	"github.com/ProtonMail/proton-bridge/v3/internal/updater"
 	"github.com/elastic/go-sysinfo"
 	"github.com/sirupsen/logrus"
@@ -254,7 +255,9 @@ func (bridge *Bridge) installUpdateLegacy(ctx context.Context, job installJobLeg
 			Silent:        job.silent,
 		})
 
-		err := bridge.updater.InstallUpdateLegacy(ctx, bridge.api, job.version)
+		removeTemporaryFolderDisabled := bridge.unleashService.GetFlagValue(unleash.AfterUpdateTemporaryFolderRemovalDisabled)
+
+		err := bridge.updater.InstallUpdateLegacy(ctx, bridge.api, job.version, removeTemporaryFolderDisabled)
 
 		switch {
 		case errors.Is(err, updater.ErrDownloadVerify):
@@ -318,7 +321,9 @@ func (bridge *Bridge) installUpdate(ctx context.Context, job installJob) {
 			Silent:     job.Silent,
 		})
 
-		err := bridge.updater.InstallUpdate(ctx, bridge.api, job.Release)
+		removeTemporaryFolderDisabled := bridge.unleashService.GetFlagValue(unleash.AfterUpdateTemporaryFolderRemovalDisabled)
+
+		err := bridge.updater.InstallUpdate(ctx, bridge.api, job.Release, removeTemporaryFolderDisabled)
 		switch {
 		case errors.Is(err, updater.ErrReleaseUpdatePackageMissing):
 			log.WithError(err).Error("The update could not be installed but we will fail silently")
