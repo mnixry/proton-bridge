@@ -27,7 +27,6 @@ import (
 	"github.com/ProtonMail/gluon/imap"
 	"github.com/ProtonMail/gluon/reporter"
 	"github.com/ProtonMail/go-proton-api"
-	"github.com/ProtonMail/proton-bridge/v3/internal/unleash"
 	"github.com/ProtonMail/proton-bridge/v3/pkg/algo"
 	"github.com/sirupsen/logrus"
 )
@@ -58,7 +57,6 @@ type LabelConflictManager struct {
 	gluonIDProvider        gluonIDProvider
 	client                 apiClient
 	reporter               sentryReporter
-	featureFlagProvider    unleash.FeatureFlagValueProvider
 }
 
 func NewLabelConflictManager(
@@ -66,13 +64,12 @@ func NewLabelConflictManager(
 	gluonIDProvider gluonIDProvider,
 	client apiClient,
 	reporter sentryReporter,
-	featureFlagProvider unleash.FeatureFlagValueProvider) *LabelConflictManager {
+) *LabelConflictManager {
 	return &LabelConflictManager{
 		gluonLabelNameProvider: gluonLabelNameProvider,
 		gluonIDProvider:        gluonIDProvider,
 		client:                 client,
 		reporter:               reporter,
-		featureFlagProvider:    featureFlagProvider,
 	}
 }
 
@@ -113,20 +110,7 @@ type labelConflictResolverImpl struct {
 	log          *logrus.Entry
 }
 
-type nullLabelConflictResolverImpl struct {
-}
-
-func (r *nullLabelConflictResolverImpl) ResolveConflict(_ context.Context, _ proton.Label, _ map[string]bool) (func() []imap.Update, error) {
-	return func() []imap.Update {
-		return []imap.Update{}
-	}, nil
-}
-
 func (m *LabelConflictManager) NewConflictResolver(connectors []*Connector) LabelConflictResolver {
-	if m.featureFlagProvider.GetFlagValue(unleash.LabelConflictResolverDisabled) {
-		return &nullLabelConflictResolverImpl{}
-	}
-
 	return &labelConflictResolverImpl{
 		mailboxFetch: m.generateMailboxFetcher(connectors),
 		client:       m.client,
@@ -262,33 +246,21 @@ type InternalLabelConflictResolver interface {
 }
 
 type internalLabelConflictResolverImpl struct {
-	mailboxFetch                 mailboxFetcherFn
-	mailboxMessageCountFetch     mailboxMessageCountFetcherFn
-	userLabelConflictResolver    LabelConflictResolver
-	allowNonEmptyMailboxDeletion bool
-	client                       apiClient
-	reporter                     sentryReporter
-	log                          *logrus.Entry
-}
-
-type nullInternalLabelConflictResolver struct{}
-
-func (r *nullInternalLabelConflictResolver) ResolveConflict(_ context.Context, _ map[string]proton.Label) (func() []imap.Update, error) {
-	return func() []imap.Update { return []imap.Update{} }, nil
+	mailboxFetch              mailboxFetcherFn
+	mailboxMessageCountFetch  mailboxMessageCountFetcherFn
+	userLabelConflictResolver LabelConflictResolver
+	client                    apiClient
+	reporter                  sentryReporter
+	log                       *logrus.Entry
 }
 
 func (m *LabelConflictManager) NewInternalLabelConflictResolver(connectors []*Connector) InternalLabelConflictResolver {
-	if m.featureFlagProvider.GetFlagValue(unleash.InternalLabelConflictResolverDisabled) {
-		return &nullInternalLabelConflictResolver{}
-	}
-
 	return &internalLabelConflictResolverImpl{
-		mailboxFetch:                 m.generateMailboxFetcher(connectors),
-		mailboxMessageCountFetch:     m.generateMailboxMessageCountFetcher(connectors),
-		userLabelConflictResolver:    m.NewConflictResolver(connectors),
-		allowNonEmptyMailboxDeletion: m.featureFlagProvider.GetFlagValue(unleash.InternalLabelConflictNonEmptyMailboxDeletion),
-		client:                       m.client,
-		reporter:                     m.reporter,
+		mailboxFetch:              m.generateMailboxFetcher(connectors),
+		mailboxMessageCountFetch:  m.generateMailboxMessageCountFetcher(connectors),
+		userLabelConflictResolver: m.NewConflictResolver(connectors),
+		client:                    m.client,
+		reporter:                  m.reporter,
 		log: logrus.WithFields(logrus.Fields{
 			"pkg":                "imapservice/internalLabelConflictResolver",
 			"numberOfConnectors": len(connectors),

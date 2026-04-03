@@ -389,7 +389,7 @@ func TestBridge_Cookies(t *testing.T) {
 func TestBridge_CheckUpdate_Legacy(t *testing.T) {
 	withEnv(t, func(ctx context.Context, s *server.Server, netCtl *proton.NetCtl, locator bridge.Locator, vaultKey []byte) {
 		unleash.ModifyPollPeriodAndJitter(500*time.Millisecond, 0)
-		s.PushFeatureFlag(unleash.UpdateUseNewVersionFileStructureDisabled)
+		s.PushFeatureFlag(unleash.UpdateUseNewVersionFileStructureDisabled) //nolint:staticcheck
 
 		withBridge(ctx, t, s.GetHostURL(), netCtl, locator, vaultKey, func(bridge *bridge.Bridge, mocks *bridge.Mocks) {
 			// Wait for FF poll.
@@ -434,7 +434,7 @@ func TestBridge_CheckUpdate_Legacy(t *testing.T) {
 func TestBridge_AutoUpdate_Legacy(t *testing.T) {
 	withEnv(t, func(ctx context.Context, s *server.Server, netCtl *proton.NetCtl, locator bridge.Locator, vaultKey []byte) {
 		unleash.ModifyPollPeriodAndJitter(500*time.Millisecond, 0)
-		s.PushFeatureFlag(unleash.UpdateUseNewVersionFileStructureDisabled)
+		s.PushFeatureFlag(unleash.UpdateUseNewVersionFileStructureDisabled) //nolint:staticcheck
 
 		withBridge(ctx, t, s.GetHostURL(), netCtl, locator, vaultKey, func(b *bridge.Bridge, mocks *bridge.Mocks) {
 			// Wait for FF poll.
@@ -468,7 +468,7 @@ func TestBridge_AutoUpdate_Legacy(t *testing.T) {
 func TestBridge_ManualUpdate_Legacy(t *testing.T) {
 	withEnv(t, func(ctx context.Context, s *server.Server, netCtl *proton.NetCtl, locator bridge.Locator, vaultKey []byte) {
 		unleash.ModifyPollPeriodAndJitter(500*time.Millisecond, 0)
-		s.PushFeatureFlag(unleash.UpdateUseNewVersionFileStructureDisabled)
+		s.PushFeatureFlag(unleash.UpdateUseNewVersionFileStructureDisabled) //nolint:staticcheck
 
 		withBridge(ctx, t, s.GetHostURL(), netCtl, locator, vaultKey, func(bridge *bridge.Bridge, mocks *bridge.Mocks) {
 			// Wait for FF poll.
@@ -503,7 +503,7 @@ func TestBridge_ManualUpdate_Legacy(t *testing.T) {
 func TestBridge_ForceUpdate(t *testing.T) {
 	withEnv(t, func(ctx context.Context, s *server.Server, netCtl *proton.NetCtl, locator bridge.Locator, vaultKey []byte) {
 		unleash.ModifyPollPeriodAndJitter(500*time.Millisecond, 0)
-		s.PushFeatureFlag(unleash.UpdateUseNewVersionFileStructureDisabled)
+		s.PushFeatureFlag(unleash.UpdateUseNewVersionFileStructureDisabled) //nolint:staticcheck
 
 		withBridge(ctx, t, s.GetHostURL(), netCtl, locator, vaultKey, func(bridge *bridge.Bridge, _ *bridge.Mocks) {
 			// Wait for FF poll.

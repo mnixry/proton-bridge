@@ -33,7 +33,6 @@ import (
 	"github.com/ProtonMail/proton-bridge/v3/internal/safe"
 	"github.com/ProtonMail/proton-bridge/v3/internal/services/imapservice"
 	"github.com/ProtonMail/proton-bridge/v3/internal/try"
-	"github.com/ProtonMail/proton-bridge/v3/internal/unleash"
 	"github.com/ProtonMail/proton-bridge/v3/internal/user"
 	"github.com/ProtonMail/proton-bridge/v3/internal/vault"
 	"github.com/go-resty/resty/v2"
@@ -618,7 +617,7 @@ func (bridge *Bridge) logoutUser(ctx context.Context, user *user.User, withAPI, 
 		"withData": withData,
 	}).Debug("Logging out user")
 
-	if err := user.Logout(ctx, withAPI, withData, bridge.unleashService.GetFlagValue(unleash.UserRemovalGluonDataCleanupDisabled)); err != nil {
+	if err := user.Logout(ctx, withAPI, withData); err != nil {
 		logUser.WithError(err).Error("Failed to logout user")
 	}
 

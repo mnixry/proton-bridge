@@ -39,15 +39,19 @@ var (
 
 const filename = "unleash_flags"
 
+// Deprecated: The flags below are deprecated and will be removed in the future.
+const (
+	UserRemovalGluonDataCleanupDisabled          = "InboxBridgeUserRemovalGluonDataCleanupDisabled"
+	UpdateUseNewVersionFileStructureDisabled     = "InboxBridgeUpdateWithOsFilterDisabled"
+	LabelConflictResolverDisabled                = "InboxBridgeLabelConflictResolverDisabled"
+	InternalLabelConflictResolverDisabled        = "InboxBridgeUnexpectedFoldersLabelsStartupFixupDisabled"
+	InternalLabelConflictNonEmptyMailboxDeletion = "InboxBridgeUnknownNonEmptyMailboxDeletion"
+)
+
 const (
 	EventLoopNotificationDisabled                        = "InboxBridgeEventLoopNotificationDisabled"
 	IMAPAuthenticateCommandDisabled                      = "InboxBridgeImapAuthenticateCommandDisabled"
-	UserRemovalGluonDataCleanupDisabled                  = "InboxBridgeUserRemovalGluonDataCleanupDisabled"
-	UpdateUseNewVersionFileStructureDisabled             = "InboxBridgeUpdateWithOsFilterDisabled"
-	LabelConflictResolverDisabled                        = "InboxBridgeLabelConflictResolverDisabled"
 	SMTPSubmissionRequestSentryReportDisabled            = "InboxBridgeSmtpSubmissionRequestSentryReportDisabled"
-	InternalLabelConflictResolverDisabled                = "InboxBridgeUnexpectedFoldersLabelsStartupFixupDisabled"
-	InternalLabelConflictNonEmptyMailboxDeletion         = "InboxBridgeUnknownNonEmptyMailboxDeletion"
 	LinuxVaultPreferredKeychainNotAvailableRetryDisabled = "InboxBridgeLinuxVaultPreferredKeychainNotAvailableRetryDisabled"
 	InboxBridgeU2FLoginEnabled                           = "InboxBridgeU2FLogin"
 	SplitMessageHeaderBodyV2Disabled                     = "InboxBridgeMessageHeaderBodySplitOptimizationDisabled"

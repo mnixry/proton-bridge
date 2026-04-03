@@ -127,7 +127,7 @@ func NewService(
 	})
 	rwIdentity := newRWIdentity(identityState, bridgePassProvider, keyPassProvider)
 
-	labelConflictManager := NewLabelConflictManager(serverManager, gluonIDProvider, client, reporter, featureFlagProvider)
+	labelConflictManager := NewLabelConflictManager(serverManager, gluonIDProvider, client, reporter)
 	syncUpdateApplier := NewSyncUpdateApplier(labelConflictManager)
 	syncMessageBuilder := NewSyncMessageBuilder(rwIdentity, featureFlagProvider)
 	syncReporter := newSyncReporter(identityState.User.ID, eventPublisher, time.Second)

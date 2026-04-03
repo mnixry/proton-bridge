@@ -454,7 +454,7 @@ func (bridge *Bridge) init(tlsReporter TLSReporter) error {
 		var version updater.VersionInfo
 		var err error
 
-		useOldUpdateLogic := bridge.GetFeatureFlagValue(unleash.UpdateUseNewVersionFileStructureDisabled)
+		useOldUpdateLogic := bridge.GetFeatureFlagValue(unleash.UpdateUseNewVersionFileStructureDisabled) //nolint:staticcheck
 		if useOldUpdateLogic {
 			versionLegacy, err = bridge.updater.GetVersionInfoLegacy(ctx, bridge.api, bridge.vault.GetUpdateChannel())
 		} else {

@@ -487,16 +487,16 @@ func (s *scenario) bridgeSMTPPortIs(expectedPort int) error {
 
 func (s *scenario) bridgeLegacyUpdateKillSwitchEnabled() error {
 	unleash.ModifyPollPeriodAndJitter(5*time.Second, 0)
-	s.t.api.PushFeatureFlag(unleash.UpdateUseNewVersionFileStructureDisabled)
+	s.t.api.PushFeatureFlag(unleash.UpdateUseNewVersionFileStructureDisabled) //nolint:staticcheck
 	return nil
 }
 
 func (s *scenario) bridgeLegacyUpdateEnabled() error {
 	return eventually(func() error {
-		res := s.t.bridge.GetFeatureFlagValue(unleash.UpdateUseNewVersionFileStructureDisabled)
+		res := s.t.bridge.GetFeatureFlagValue(unleash.UpdateUseNewVersionFileStructureDisabled) //nolint:staticcheck
 		fmt.Println("RES", res)
 		if res != true {
-			return fmt.Errorf("expected the %v kill-switch to be enabled", unleash.UpdateUseNewVersionFileStructureDisabled)
+			return fmt.Errorf("expected the %v kill-switch to be enabled", unleash.UpdateUseNewVersionFileStructureDisabled) //nolint:staticcheck
 		}
 		return nil
 	})

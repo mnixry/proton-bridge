@@ -596,12 +596,11 @@ func (user *User) CheckAuth(email string, password []byte) (string, error) {
 }
 
 // Logout logs the user out from the API.
-func (user *User) Logout(ctx context.Context, withAPI, withData, withDataDisabledKillSwitch bool) error {
+func (user *User) Logout(ctx context.Context, withAPI, withData bool) error {
 	user.log.WithFields(
 		logrus.Fields{
-			"withAPI":                    withAPI,
-			"withData":                   withData,
-			"withDataDisabledKillSwitch": withDataDisabledKillSwitch,
+			"withAPI":  withAPI,
+			"withData": withData,
 		}).Info("Logging out user")
 
 	user.log.Debug("Canceling ongoing tasks")
@@ -610,7 +609,7 @@ func (user *User) Logout(ctx context.Context, withAPI, withData, withDataDisable
 		return fmt.Errorf("failed to remove user from smtp server: %w", err)
 	}
 
-	if withData && !withDataDisabledKillSwitch {
+	if withData {
 		if err := user.imapService.OnDelete(ctx); err != nil {
 			if rerr := user.reporter.ReportMessageWithContext("Failed to delete user IMAP data", map[string]any{
 				"error": err.Error(),
