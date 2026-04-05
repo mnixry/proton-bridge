@@ -30,7 +30,7 @@ func TestBasicTLSDialer_ShouldSkipCertificateChainVerification(t *testing.T) {
 		expected bool
 	}{
 		{
-			hostURL:  "https://mail-api.proton.me",
+			hostURL:  "https://mail.proton.me/api",
 			address:  "mail-api.proton.me:443",
 			expected: false,
 		},
@@ -50,7 +50,7 @@ func TestBasicTLSDialer_ShouldSkipCertificateChainVerification(t *testing.T) {
 			expected: false,
 		},
 		{
-			hostURL:  "https://mail-api.proton.me",
+			hostURL:  "https://mail.proton.me/api",
 			address:  "proton.me:443",
 			expected: false,
 		},

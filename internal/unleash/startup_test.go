@@ -98,7 +98,7 @@ func TestGetStartupFeatureFlagsAndStore_FakeAPIURL(t *testing.T) {
 }
 
 func TestGetStartupFeatureFlagsAndStore_RealAPIURL(t *testing.T) {
-	apiURL := "https://mail-api.proton.me"
+	apiURL := "https://mail.proton.me/api"
 	cacheProvider := func() (string, error) {
 		return t.TempDir(), nil
 	}
@@ -112,7 +112,7 @@ func TestGetStartupFeatureFlagsAndStore_RealAPIURL(t *testing.T) {
 
 func TestGetStartupFeatureFlagsAndStore_FeatureFlagCacheRetention(t *testing.T) {
 	fakeAPIURL := "https://example.com"
-	realAPIURL := "https://mail-api.proton.me"
+	realAPIURL := "https://mail.proton.me/api"
 
 	cacheDir := t.TempDir()
 	cacheProvider := func() (string, error) {
