@@ -3,6 +3,12 @@
 Changelog [format](http://keepachangelog.com/en/1.0.0/)
 
 
+## Nescio Bridge 3.24.1
+
+### Changed
+* BRIDGE-522: Restored old unlabel endpoint logic under a feature flag.
+
+
 ## Nescio Bridge 3.24.0
 
 ### Added
