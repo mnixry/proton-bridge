@@ -49,6 +49,7 @@ const (
 	LinuxVaultPreferredKeychainNotAvailableRetryDisabled = "InboxBridgeLinuxVaultPreferredKeychainNotAvailableRetryDisabled"
 	InboxBridgeU2FLoginEnabled                           = "InboxBridgeU2FLogin"
 	SplitMessageHeaderBodyV2Disabled                     = "InboxBridgeMessageHeaderBodySplitOptimizationDisabled"
+	FolderUnlabelCallDisabled                            = "InboxBridgeUnlabelCallOnFoldersDisabled"
 )
 
 type FeatureFlagValueProvider interface {
