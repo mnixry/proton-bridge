@@ -400,7 +400,15 @@ func (s *Connector) isMailboxOfTypeLabel(mboxID string) bool {
 	return false
 }
 
-func (s *Connector) RemoveMessagesFromMailbox(ctx context.Context, _ connector.IMAPStateWrite, messageIDs []imap.MessageID, mboxID imap.MailboxID) error {
+func (s *Connector) RemoveMessagesFromMailbox(ctx context.Context, con connector.IMAPStateWrite, messageIDs []imap.MessageID, mboxID imap.MailboxID) error {
+	if s.featureFlagValueProvider.GetFlagValue(unleash.FolderUnlabelCallDisabled) {
+		return s.removeMessagesFromMailboxWithoutUnlabelOnFolders(ctx, con, messageIDs, mboxID)
+	}
+
+	return s.removeMessagesFromMailboxWithUnlabelCallOnFolders(ctx, con, messageIDs, mboxID)
+}
+
+func (s *Connector) removeMessagesFromMailboxWithoutUnlabelOnFolders(ctx context.Context, _ connector.IMAPStateWrite, messageIDs []imap.MessageID, mboxID imap.MailboxID) error {
 	if isAllMailOrScheduled(mboxID) {
 		return connector.ErrOperationNotAllowed
 	}
@@ -408,7 +416,7 @@ func (s *Connector) RemoveMessagesFromMailbox(ctx context.Context, _ connector.I
 	if s.isMailboxOfTypeLabel(string(mboxID)) {
 		msgIDs := usertypes.MapTo[imap.MessageID, string](messageIDs)
 
-		if err := s.client.UnlabelMessages(ctx, msgIDs, string(mboxID)); err != nil {
+		if err := s.unlabelMessages(ctx, msgIDs, string(mboxID), "removeMessagesFromMailboxWithoutUnlabelOnFolders"); err != nil {
 			return err
 		}
 	}
@@ -442,7 +450,7 @@ func (s *Connector) RemoveMessagesFromMailbox(ctx context.Context, _ connector.I
 					label, ok := rdLabels.GetLabel(id)
 					if !ok {
 						// Handle case where this label was newly introduced and we do not yet know about it.
-						logrus.WithField("labelID", id).Warnf("Unknown label found during expung from Trash, attempting to locate it")
+						logrus.WithField("labelID", id).Warnf("Unknown label found during expunge from Trash, attempting to locate it")
 						label, err = s.client.GetLabel(ctx, id, proton.LabelTypeFolder, proton.LabelTypeSystem, proton.LabelTypeSystem)
 						if err != nil {
 							if errors.Is(err, proton.ErrNoSuchLabel) {
@@ -474,14 +482,14 @@ func (s *Connector) RemoveMessagesFromMailbox(ctx context.Context, _ connector.I
 				}
 
 				if len(remainingLabels) == 0 {
-					logrus.WithFields(logrus.Fields{
+					s.log.WithFields(logrus.Fields{
 						"messageID":    m.ID,
 						"mailboxID":    mboxID,
 						"labels id(s)": m.LabelIDs,
 					}).Info("Message has been marked for deletion")
 					msgToPermaDelete = append(msgToPermaDelete, m.ID)
 				} else {
-					logrus.WithFields(logrus.Fields{
+					s.log.WithFields(logrus.Fields{
 						"messageID":       m.ID,
 						"mailboxID":       mboxID,
 						"labels id(s)":    m.LabelIDs,
@@ -492,7 +500,11 @@ func (s *Connector) RemoveMessagesFromMailbox(ctx context.Context, _ connector.I
 		}
 
 		if len(msgToPermaDelete) != 0 {
-			logrus.Debugf("Following message(s) will be perma-deleted: %v", msgToPermaDelete)
+			s.log.WithFields(logrus.Fields{
+				"countMessageToPermaDelete":   len(msgToPermaDelete),
+				"countMessagesMarkedToDelete": len(messageIDs),
+				"mboxID":                      mboxID,
+			}).Debugf("Following message(s) will be perma-deleted: %v", msgToPermaDelete)
 
 			if err := s.client.DeleteMessage(ctx, msgToPermaDelete...); err != nil {
 				return err
@@ -503,7 +515,112 @@ func (s *Connector) RemoveMessagesFromMailbox(ctx context.Context, _ connector.I
 	return nil
 }
 
-func (s *Connector) MoveMessages(ctx context.Context, _ connector.IMAPStateWrite, messageIDs []imap.MessageID, mboxFromID, mboxToID imap.MailboxID) (bool, error) {
+// Based on mailbox removal logic before BRIDGE-451. Removing the unlabel call resulted in a lot of client issues.
+func (s *Connector) removeMessagesFromMailboxWithUnlabelCallOnFolders(ctx context.Context, _ connector.IMAPStateWrite, messageIDs []imap.MessageID, mboxID imap.MailboxID) error {
+	if isAllMailOrScheduled(mboxID) {
+		return connector.ErrOperationNotAllowed
+	}
+
+	msgIDs := usertypes.MapTo[imap.MessageID, string](messageIDs)
+	if err := s.unlabelMessages(ctx, msgIDs, string(mboxID), "removeMessagesFromMailboxWithUnlabelCallOnFolders"); err != nil {
+		return err
+	}
+
+	if mboxID == proton.TrashLabel || mboxID == proton.DraftsLabel {
+		const ChunkSize = 150
+		var msgToPermaDelete []string
+
+		rdLabels := s.labels.Read()
+		defer rdLabels.Close()
+
+		// There's currently no limit on how many IDs we can filter on,
+		// but to be nice to API, let's chunk it by 150.
+		for _, messageIDs := range xslices.Chunk(messageIDs, ChunkSize) {
+			metadata, err := s.client.GetMessageMetadataPage(ctx, 0, ChunkSize, proton.MessageFilter{
+				ID: usertypes.MapTo[imap.MessageID, string](messageIDs),
+			})
+			if err != nil {
+				return err
+			}
+
+			// If a message is not preset in any other label other than AllMail, AllDrafts and AllSent, it can be
+			// permanently deleted.
+			for _, m := range metadata {
+				var remainingLabels []string
+
+				for _, id := range m.LabelIDs {
+					label, ok := rdLabels.GetLabel(id)
+					if !ok {
+						// Handle case where this label was newly introduced and we do not yet know about it.
+						logrus.WithField("labelID", id).Warnf("Unknown label found during expunge from Trash, attempting to locate it")
+						label, err = s.client.GetLabel(ctx, id, proton.LabelTypeFolder, proton.LabelTypeSystem, proton.LabelTypeSystem)
+						if err != nil {
+							if errors.Is(err, proton.ErrNoSuchLabel) {
+								logrus.WithField("labelID", id).Warn("Label does not exist, ignoring")
+								continue
+							}
+
+							logrus.WithField("labelID", id).Errorf("Failed to resolve label: %v", err)
+							return fmt.Errorf("failed to resolve label: %w", err)
+						}
+					}
+					if !WantLabel(label) {
+						continue
+					}
+
+					if label.Type == proton.LabelTypeSystem && (id == proton.AllDraftsLabel ||
+						id == proton.AllMailLabel ||
+						id == proton.AllSentLabel ||
+						id == proton.AllScheduledLabel) {
+						continue
+					}
+
+					remainingLabels = append(remainingLabels, m.ID)
+				}
+
+				if len(remainingLabels) == 0 {
+					s.log.WithFields(logrus.Fields{
+						"messageID":    m.ID,
+						"mailboxID":    mboxID,
+						"labels id(s)": m.LabelIDs,
+					}).Info("Message has been marked for deletion")
+					msgToPermaDelete = append(msgToPermaDelete, m.ID)
+				} else {
+					s.log.WithFields(logrus.Fields{
+						"messageID":       m.ID,
+						"mailboxID":       mboxID,
+						"labels id(s)":    m.LabelIDs,
+						"remainingLabels": remainingLabels,
+					}).Info("Message has not been marked for deletion due to remaining labels.")
+				}
+			}
+		}
+
+		if len(msgToPermaDelete) != 0 {
+			s.log.WithFields(logrus.Fields{
+				"countMessageToPermaDelete":   len(msgToPermaDelete),
+				"countMessagesMarkedToDelete": len(messageIDs),
+				"mboxID":                      mboxID,
+			}).Debugf("Following message(s) will be perma-deleted: %v", msgToPermaDelete)
+
+			if err := s.client.DeleteMessage(ctx, msgToPermaDelete...); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+func (s *Connector) MoveMessages(ctx context.Context, con connector.IMAPStateWrite, messageIDs []imap.MessageID, mboxFromID, mboxToID imap.MailboxID) (bool, error) {
+	if s.featureFlagValueProvider.GetFlagValue(unleash.FolderUnlabelCallDisabled) {
+		return s.moveMessagesWithoutUnlabelCallOnFolders(ctx, con, messageIDs, mboxFromID, mboxToID)
+	}
+
+	return s.moveMessagesWithUnlabelCallOnFolders(ctx, con, messageIDs, mboxFromID, mboxToID)
+}
+
+func (s *Connector) moveMessagesWithoutUnlabelCallOnFolders(ctx context.Context, _ connector.IMAPStateWrite, messageIDs []imap.MessageID, mboxFromID, mboxToID imap.MailboxID) (bool, error) {
 	if (mboxFromID == proton.InboxLabel && mboxToID == proton.SentLabel) ||
 		(mboxFromID == proton.SentLabel && mboxToID == proton.InboxLabel) ||
 		isAllMailOrScheduled(mboxFromID) ||
@@ -530,7 +647,46 @@ func (s *Connector) MoveMessages(ctx context.Context, _ connector.IMAPStateWrite
 	}
 
 	if s.isMailboxOfTypeLabel(string(mboxFromID)) {
-		if err := s.client.UnlabelMessages(ctx, usertypes.MapTo[imap.MessageID, string](messageIDs), string(mboxFromID)); err != nil {
+		if err := s.unlabelMessages(ctx, usertypes.MapTo[imap.MessageID, string](messageIDs), string(mboxFromID), "moveMessagesWithoutUnlabelCallOnFolders"); err != nil {
+			return false, fmt.Errorf("unlabeling messages: %w", err)
+		}
+	}
+
+	return shouldExpungeOldLocation, nil
+}
+
+// Based on mailbox move logic before BRIDGE-451. Removing the unlabel call resulted in a lot of client issues.
+func (s *Connector) moveMessagesWithUnlabelCallOnFolders(ctx context.Context, _ connector.IMAPStateWrite, messageIDs []imap.MessageID, mboxFromID, mboxToID imap.MailboxID) (bool, error) {
+	if (mboxFromID == proton.InboxLabel && mboxToID == proton.SentLabel) ||
+		(mboxFromID == proton.SentLabel && mboxToID == proton.InboxLabel) ||
+		isAllMailOrScheduled(mboxFromID) ||
+		isAllMailOrScheduled(mboxToID) {
+		return false, connector.ErrOperationNotAllowed
+	}
+
+	shouldExpungeOldLocation := func() bool {
+		rdLabels := s.labels.Read()
+		defer rdLabels.Close()
+
+		var result bool
+
+		if v, ok := rdLabels.GetLabel(string(mboxFromID)); ok && v.Type == proton.LabelTypeLabel {
+			result = true
+		}
+
+		if v, ok := rdLabels.GetLabel(string(mboxToID)); ok && (v.Type == proton.LabelTypeFolder || v.Type == proton.LabelTypeSystem) {
+			result = true
+		}
+
+		return result
+	}()
+
+	if err := s.client.LabelMessages(ctx, usertypes.MapTo[imap.MessageID, string](messageIDs), string(mboxToID)); err != nil {
+		return false, fmt.Errorf("labeling messages: %w", err)
+	}
+
+	if shouldExpungeOldLocation {
+		if err := s.unlabelMessages(ctx, usertypes.MapTo[imap.MessageID, string](messageIDs), string(mboxFromID), "moveMessagesWithUnlabelCallOnFolders"); err != nil {
 			return false, fmt.Errorf("unlabeling messages: %w", err)
 		}
 	}
@@ -551,7 +707,16 @@ func (s *Connector) MarkMessagesFlagged(ctx context.Context, _ connector.IMAPSta
 		return s.client.LabelMessages(ctx, usertypes.MapTo[imap.MessageID, string](messageIDs), proton.StarredLabel)
 	}
 
-	return s.client.UnlabelMessages(ctx, usertypes.MapTo[imap.MessageID, string](messageIDs), proton.StarredLabel)
+	return s.unlabelMessages(ctx, usertypes.MapTo[imap.MessageID, string](messageIDs), proton.StarredLabel, "MarkMessagesFlagged")
+}
+
+func (s *Connector) unlabelMessages(ctx context.Context, messageIDs []string, labelID, reason string) error {
+	s.log.WithFields(logrus.Fields{
+		"messageIDs": messageIDs,
+		"labelID":    labelID,
+		"reason":     reason,
+	}).Debug("Unlabeling messages")
+	return s.client.UnlabelMessages(ctx, messageIDs, labelID)
 }
 
 func (s *Connector) MarkMessagesForwarded(ctx context.Context, _ connector.IMAPStateWrite, messageIDs []imap.MessageID, flagged bool) error {

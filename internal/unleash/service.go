@@ -52,6 +52,7 @@ const (
 	InboxBridgeU2FLoginEnabled                           = "InboxBridgeU2FLogin"
 	SplitMessageHeaderBodyV2Disabled                     = "InboxBridgeMessageHeaderBodySplitOptimizationDisabled"
 	AfterUpdateTemporaryFolderRemovalDisabled            = "InboxBridgePostUpdateTempFolderDeletionDisabled"
+	FolderUnlabelCallDisabled                            = "InboxBridgeUnlabelCallOnFoldersDisabled"
 )
 
 type FeatureFlagValueProvider interface {
