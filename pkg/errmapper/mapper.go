@@ -45,12 +45,15 @@ func (em *errorMapper) Resolve(err error) error {
 	}
 	for _, rule := range em.rules {
 		if em.match(err, rule) {
+			result := rule.ResultFn(err)
+
 			em.log.WithFields(logrus.Fields{
 				"rule":   rule,
 				"error":  err,
-				"result": rule.Result,
+				"result": result,
 			}).Debug("Given error matches rule, returning result")
-			return rule.Result
+
+			return result
 		}
 	}
 

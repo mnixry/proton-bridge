@@ -532,10 +532,9 @@ func (s *Service) getRecipients(
 
 		pubKeys, recType, err := client.GetPublicKeys(ctx, recipient)
 		if err != nil {
-			var apiErr *proton.APIError
-			if errors.As(err, &apiErr) && apiErr != nil &&
+			if apiErr, ok := errors.AsType[*proton.APIError](err); ok && apiErr != nil &&
 				apiErr.Status == http.StatusUnprocessableEntity && apiErr.Code == errCodeAddressDoesNotExist {
-				err = fmt.Errorf("%w: %w", ErrRecipientAddressDoesNotExist, err)
+				err = fmt.Errorf("%w: %w", NewErrRecipientAddressDoesNotExist(recipient), err)
 			}
 			return proton.SendPreferences{}, fmt.Errorf("%w: failed to get public key for %s: %w", ErrLookupRecipientPublicKey, recipient, err)
 		}

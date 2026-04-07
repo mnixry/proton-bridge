@@ -25,23 +25,46 @@ import (
 )
 
 var (
-	ErrInvalidRecipient             = errors.New("invalid recipient")
-	ErrInvalidReturnPath            = errors.New("invalid return path")
-	ErrNoSuchUser                   = errors.New("no such user")
-	ErrTooManyErrors                = errors.New("too many failed requests, please try again later")
-	ErrSendMessageOperation         = errors.New("smtp: send message")
-	ErrGetRecipientsOperation       = errors.New("smtp: get recipients")
-	ErrGetSendPreferencesOperation  = errors.New("smtp: get send preferences")
-	ErrLookupRecipientPublicKey     = errors.New("smtp: lookup recipient public key")
-	ErrRecipientAddressDoesNotExist = errors.New("smtp: recipient address does not exist")
-
-	ErrCannotSendFromAddressKind = errors.New("smtp: cannot send from address")
-	ErrSenderAddressNotOwned     = errors.New("smtp: sender address not owned by user")
-	ErrUnsupportedOutgoingMIME   = errors.New("smtp: unsupported outgoing MIME type")
+	ErrInvalidRecipient            = errors.New("invalid recipient")
+	ErrInvalidReturnPath           = errors.New("invalid return path")
+	ErrNoSuchUser                  = errors.New("no such user")
+	ErrTooManyErrors               = errors.New("too many failed requests, please try again later")
+	ErrSendMessageOperation        = errors.New("smtp: send message")
+	ErrGetRecipientsOperation      = errors.New("smtp: get recipients")
+	ErrGetSendPreferencesOperation = errors.New("smtp: get send preferences")
+	ErrLookupRecipientPublicKey    = errors.New("smtp: lookup recipient public key")
+	ErrSenderAddressNotOwned       = errors.New("smtp: sender address not owned by user")
+	ErrUnsupportedOutgoingMIME     = errors.New("smtp: unsupported outgoing MIME type")
 )
 
 const errCodeAddressDoesNotExist proton.Code = 33102
 
+// ErrRecipientAddressDoesNotExist is an error that is returned when a recipient address could not be resolved.
+type ErrRecipientAddressDoesNotExist struct {
+	address string
+}
+
+func NewErrRecipientAddressDoesNotExist(address string) *ErrRecipientAddressDoesNotExist {
+	return &ErrRecipientAddressDoesNotExist{address: address}
+}
+
+func (e *ErrRecipientAddressDoesNotExist) Address() string {
+	if e == nil {
+		return ""
+	}
+	return e.address
+}
+
+func (e *ErrRecipientAddressDoesNotExist) Is(target error) bool {
+	_, ok := target.(*ErrRecipientAddressDoesNotExist)
+	return ok
+}
+
+func (e *ErrRecipientAddressDoesNotExist) Error() string {
+	return fmt.Sprintf("recipient address does not exist: %v", e.address)
+}
+
+// ErrCannotSendFromAddress is an error that is returned when a sender address could not be used.
 type ErrCannotSendFromAddress struct {
 	address string
 }
@@ -50,13 +73,18 @@ func NewErrCannotSendFromAddress(address string) *ErrCannotSendFromAddress {
 	return &ErrCannotSendFromAddress{address: address}
 }
 
-func (e ErrCannotSendFromAddress) Error() string {
+func (e *ErrCannotSendFromAddress) Error() string {
 	return fmt.Sprintf("cannot send from address: %v", e.address)
 }
 
-func (e *ErrCannotSendFromAddress) Unwrap() error {
+func (e *ErrCannotSendFromAddress) Is(target error) bool {
+	_, ok := target.(*ErrCannotSendFromAddress)
+	return ok
+}
+
+func (e *ErrCannotSendFromAddress) Address() string {
 	if e == nil {
-		return nil
+		return ""
 	}
-	return ErrCannotSendFromAddressKind
+	return e.address
 }

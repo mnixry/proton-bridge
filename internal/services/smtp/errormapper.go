@@ -19,6 +19,7 @@ package smtp
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/ProtonMail/proton-bridge/v3/pkg/errmapper"
 )
@@ -35,23 +36,53 @@ func mapError(err error) error {
 	return smtpSharedErrMapper.Resolve(err)
 }
 
+// Sentinel for errors.Is; any *ErrRecipientAddressDoesNotExist matches via Is().
+//
+//nolint:gochecknoglobals
+var errRecipientAddressDoesNotExistTarget = NewErrRecipientAddressDoesNotExist("")
+
+// Sentinel for errors.Is; any *ErrCannotSendFromAddress matches via Is().
+//
+//nolint:gochecknoglobals
+var errCannotSendFromAddress = NewErrCannotSendFromAddress("")
+
 //nolint:gochecknoglobals
 var smtpErrRules = []errmapper.Rule{
-	errmapper.NewRule(
+	errmapper.NewRuleWithResultFunc(
 		[]error{
 			ErrSendMessageOperation,
 			ErrGetRecipientsOperation,
 			ErrGetSendPreferencesOperation,
 			ErrLookupRecipientPublicKey,
-			ErrRecipientAddressDoesNotExist,
+			errRecipientAddressDoesNotExistTarget,
 		},
 		errmapper.MatchAll,
-		errors.New("One or more addresses do not exist. Remove or correct the recipients and try again."), //nolint:revive,staticcheck //disable ST1005,
+		func(err error) error {
+			if target, ok := errors.AsType[*ErrRecipientAddressDoesNotExist](err); ok {
+				//nolint:revive,staticcheck //disable ST1005,
+				return fmt.Errorf(
+					"The address %s does not exist. Remove or correct the recipient and try again.",
+					target.Address(),
+				)
+			}
+			return errors.New("One or more addresses do not exist. Remove or correct the recipients and try again.") //nolint:revive,staticcheck //disable ST1005,
+		},
 	),
-	errmapper.NewRule(
-		[]error{ErrCannotSendFromAddressKind},
+	errmapper.NewRuleWithResultFunc(
+		[]error{
+			errCannotSendFromAddress,
+		},
 		errmapper.MatchAny,
-		errors.New("You cannot send from this address. Check that it is enabled in your email client or Bridge settings."), //nolint:revive,staticcheck //disable ST1005,
+		func(err error) error {
+			if target, ok := errors.AsType[*ErrCannotSendFromAddress](err); ok {
+				//nolint:revive,staticcheck //disable ST1005,
+				return fmt.Errorf(
+					"You cannot send from this address: %s. Check that it is enabled in your email client or Bridge settings.",
+					target.Address(),
+				)
+			}
+			return errors.New("You cannot send from this address. Check that it is enabled in your email client or Bridge settings.") //nolint:revive,staticcheck //disable ST1005,
+		},
 	),
 	errmapper.NewRule(
 		[]error{ErrTooManyErrors},

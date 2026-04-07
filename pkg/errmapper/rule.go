@@ -19,16 +19,33 @@ package errmapper
 
 // Rule holds information about a rule to be applied to a given error or error chain.
 type Rule struct {
-	Targets   []error
+	// Targets is a list of errors to match against.
+	Targets []error
+
+	// MatchType is the type of matching operation to be performed on a given error chain.
+	// Can be either MatchAll or MatchAny.
 	MatchType MatchType
-	Result    error
+
+	// ResultFn is a function to build the result error.
+	ResultFn func(err error) error
 }
 
-// NewRule returns a new Rule instance.
+// NewRule returns a new Rule instance,. The given result error is returned when the rule matches.
 func NewRule(targets []error, matchType MatchType, result error) Rule {
 	return Rule{
 		Targets:   targets,
 		MatchType: matchType,
-		Result:    result,
+		ResultFn: func(_ error) error {
+			return result
+		},
+	}
+}
+
+// NewRuleWithResultFunc builds a Rule instance with a function to build the result error.
+func NewRuleWithResultFunc(targets []error, matchType MatchType, fn func(err error) error) Rule {
+	return Rule{
+		Targets:   targets,
+		MatchType: matchType,
+		ResultFn:  fn,
 	}
 }
