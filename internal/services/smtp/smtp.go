@@ -237,6 +237,19 @@ func (s *Service) sendWithKey(
 	})
 	if err != nil {
 		s.observabilitySender.AddDistinctMetrics(observability.SMTPError, observabilitymetrics.GenerateFailedCreateDraft())
+		if apiErr, ok := errors.AsType[*proton.APIError](err); ok {
+			if apiErr.Status == http.StatusUnprocessableEntity {
+				//nolint:exhaustive // only handle unprocessable entity status codes
+				switch apiErr.Code {
+				case errCodeValidationFailed:
+					return proton.Message{}, NewErrValidationFailed(apiErr.Message)
+				case errCodeMessageTooLarge:
+					return proton.Message{}, ErrMessageTooLarge
+				case errCodeInvalidListOfRecipients:
+					return proton.Message{}, ErrInvalidListOfRecipients
+				}
+			}
+		}
 		return proton.Message{}, fmt.Errorf("failed to create draft: %w", err)
 	}
 

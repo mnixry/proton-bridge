@@ -35,9 +35,14 @@ var (
 	ErrLookupRecipientPublicKey    = errors.New("smtp: lookup recipient public key")
 	ErrSenderAddressNotOwned       = errors.New("smtp: sender address not owned by user")
 	ErrUnsupportedOutgoingMIME     = errors.New("smtp: unsupported outgoing MIME type")
+	ErrInvalidListOfRecipients     = errors.New("smtp: invalid list of recipients draft")
+	ErrMessageTooLarge             = errors.New("smtp: message too large draft")
 )
 
 const errCodeAddressDoesNotExist proton.Code = 33102
+const errCodeValidationFailed proton.Code = 2001
+const errCodeMessageTooLarge proton.Code = 2024
+const errCodeInvalidListOfRecipients proton.Code = 2002
 
 // ErrRecipientAddressDoesNotExist is an error that is returned when a recipient address could not be resolved.
 type ErrRecipientAddressDoesNotExist struct {
@@ -87,4 +92,28 @@ func (e *ErrCannotSendFromAddress) Address() string {
 		return ""
 	}
 	return e.address
+}
+
+type ErrValidationFailed struct {
+	reason string
+}
+
+func NewErrValidationFailed(reason string) *ErrValidationFailed {
+	return &ErrValidationFailed{reason: reason}
+}
+
+func (e *ErrValidationFailed) Error() string {
+	return fmt.Sprintf("validation failed: %v", e.reason)
+}
+
+func (e *ErrValidationFailed) Is(target error) bool {
+	_, ok := target.(*ErrValidationFailed)
+	return ok
+}
+
+func (e *ErrValidationFailed) Reason() string {
+	if e == nil {
+		return ""
+	}
+	return e.reason
 }

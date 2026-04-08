@@ -46,6 +46,11 @@ var errRecipientAddressDoesNotExistTarget = NewErrRecipientAddressDoesNotExist("
 //nolint:gochecknoglobals
 var errCannotSendFromAddress = NewErrCannotSendFromAddress("")
 
+// Sentinel for errors.Is; any *ErrValidationFailed matches via Is().
+//
+// nolint:gochecknoglobals
+var errValidationFailedTarget = NewErrValidationFailed("")
+
 //nolint:gochecknoglobals
 var smtpErrRules = []errmapper.Rule{
 	errmapper.NewRuleWithResultFunc(
@@ -65,7 +70,22 @@ var smtpErrRules = []errmapper.Rule{
 					target.Address(),
 				)
 			}
-			return errors.New("One or more addresses do not exist. Remove or correct the recipients and try again.") //nolint:revive,staticcheck //disable ST1005,
+			return errors.New("One or more addresses do not exist. Remove or correct the recipients and try again.") //nolint:revive,staticcheck //disable ST1005
+		},
+	),
+	errmapper.NewRuleWithResultFunc(
+		[]error{
+			ErrSendMessageOperation,
+			errValidationFailedTarget,
+		},
+		errmapper.MatchAll,
+		func(err error) error {
+			if target, ok := errors.AsType[*ErrValidationFailed](err); ok {
+				//nolint:revive,staticcheck //disable ST1005,
+				return fmt.Errorf("There was a problem with the message you are trying to send. Reason: %s", target.Reason())
+			}
+
+			return errors.New("The message you are trying to send is not valid. Please check the Subject/Recipients/Body.") //nolint:revive,staticcheck //disable ST1005
 		},
 	),
 	errmapper.NewRuleWithResultFunc(
