@@ -9,7 +9,7 @@ TARGET_OS?=${GOOS}
 ROOT_DIR:=$(realpath .)
 
 ## Build
-.PHONY: build build-gui build-nogui build-launcher versioner hasher install-libfido2
+.PHONY: build build-gui build-nogui build-launcher hasher install-libfido2
 
 # Keep version hardcoded so app build works also without Git repository.
 BRIDGE_APP_VERSION?=3.23.1+git
@@ -146,9 +146,6 @@ ${EXE_NAME}: gofiles  ${RESOURCE_FILE}
 
 build-launcher: ${RESOURCE_FILE}
 	$(call go-build-finalize,${BUILD_FLAGS_LAUNCHER},"${LAUNCHER_EXE}","${ROOT_DIR}/${LAUNCHER_PATH}/","${ROOT_DIR}/${LAUNCHER_PATH}/${RESOURCE_FILE}")
-
-versioner:
-	go build ${BUILD_FLAGS} -o versioner utils/versioner/main.go
 
 vault-editor:
 	$(call go-build-finalize,-tags=debug,"vault-editor","./utils/vault-editor/main.go")
