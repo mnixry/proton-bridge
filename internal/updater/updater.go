@@ -72,31 +72,6 @@ func NewUpdater(ver *versioner.Versioner, verifier *crypto.KeyRing, product, pla
 	}
 }
 
-func (u *Updater) GetVersionInfoLegacy(ctx context.Context, downloader Downloader, channel Channel) (VersionInfoLegacy, error) {
-	b, err := downloader.DownloadAndVerify(
-		ctx,
-		u.verifier,
-		u.getVersionFileURLLegacy(),
-		u.getVersionFileURLLegacy()+".sig",
-	)
-	if err != nil {
-		return VersionInfoLegacy{}, fmt.Errorf("%w: %w", ErrVersionFileDownloadOrVerify, err)
-	}
-
-	var versionMap VersionMap
-
-	if err := json.Unmarshal(b, &versionMap); err != nil {
-		return VersionInfoLegacy{}, err
-	}
-
-	version, ok := versionMap[channel]
-	if !ok {
-		return VersionInfoLegacy{}, errors.New("no updates available for this channel")
-	}
-
-	return version, nil
-}
-
 func (u *Updater) GetVersionInfo(ctx context.Context, downloader Downloader) (VersionInfo, error) {
 	b, err := downloader.DownloadAndVerify(
 		ctx,
@@ -115,29 +90,6 @@ func (u *Updater) GetVersionInfo(ctx context.Context, downloader Downloader) (Ve
 	}
 
 	return releases, nil
-}
-
-func (u *Updater) InstallUpdateLegacy(ctx context.Context, downloader Downloader, update VersionInfoLegacy, removeTemporaryFolderDisabled bool) error {
-	if u.installer.IsAlreadyInstalled(update.Version) {
-		return ErrUpdateAlreadyInstalled
-	}
-
-	b, err := downloader.DownloadAndVerify(
-		ctx,
-		u.verifier,
-		update.Package,
-		update.Package+".sig",
-	)
-	if err != nil {
-		return fmt.Errorf("%w: %w", ErrDownloadVerify, err)
-	}
-
-	if err := u.installer.InstallUpdate(update.Version, bytes.NewReader(b), removeTemporaryFolderDisabled); err != nil {
-		logrus.WithError(err).Error("Failed to install update")
-		return fmt.Errorf("%w: %w", ErrInstall, err)
-	}
-
-	return nil
 }
 
 func (u *Updater) InstallUpdate(ctx context.Context, downloader Downloader, release Release, removeTemporaryFolderDisabled bool) error {
@@ -179,13 +131,6 @@ func (u *Updater) InstallUpdate(ctx context.Context, downloader Downloader, rele
 
 func (u *Updater) RemoveOldUpdates() error {
 	return u.versioner.RemoveOldVersions()
-}
-
-// getVersionFileURLLegacy returns the URL of the version file.
-// For example:
-//   - https://protonmail.com/download/bridge/version_linux.json
-func (u *Updater) getVersionFileURLLegacy() string {
-	return fmt.Sprintf("%v/%v/version_%v.json", Host, u.product, u.platform)
 }
 
 // getVersionFileURL returns the URL of the version file.

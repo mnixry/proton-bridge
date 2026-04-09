@@ -122,43 +122,22 @@ func (provider *TestLocationsProvider) UserCache() string {
 }
 
 type TestUpdater struct {
-	latest   updater.VersionInfoLegacy
 	releases updater.VersionInfo
 	lock     sync.RWMutex
 }
 
 func NewTestUpdater(version, minAuto *semver.Version) *TestUpdater {
 	return &TestUpdater{
-		latest: updater.VersionInfoLegacy{
-			Version: version,
-			MinAuto: minAuto,
-
-			RolloutProportion: 1.0,
+		releases: updater.VersionInfo{
+			Releases: []updater.Release{
+				{
+					Version:           version,
+					MinAuto:           minAuto,
+					RolloutProportion: 1.0,
+				},
+			},
 		},
 	}
-}
-
-func (testUpdater *TestUpdater) SetLatestVersionLegacy(version, minAuto *semver.Version) {
-	testUpdater.lock.Lock()
-	defer testUpdater.lock.Unlock()
-
-	testUpdater.latest = updater.VersionInfoLegacy{
-		Version: version,
-		MinAuto: minAuto,
-
-		RolloutProportion: 1.0,
-	}
-}
-
-func (testUpdater *TestUpdater) GetVersionInfoLegacy(_ context.Context, _ updater.Downloader, _ updater.Channel) (updater.VersionInfoLegacy, error) {
-	testUpdater.lock.RLock()
-	defer testUpdater.lock.RUnlock()
-
-	return testUpdater.latest, nil
-}
-
-func (testUpdater *TestUpdater) InstallUpdateLegacy(_ context.Context, _ updater.Downloader, _ updater.VersionInfoLegacy, _ bool) error {
-	return nil
 }
 
 func (testUpdater *TestUpdater) RemoveOldUpdates() error {

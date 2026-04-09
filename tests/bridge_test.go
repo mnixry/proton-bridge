@@ -32,7 +32,7 @@ import (
 	"github.com/ProtonMail/proton-bridge/v3/internal/bridge"
 	"github.com/ProtonMail/proton-bridge/v3/internal/events"
 	"github.com/ProtonMail/proton-bridge/v3/internal/kb"
-	"github.com/ProtonMail/proton-bridge/v3/internal/unleash"
+	"github.com/ProtonMail/proton-bridge/v3/internal/updater"
 	"github.com/ProtonMail/proton-bridge/v3/internal/vault"
 	"github.com/cucumber/godog"
 	"github.com/golang/mock/gomock"
@@ -56,7 +56,15 @@ func (s *scenario) bridgeStops() error {
 
 func (s *scenario) bridgeVersionIsAndTheLatestAvailableVersionIsReachableFrom(current, latest, minAuto string) error {
 	s.t.version = semver.MustParse(current)
-	s.t.mocks.Updater.SetLatestVersionLegacy(semver.MustParse(latest), semver.MustParse(minAuto))
+
+	updaterData := updater.VersionInfo{Releases: []updater.Release{
+		{
+			Version: semver.MustParse(latest),
+			MinAuto: semver.MustParse(minAuto),
+		},
+	}}
+
+	s.t.mocks.Updater.SetLatestVersion(updaterData)
 	return nil
 }
 
@@ -362,8 +370,8 @@ func (s *scenario) bridgeSendsAnUpdateAvailableEventForVersion(version string) e
 		return errors.New("expected update event to be installable")
 	}
 
-	if !event.VersionLegacy.Version.Equal(semver.MustParse(version)) {
-		return fmt.Errorf("expected update event for version %s, got %s", version, event.VersionLegacy.Version)
+	if !event.Release.Version.Equal(semver.MustParse(version)) {
+		return fmt.Errorf("expected update event for version %s, got %s", version, event.Release.Version)
 	}
 
 	return nil
@@ -379,8 +387,8 @@ func (s *scenario) bridgeSendsAManualUpdateEventForVersion(version string) error
 		return errors.New("expected update event to not be installable")
 	}
 
-	if !event.VersionLegacy.Version.Equal(semver.MustParse(version)) {
-		return fmt.Errorf("expected update event for version %s, got %s", version, event.VersionLegacy.Version)
+	if !event.Release.Version.Equal(semver.MustParse(version)) {
+		return fmt.Errorf("expected update event for version %s, got %s", version, event.Release.Version)
 	}
 
 	return nil
@@ -392,8 +400,8 @@ func (s *scenario) bridgeSendsAnUpdateInstalledEventForVersion(version string) e
 		return errors.New("expected update installed event, got none")
 	}
 
-	if !event.VersionLegacy.Version.Equal(semver.MustParse(version)) {
-		return fmt.Errorf("expected update installed event for version %s, got %s", version, event.VersionLegacy.Version)
+	if !event.Release.Version.Equal(semver.MustParse(version)) {
+		return fmt.Errorf("expected update installed event for version %s, got %s", version, event.Release.Version)
 	}
 
 	return nil
@@ -483,23 +491,6 @@ func (s *scenario) bridgeSMTPPortIs(expectedPort int) error {
 	}
 
 	return nil
-}
-
-func (s *scenario) bridgeLegacyUpdateKillSwitchEnabled() error {
-	unleash.ModifyPollPeriodAndJitter(5*time.Second, 0)
-	s.t.api.PushFeatureFlag(unleash.UpdateUseNewVersionFileStructureDisabled) //nolint:staticcheck
-	return nil
-}
-
-func (s *scenario) bridgeLegacyUpdateEnabled() error {
-	return eventually(func() error {
-		res := s.t.bridge.GetFeatureFlagValue(unleash.UpdateUseNewVersionFileStructureDisabled) //nolint:staticcheck
-		fmt.Println("RES", res)
-		if res != true {
-			return fmt.Errorf("expected the %v kill-switch to be enabled", unleash.UpdateUseNewVersionFileStructureDisabled) //nolint:staticcheck
-		}
-		return nil
-	})
 }
 
 func (s *scenario) bridgeChecksForUpdates() error {

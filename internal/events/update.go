@@ -28,27 +28,19 @@ import (
 type UpdateLatest struct {
 	eventBase
 
-	// VersionLegacy - holds Update version information; corresponding to the old update structure and logic;
-	VersionLegacy updater.VersionInfoLegacy
-
 	// Release - holds Release version data; part of the new update logic as of BRIDGE-309.
 	Release updater.Release
 }
 
 func (event UpdateLatest) GetLatestVersion() string {
 	var latestVersion string
-	if !event.VersionLegacy.IsEmpty() {
-		latestVersion = event.VersionLegacy.Version.String()
-	} else if !event.Release.IsEmpty() {
+	if !event.Release.IsEmpty() {
 		latestVersion = event.Release.Version.String()
 	}
 	return latestVersion
 }
 
 func (event UpdateLatest) String() string {
-	if !event.VersionLegacy.IsEmpty() {
-		return fmt.Sprintf("UpdateLatest: Version: %s", event.VersionLegacy.Version)
-	}
 	if !event.Release.IsEmpty() {
 		return fmt.Sprintf("UpdateLatest: Version: %s", event.Release.Version)
 	}
@@ -60,10 +52,6 @@ func (event UpdateLatest) String() string {
 // If the update will be installed silently (without user interaction), Silent is true.
 type UpdateAvailable struct {
 	eventBase
-
-	// VersionLegacy - holds Update version information; corresponding to the old update structure and logic;
-	VersionLegacy updater.VersionInfoLegacy
-
 	// Release - holds Release version data; part of the new update logic as of BRIDGE-309.
 	Release updater.Release
 
@@ -76,9 +64,7 @@ type UpdateAvailable struct {
 
 func (event UpdateAvailable) GetLatestVersion() string {
 	var latestVersion string
-	if !event.VersionLegacy.IsEmpty() {
-		latestVersion = event.VersionLegacy.Version.String()
-	} else if !event.Release.IsEmpty() {
+	if !event.Release.IsEmpty() {
 		latestVersion = event.Release.Version.String()
 	}
 	return latestVersion
@@ -87,8 +73,6 @@ func (event UpdateAvailable) GetLatestVersion() string {
 func (event UpdateAvailable) String() string {
 	if !event.Release.IsEmpty() {
 		return fmt.Sprintf("UpdateAvailable: Version %s, Compatible: %t, Silent: %t", event.Release.Version, event.Compatible, event.Silent)
-	} else if !event.VersionLegacy.IsEmpty() {
-		return fmt.Sprintf("UpdateAvailable: Version %s, Compatible: %t, Silent: %t", event.VersionLegacy.Version, event.Compatible, event.Silent)
 	}
 	return ""
 }
@@ -106,9 +90,6 @@ func (event UpdateNotAvailable) String() string {
 type UpdateInstalled struct {
 	eventBase
 
-	// VersionLegacy - holds Update version information; corresponding to the old update structure and logic;
-	VersionLegacy updater.VersionInfoLegacy
-
 	// Release - holds Release version data; part of the new update logic as of BRIDGE-309.
 	Release updater.Release
 
@@ -117,9 +98,7 @@ type UpdateInstalled struct {
 
 func (event UpdateInstalled) GetLatestVersion() string {
 	var latestVersion string
-	if !event.VersionLegacy.IsEmpty() {
-		latestVersion = event.VersionLegacy.Version.String()
-	} else if !event.Release.IsEmpty() {
+	if !event.Release.IsEmpty() {
 		latestVersion = event.Release.Version.String()
 	}
 	return latestVersion
@@ -128,8 +107,6 @@ func (event UpdateInstalled) GetLatestVersion() string {
 func (event UpdateInstalled) String() string {
 	if !event.Release.IsEmpty() {
 		return fmt.Sprintf("UpdateInstalled: Version %s, Silent: %t", event.Release.Version, event.Silent)
-	} else if !event.VersionLegacy.IsEmpty() {
-		return fmt.Sprintf("UpdateInstalled: Version %s, Silent: %t", event.VersionLegacy.Version, event.Silent)
 	}
 	return ""
 }
@@ -137,9 +114,6 @@ func (event UpdateInstalled) String() string {
 // UpdateFailed is published when an update fails to be installed.
 type UpdateFailed struct {
 	eventBase
-
-	// VersionLegacy - holds Update version information; corresponding to the old update structure and logic;
-	VersionLegacy updater.VersionInfoLegacy
 
 	// Release - holds Release version data; part of the new update logic as of BRIDGE-309.
 	Release updater.Release
@@ -151,9 +125,7 @@ type UpdateFailed struct {
 
 func (event UpdateFailed) GetLatestVersion() string {
 	var latestVersion string
-	if !event.VersionLegacy.IsEmpty() {
-		latestVersion = event.VersionLegacy.Version.String()
-	} else if !event.Release.IsEmpty() {
+	if !event.Release.IsEmpty() {
 		latestVersion = event.Release.Version.String()
 	}
 	return latestVersion
@@ -162,8 +134,6 @@ func (event UpdateFailed) GetLatestVersion() string {
 func (event UpdateFailed) String() string {
 	if !event.Release.IsEmpty() {
 		return fmt.Sprintf("UpdateFailed: Version %s, Silent: %t, Error: %s", event.Release.Version, event.Silent, event.Error)
-	} else if !event.VersionLegacy.IsEmpty() {
-		return fmt.Sprintf("UpdateFailed: Version %s, Silent: %t, Error: %s", event.VersionLegacy.Version, event.Silent, event.Error)
 	}
 	return ""
 }

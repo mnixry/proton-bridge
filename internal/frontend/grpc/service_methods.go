@@ -301,9 +301,7 @@ func (s *Service) ReleaseNotesPageLink(_ context.Context, _ *emptypb.Empty) (*wr
 	}()
 
 	var releaseNotesPage string
-	if !s.latestLegacy.IsEmpty() {
-		releaseNotesPage = s.latestLegacy.ReleaseNotesPage
-	} else if !s.latest.IsEmpty() {
+	if !s.latest.IsEmpty() {
 		releaseNotesPage = s.latest.ReleaseNotesPage
 	}
 
@@ -318,9 +316,7 @@ func (s *Service) LandingPageLink(_ context.Context, _ *emptypb.Empty) (*wrapper
 	}()
 
 	var landingPage string
-	if !s.latestLegacy.IsEmpty() {
-		landingPage = s.latestLegacy.LandingPage
-	} else if !s.latest.IsEmpty() {
+	if !s.latest.IsEmpty() {
 		landingPage = s.latest.LandingPage
 	}
 
@@ -664,9 +660,7 @@ func (s *Service) InstallUpdate(_ context.Context, _ *emptypb.Empty) (*emptypb.E
 		defer async.HandlePanic(s.panicHandler)
 
 		safe.RLock(func() {
-			if !s.targetLegacy.IsEmpty() {
-				s.bridge.InstallUpdateLegacy(s.targetLegacy)
-			} else if !s.target.IsEmpty() {
+			if !s.target.IsEmpty() {
 				s.bridge.InstallUpdate(s.target)
 			}
 		}, s.targetLock)

@@ -80,13 +80,11 @@ type Service struct {
 	eventCh      <-chan events.Event
 	quitCh       <-chan struct{}
 
-	latestLegacy updater.VersionInfoLegacy
-	latest       updater.Release
-	latestLock   safe.RWMutex
+	latest     updater.Release
+	latestLock safe.RWMutex
 
-	targetLegacy updater.VersionInfoLegacy
-	target       updater.Release
-	targetLock   safe.RWMutex
+	target     updater.Release
+	targetLock safe.RWMutex
 
 	authClient              *proton.Client
 	auth                    proton.Auth
@@ -174,13 +172,11 @@ func NewService(
 		eventCh:      eventCh,
 		quitCh:       quitCh,
 
-		latestLegacy: updater.VersionInfoLegacy{},
-		latest:       updater.Release{},
-		latestLock:   safe.NewRWMutex(),
+		latest:     updater.Release{},
+		latestLock: safe.NewRWMutex(),
 
-		targetLegacy: updater.VersionInfoLegacy{},
-		target:       updater.Release{},
-		targetLock:   safe.NewRWMutex(),
+		target:     updater.Release{},
+		targetLock: safe.NewRWMutex(),
 
 		log:                logrus.WithField("pkg", "grpc"),
 		initializing:       sync.WaitGroup{},
@@ -364,7 +360,6 @@ func (s *Service) watchEvents() {
 
 		case events.UpdateLatest:
 			safe.RLock(func() {
-				s.latestLegacy = event.VersionLegacy
 				s.latest = event.Release
 			}, s.latestLock)
 
@@ -377,7 +372,6 @@ func (s *Service) watchEvents() {
 
 			case !event.Silent:
 				safe.RLock(func() {
-					s.targetLegacy = event.VersionLegacy
 					s.target = event.Release
 				}, s.targetLock)
 
@@ -403,8 +397,6 @@ func (s *Service) watchEvents() {
 
 			if s.latest.Version != nil {
 				latest = s.latest.Version.String()
-			} else if s.latestLegacy.Version != nil {
-				latest = s.latestLegacy.Version.String()
 			} else if latestVersion, ok := s.checkLatestVersion(); ok {
 				latest = latestVersion
 			} else {
