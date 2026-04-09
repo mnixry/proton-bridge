@@ -26,6 +26,7 @@ import (
 	"github.com/ProtonMail/gluon/rfc5322"
 	"github.com/ProtonMail/gluon/rfc822"
 	"github.com/ProtonMail/go-proton-api"
+	"github.com/ProtonMail/proton-bridge/v3/pkg/utils"
 	"github.com/bradenaw/juniper/xslices"
 )
 
@@ -177,7 +178,7 @@ func WantLabel(label proton.Label) bool {
 }
 
 func wantLabels(apiLabels map[string]proton.Label, labelIDs []string) []string {
-	return xslices.Filter(labelIDs, func(labelID string) bool {
+	return utils.Filter(labelIDs, func(labelID string) bool {
 		apiLabel, ok := apiLabels[labelID]
 		if !ok {
 			return false

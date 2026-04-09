@@ -20,10 +20,11 @@ package orderedtasks
 import (
 	"context"
 
+	"slices"
+
 	"github.com/ProtonMail/gluon/async"
 	gl "github.com/ProtonMail/gluon/logging"
 	"github.com/bradenaw/juniper/xslices"
-	"golang.org/x/exp/slices"
 )
 
 type task struct {

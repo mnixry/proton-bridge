@@ -23,11 +23,11 @@ import (
 	"fmt"
 	"runtime"
 
+	"slices"
+
 	"github.com/ProtonMail/gluon/async"
 	"github.com/ProtonMail/go-proton-api"
 	"github.com/bradenaw/juniper/parallel"
-	"github.com/bradenaw/juniper/xslices"
-	"golang.org/x/exp/slices"
 )
 
 type EventChanneledSubscriber = ChanneledSubscriber[proton.Event]
@@ -71,7 +71,7 @@ func (s *subscriberList[T]) Remove(subscriber subscriber[T]) {
 	}
 
 	s.subscribers[index].close()
-	s.subscribers = xslices.Remove(s.subscribers, index, 1)
+	s.subscribers = slices.Delete(s.subscribers, index, index+1)
 }
 
 type publishError[T any] struct {

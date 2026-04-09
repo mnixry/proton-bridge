@@ -22,7 +22,7 @@ import (
 	"testing"
 
 	"github.com/ProtonMail/gluon/reporter"
-	"github.com/bradenaw/juniper/xslices"
+	"github.com/ProtonMail/proton-bridge/v3/pkg/utils"
 	"github.com/golang/mock/gomock"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
@@ -102,7 +102,7 @@ func (r *reportRecorder) removeMatchingRecords(isException, message, context gom
 		n = len(r.reports)
 	}
 
-	r.reports = xslices.Filter(r.reports, func(rec reportRecord) bool {
+	r.reports = utils.Filter(r.reports, func(rec reportRecord) bool {
 		if n <= 0 {
 			return true
 		}

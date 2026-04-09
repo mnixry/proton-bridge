@@ -24,10 +24,11 @@ import (
 	"sync"
 	"time"
 
+	"slices"
+
 	"github.com/ProtonMail/gluon/rfc822"
-	"github.com/bradenaw/juniper/xslices"
+	"github.com/ProtonMail/proton-bridge/v3/pkg/utils"
 	"github.com/sirupsen/logrus"
-	"golang.org/x/exp/slices"
 )
 
 const SendEntryExpiry = 30 * time.Minute
@@ -123,7 +124,7 @@ func (h *SendRecorder) HasEntryWait(ctx context.Context,
 
 func (h *SendRecorder) removeExpiredUnsafe() {
 	for hash, entry := range h.entries {
-		remaining := xslices.Filter(entry, func(t *sendEntry) bool {
+		remaining := utils.Filter(entry, func(t *sendEntry) bool {
 			return !t.exp.Before(time.Now())
 		})
 
@@ -207,18 +208,21 @@ func (h *SendRecorder) RemoveOnFail(hash string, id ID) {
 	if !ok {
 		return
 	}
+	toClose := utils.Filter(entries, func(e *sendEntry) bool {
+		return e.srID == id && e.msgID == ""
+	})
+	toKeep := utils.Filter(entries, func(t *sendEntry) bool {
+		return t.srID != id || t.msgID != ""
+	})
 
-	for idx, entry := range entries {
-		if entry.srID == id && entry.msgID == "" {
-			entry.closeWaitChannel()
+	for _, entry := range toClose {
+		entry.closeWaitChannel()
+	}
 
-			remaining := xslices.Remove(entries, idx, 1)
-			if len(remaining) != 0 {
-				h.entries[hash] = remaining
-			} else {
-				delete(h.entries, hash)
-			}
-		}
+	if len(toKeep) != 0 {
+		h.entries[hash] = toKeep
+	} else {
+		delete(h.entries, hash)
 	}
 }
 

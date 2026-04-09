@@ -26,6 +26,7 @@ import (
 	"net/url"
 	"regexp"
 	"runtime"
+	"slices"
 	"strings"
 	"sync"
 	"testing"
@@ -38,6 +39,7 @@ import (
 	frontend "github.com/ProtonMail/proton-bridge/v3/internal/frontend/grpc"
 	"github.com/ProtonMail/proton-bridge/v3/internal/locations"
 	"github.com/ProtonMail/proton-bridge/v3/internal/vault"
+	"github.com/ProtonMail/proton-bridge/v3/pkg/utils"
 	"github.com/bradenaw/juniper/xslices"
 	"github.com/cucumber/godog"
 	"github.com/emersion/go-imap/client"
@@ -317,7 +319,7 @@ func (t *testCtx) getMBoxID(userID string, name string) string {
 			panic(err)
 		}
 
-		idx := xslices.IndexFunc(labels, func(label proton.Label) bool {
+		idx := slices.IndexFunc(labels, func(label proton.Label) bool {
 			var labelName string
 			switch label.Type {
 			case proton.LabelTypeSystem:
@@ -394,7 +396,7 @@ func (t *testCtx) getAllCalls(method, pathExp string) ([]server.Call, error) {
 		return []server.Call{}, err
 	}
 
-	if matches := xslices.Filter(xslices.Join(t.calls...), func(call server.Call) bool {
+	if matches := utils.Filter(xslices.Join(t.calls...), func(call server.Call) bool {
 		return call.Method == method && regexp.MustCompile("^"+pathExp+"$").MatchString(strings.TrimPrefix(call.URL.Path, root.Path))
 	}); len(matches) > 0 {
 		return matches, nil
@@ -412,7 +414,7 @@ func (t *testCtx) getLastCallExcludingHTTPOverride(method, pathExp string) (serv
 		return server.Call{}, err
 	}
 
-	if matches := xslices.Filter(xslices.Join(t.calls...), func(call server.Call) bool {
+	if matches := utils.Filter(xslices.Join(t.calls...), func(call server.Call) bool {
 		if len(call.RequestHeader.Get("X-HTTP-Method-Override")) != 0 || len(call.RequestHeader.Get("X-Http-Method")) != 0 {
 			return false
 		}

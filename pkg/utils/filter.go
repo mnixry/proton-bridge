@@ -13,22 +13,14 @@
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with Proton Mail Bridge. If not, see <https://www.gnu.org/licenses/>.
+// along with Proton Mail Bridge.  If not, see <https://www.gnu.org/licenses/>.
 
-package grpc
+package utils
 
-import (
-	"github.com/ProtonMail/proton-bridge/v3/pkg/utils"
-)
+import "slices"
 
-// isInternetStatus returns true iff the event is InternetStatus.
-func (x *StreamEvent) isInternetStatus() bool {
-	appEvent := x.GetApp()
-
-	return (appEvent != nil) && (appEvent.GetInternetStatus() != nil)
-}
-
-// filterOutInternetStatusEvents return a copy of the events list where all internet connection events have been removed.
-func filterOutInternetStatusEvents(events []*StreamEvent) []*StreamEvent {
-	return utils.Filter(events, func(event *StreamEvent) bool { return !event.isInternetStatus() })
+func Filter[S ~[]E, E any](s S, keep func(E) bool) S {
+	return slices.DeleteFunc(slices.Clone(s), func(e E) bool {
+		return !keep(e)
+	})
 }

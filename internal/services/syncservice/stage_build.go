@@ -31,6 +31,7 @@ import (
 	"github.com/ProtonMail/gopenpgp/v2/crypto"
 	"github.com/ProtonMail/proton-bridge/v3/internal/services/observability"
 	obsMetrics "github.com/ProtonMail/proton-bridge/v3/internal/services/syncservice/observabilitymetrics"
+	"github.com/ProtonMail/proton-bridge/v3/pkg/utils"
 	"github.com/bradenaw/juniper/parallel"
 	"github.com/bradenaw/juniper/xslices"
 	"github.com/sirupsen/logrus"
@@ -189,7 +190,7 @@ func (b *BuildStage) run(ctx context.Context) {
 					return err
 				}
 
-				success := xslices.Filter(result, func(t BuildResult) bool {
+				success := utils.Filter(result, func(t BuildResult) bool {
 					return t.Update != nil
 				})
 

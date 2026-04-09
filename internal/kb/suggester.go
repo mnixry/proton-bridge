@@ -26,7 +26,7 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/bradenaw/juniper/xslices"
+	"github.com/ProtonMail/proton-bridge/v3/pkg/utils"
 )
 
 var ErrArticleNotFound = errors.New("KB article not found")
@@ -79,7 +79,7 @@ func GetSuggestionsFromArticleList(userInput string, articles ArticleList) (Arti
 		}
 	}
 
-	articles = xslices.Filter(articles, func(article *Article) bool { return article.Score > 0 })
+	articles = utils.Filter(articles, func(article *Article) bool { return article.Score > 0 })
 	slices.SortFunc(articles, func(lhs, rhs *Article) int {
 		return cmp.Compare(rhs.Score, lhs.Score)
 	})
@@ -98,7 +98,7 @@ func GetArticleIndex(url string) (uint64, error) {
 		return 0, err
 	}
 
-	index := xslices.IndexFunc(articles, func(article *Article) bool { return strings.EqualFold(article.URL, url) })
+	index := slices.IndexFunc(articles, func(article *Article) bool { return strings.EqualFold(article.URL, url) })
 	if index == -1 {
 		return 0, ErrArticleNotFound
 	}

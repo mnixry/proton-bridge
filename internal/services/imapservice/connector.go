@@ -23,6 +23,7 @@ import (
 	"errors"
 	"fmt"
 	"net/mail"
+	"slices"
 	"strings"
 	"sync/atomic"
 	"time"
@@ -43,7 +44,6 @@ import (
 	"github.com/bradenaw/juniper/stream"
 	"github.com/bradenaw/juniper/xslices"
 	"github.com/sirupsen/logrus"
-	"golang.org/x/exp/slices"
 )
 
 type mailboxCountProvider interface {
@@ -1043,7 +1043,7 @@ func fixGODT3003Labels(
 		case proton.LabelTypeFolder:
 			if mbox.Name[0] != folderPrefix {
 				log.WithField("labelID", mbox.ID.ShortID()).Debug("Found folder without prefix, patching")
-				if err := write.PatchMailboxHierarchyWithoutTransforms(ctx, mbox.ID, xslices.Insert(mbox.Name, 0, folderPrefix)); err != nil {
+				if err := write.PatchMailboxHierarchyWithoutTransforms(ctx, mbox.ID, slices.Insert(mbox.Name, 0, folderPrefix)); err != nil {
 					return false, fmt.Errorf("failed to update mailbox name: %w", err)
 				}
 
@@ -1052,7 +1052,7 @@ func fixGODT3003Labels(
 		case proton.LabelTypeLabel:
 			if mbox.Name[0] != labelPrefix {
 				log.WithField("labelID", mbox.ID.ShortID()).Debug("Found label without prefix, patching")
-				if err := write.PatchMailboxHierarchyWithoutTransforms(ctx, mbox.ID, xslices.Insert(mbox.Name, 0, labelPrefix)); err != nil {
+				if err := write.PatchMailboxHierarchyWithoutTransforms(ctx, mbox.ID, slices.Insert(mbox.Name, 0, labelPrefix)); err != nil {
 					return false, fmt.Errorf("failed to update mailbox name: %w", err)
 				}
 

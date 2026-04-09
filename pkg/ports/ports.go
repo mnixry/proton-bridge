@@ -20,9 +20,9 @@ package ports
 import (
 	"fmt"
 	"net"
+	"slices"
 
 	"github.com/ProtonMail/proton-bridge/v3/internal/constants"
-	"golang.org/x/exp/slices"
 )
 
 const (

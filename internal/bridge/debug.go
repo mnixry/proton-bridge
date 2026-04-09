@@ -28,8 +28,8 @@ import (
 	"github.com/ProtonMail/gluon/rfc822"
 	"github.com/ProtonMail/go-proton-api"
 	"github.com/ProtonMail/proton-bridge/v3/internal/user"
+	"github.com/ProtonMail/proton-bridge/v3/pkg/utils"
 	"github.com/bradenaw/juniper/iterator"
-	"github.com/bradenaw/juniper/xslices"
 	goimap "github.com/emersion/go-imap"
 	goimapclient "github.com/emersion/go-imap/client"
 	"github.com/sirupsen/logrus"
@@ -181,7 +181,7 @@ func (bridge *Bridge) CheckClientState(ctx context.Context, checkFlags bool, pro
 		log.Debugf("Checking for orphans")
 
 		for _, m := range meta.Metadata {
-			filteredLabels := xslices.Filter(m.LabelIDs, func(t string) bool {
+			filteredLabels := utils.Filter(m.LabelIDs, func(t string) bool {
 				switch t {
 				case proton.AllMailLabel:
 					return false

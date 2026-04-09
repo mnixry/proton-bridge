@@ -23,11 +23,12 @@ import (
 	"mime"
 	"unicode/utf8"
 
+	"slices"
+
 	pmmime "github.com/ProtonMail/proton-bridge/v3/pkg/mime"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/emersion/go-message"
 	"github.com/sirupsen/logrus"
-	"golang.org/x/exp/slices"
 	"golang.org/x/net/html"
 	"golang.org/x/net/html/charset"
 	"golang.org/x/text/encoding"

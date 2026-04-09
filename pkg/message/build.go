@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"mime"
 	"net/mail"
+	"slices"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -31,7 +32,6 @@ import (
 	"github.com/ProtonMail/go-proton-api"
 	"github.com/ProtonMail/gopenpgp/v2/crypto"
 	"github.com/ProtonMail/proton-bridge/v3/pkg/algo"
-	"github.com/bradenaw/juniper/xslices"
 	"github.com/emersion/go-message"
 	"github.com/emersion/go-message/textproto"
 	"github.com/pkg/errors"
@@ -432,7 +432,7 @@ func getMessageHeader(msg proton.Message, opts JobOptions) message.Header {
 
 	// Include the message ID in the references (supposedly this somehow improves outlook support...).
 	if opts.AddMessageIDReference {
-		if refs := hdr.Values("References"); xslices.IndexFunc(refs, func(ref string) bool {
+		if refs := hdr.Values("References"); slices.IndexFunc(refs, func(ref string) bool {
 			return strings.Contains(ref, msg.ID)
 		}) < 0 {
 			hdr.Set("References", strings.Join(append(refs, "<"+msg.ID+"@"+InternalIDDomain+">"), " "))

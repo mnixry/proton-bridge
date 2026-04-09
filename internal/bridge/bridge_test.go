@@ -51,6 +51,7 @@ import (
 	"github.com/ProtonMail/proton-bridge/v3/internal/useragent"
 	"github.com/ProtonMail/proton-bridge/v3/internal/vault"
 	"github.com/ProtonMail/proton-bridge/v3/pkg/keychain"
+	"github.com/ProtonMail/proton-bridge/v3/pkg/utils"
 	"github.com/ProtonMail/proton-bridge/v3/tests"
 	"github.com/bradenaw/juniper/xslices"
 	imapid "github.com/emersion/go-imap-id"
@@ -927,7 +928,7 @@ func must[T any](val T, err error) T {
 func getConnectedUserIDs(t *testing.T, b *bridge.Bridge) []string {
 	t.Helper()
 
-	return xslices.Filter(b.GetUserIDs(), func(userID string) bool {
+	return utils.Filter(b.GetUserIDs(), func(userID string) bool {
 		info, err := b.GetUserInfo(userID)
 		require.NoError(t, err)
 

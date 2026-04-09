@@ -22,6 +22,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/ProtonMail/proton-bridge/v3/pkg/utils"
 	"github.com/bradenaw/juniper/xslices"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/sys/execabs"
@@ -168,5 +169,5 @@ func removeFlagsWithValue(argList []string, flags ...string) []string {
 }
 
 func removeFlag(argList []string, flag string) []string {
-	return xslices.Filter(argList, func(arg string) bool { return (arg != "-"+flag) && (arg != "--"+flag) })
+	return utils.Filter(argList, func(arg string) bool { return (arg != "-"+flag) && (arg != "--"+flag) })
 }

@@ -24,6 +24,8 @@ import (
 	"runtime"
 	"time"
 
+	"slices"
+
 	"github.com/Masterminds/semver/v3"
 	"github.com/ProtonMail/gluon/async"
 	"github.com/ProtonMail/gopenpgp/v2/crypto"
@@ -36,12 +38,11 @@ import (
 	"github.com/ProtonMail/proton-bridge/v3/internal/updater"
 	"github.com/ProtonMail/proton-bridge/v3/internal/useragent"
 	"github.com/ProtonMail/proton-bridge/v3/internal/versioner"
-	"github.com/bradenaw/juniper/xslices"
+	"github.com/ProtonMail/proton-bridge/v3/pkg/utils"
 	"github.com/elastic/go-sysinfo"
 	"github.com/elastic/go-sysinfo/types"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	"golang.org/x/exp/slices"
 	"golang.org/x/sys/execabs"
 )
 
@@ -203,7 +204,7 @@ func flagIndex(args []string, flag string) int {
 
 // findAndStrip check if a value is present in s list and remove all occurrences of the value from this list.
 func findAndStrip[T comparable](slice []T, v T) (strippedList []T, found bool) {
-	strippedList = xslices.Filter(slice, func(value T) bool {
+	strippedList = utils.Filter(slice, func(value T) bool {
 		return value != v
 	})
 	return strippedList, len(strippedList) != len(slice)
@@ -317,7 +318,7 @@ func waitForProcessToFinish(exePath string) {
 			return
 		}
 
-		if xslices.Any(processes, func(process types.Process) bool {
+		if slices.ContainsFunc(processes, func(process types.Process) bool {
 			info, err := process.Info()
 			if err != nil {
 				logrus.WithError(err).Trace("Could not retrieve process info")

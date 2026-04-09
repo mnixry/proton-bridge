@@ -21,8 +21,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/bradenaw/juniper/xslices"
-	"golang.org/x/exp/slices"
+	"slices"
+
+	"github.com/ProtonMail/proton-bridge/v3/pkg/utils"
 )
 
 type User struct {
@@ -185,7 +186,7 @@ func (user *User) AddFailedMessageID(messageID string) error {
 // RemFailedMessageID removes a message ID from the list of failed message IDs.
 func (user *User) RemFailedMessageID(messageID string) error {
 	return user.vault.modUser(user.userID, func(data *UserData) {
-		data.SyncStatus.FailedMessageIDs = xslices.Filter(data.SyncStatus.FailedMessageIDs, func(otherID string) bool {
+		data.SyncStatus.FailedMessageIDs = utils.Filter(data.SyncStatus.FailedMessageIDs, func(otherID string) bool {
 			return otherID != messageID
 		})
 	})

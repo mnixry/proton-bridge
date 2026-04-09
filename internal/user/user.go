@@ -18,10 +18,13 @@
 package user
 
 import (
+	"cmp"
 	"context"
 	"encoding/json"
 	"fmt"
 	"time"
+
+	"slices"
 
 	"github.com/ProtonMail/gluon/async"
 	"github.com/ProtonMail/gluon/reporter"
@@ -43,11 +46,11 @@ import (
 	"github.com/ProtonMail/proton-bridge/v3/internal/usertypes"
 	"github.com/ProtonMail/proton-bridge/v3/internal/vault"
 	"github.com/ProtonMail/proton-bridge/v3/pkg/algo"
+	"github.com/ProtonMail/proton-bridge/v3/pkg/utils"
 	"github.com/bradenaw/juniper/xslices"
 	"github.com/go-resty/resty/v2"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/exp/maps"
-	"golang.org/x/exp/slices"
 )
 
 var (
@@ -741,12 +744,12 @@ func (user *User) protonAddresses() []proton.Address {
 		return nil
 	}
 
-	addresses := xslices.Filter(maps.Values(apiAddrs), func(addr proton.Address) bool {
+	addresses := utils.Filter(maps.Values(apiAddrs), func(addr proton.Address) bool {
 		return addr.Status == proton.AddressStatusEnabled && (addr.IsBYOEAddress() || addr.Type != proton.AddressTypeExternal)
 	})
 
-	slices.SortFunc(addresses, func(a, b proton.Address) bool {
-		return a.Order < b.Order
+	slices.SortFunc(addresses, func(a, b proton.Address) int {
+		return cmp.Compare(a.Order, b.Order)
 	})
 
 	return addresses

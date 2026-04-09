@@ -21,6 +21,8 @@ import (
 	"context"
 	"errors"
 
+	"slices"
+
 	"github.com/Masterminds/semver/v3"
 	"github.com/ProtonMail/gluon/reporter"
 	"github.com/ProtonMail/proton-bridge/v3/internal/events"
@@ -29,7 +31,6 @@ import (
 	"github.com/ProtonMail/proton-bridge/v3/internal/updater"
 	"github.com/elastic/go-sysinfo"
 	"github.com/sirupsen/logrus"
-	"golang.org/x/exp/slices"
 )
 
 func (bridge *Bridge) CheckForUpdates() {

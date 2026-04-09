@@ -29,7 +29,10 @@ import (
 	"strings"
 	"time"
 
+	"slices"
+
 	"github.com/ProtonMail/gluon/rfc822"
+	"github.com/ProtonMail/proton-bridge/v3/pkg/utils"
 	"github.com/bradenaw/juniper/iterator"
 	"github.com/bradenaw/juniper/xslices"
 	"github.com/cucumber/godog"
@@ -38,7 +41,6 @@ import (
 	"github.com/emersion/go-imap/client"
 	"github.com/emersion/go-sasl"
 	"github.com/sirupsen/logrus"
-	"golang.org/x/exp/slices"
 )
 
 type imapAuthMethod int
@@ -303,7 +305,7 @@ func (s *scenario) imapClientSeesTheFollowingMailboxInfoForMailbox(clientID, mai
 		return err
 	}
 
-	status = xslices.Filter(status, func(status *imap.MailboxStatus) bool {
+	status = utils.Filter(status, func(status *imap.MailboxStatus) bool {
 		return status.Name == mailbox
 	})
 
@@ -346,7 +348,7 @@ func (s *scenario) imapClientCountsMailboxesUnder(clientID string, count int, pa
 
 	mailboxes := clientList(client)
 
-	mailboxes = xslices.Filter(mailboxes, func(info *imap.MailboxInfo) bool {
+	mailboxes = utils.Filter(mailboxes, func(info *imap.MailboxInfo) bool {
 		return strings.HasPrefix(info.Name, parent) && info.Name != parent
 	})
 
@@ -747,8 +749,8 @@ func (s *scenario) imapClientsMoveMessageWithSubjectUserFromToByOrderedOperation
 		case "APPEND":
 
 			flags := messages[0].Flags
-			if index := xslices.Index(flags, imap.RecentFlag); index >= 0 {
-				flags = xslices.Remove(flags, index, 1)
+			if index := slices.Index(flags, imap.RecentFlag); index >= 0 {
+				flags = slices.Delete(flags, index, index+1)
 			}
 
 			targetErr = targetClient.Append(targetMailboxName, flags, time.Now(), bytes.NewReader(literal))
@@ -997,7 +999,7 @@ func clientIsFlagApplied(client *client.Client, seq int, flag string, applied bo
 		return err
 	}
 
-	idx := xslices.IndexFunc(fetch, func(msg *imap.Message) bool {
+	idx := slices.IndexFunc(fetch, func(msg *imap.Message) bool {
 		return msg.SeqNum == uint32(seq)
 	})
 
@@ -1007,7 +1009,7 @@ func clientIsFlagApplied(client *client.Client, seq int, flag string, applied bo
 
 	if wholeMailbox {
 		for i := seq; i <= int(client.Mailbox().Messages); i++ {
-			idx := xslices.IndexFunc(fetch, func(msg *imap.Message) bool {
+			idx := slices.IndexFunc(fetch, func(msg *imap.Message) bool {
 				return msg.SeqNum == uint32(i)
 			})
 

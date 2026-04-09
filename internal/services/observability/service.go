@@ -29,7 +29,7 @@ import (
 	"github.com/ProtonMail/go-proton-api"
 	"github.com/ProtonMail/proton-bridge/v3/internal/locations"
 	"github.com/ProtonMail/proton-bridge/v3/internal/services/telemetry"
-	"github.com/bradenaw/juniper/xslices"
+	"github.com/ProtonMail/proton-bridge/v3/pkg/utils"
 	"github.com/sirupsen/logrus"
 )
 
@@ -231,7 +231,7 @@ func (s *Service) writeCacheFile() {
 	}(file)
 
 	s.withMetricStoreLock(func() {
-		metricsToCache := xslices.Filter(s.metricStore, func(m proton.ObservabilityMetric) bool {
+		metricsToCache := utils.Filter(s.metricStore, func(m proton.ObservabilityMetric) bool {
 			return m.ShouldCache
 		})
 

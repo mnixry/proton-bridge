@@ -27,10 +27,10 @@ import (
 	"github.com/ProtonMail/proton-bridge/v3/internal/locations"
 	"github.com/ProtonMail/proton-bridge/v3/internal/logging"
 	"github.com/ProtonMail/proton-bridge/v3/internal/sentry"
+	"github.com/ProtonMail/proton-bridge/v3/pkg/utils"
 	"github.com/sirupsen/logrus"
 
 	"github.com/ProtonMail/proton-bridge/v3/internal/app"
-	"github.com/bradenaw/juniper/xslices"
 )
 
 /*
@@ -51,7 +51,7 @@ import (
 */
 
 func main() {
-	appErr := app.New().Run(xslices.Filter(os.Args, func(arg string) bool { return !strings.Contains(arg, "-psn_") }))
+	appErr := app.New().Run(utils.Filter(os.Args, func(arg string) bool { return !strings.Contains(arg, "-psn_") }))
 	if appErr != nil {
 		_ = app.WithLocations(func(l *locations.Locations) error {
 			logsPath, err := l.ProvideLogsPath()

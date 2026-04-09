@@ -24,13 +24,14 @@ import (
 	"fmt"
 	"io"
 
+	"slices"
+
 	"github.com/Masterminds/semver/v3"
 	"github.com/ProtonMail/gopenpgp/v2/crypto"
 	"github.com/ProtonMail/proton-bridge/v3/internal/platform"
 	"github.com/ProtonMail/proton-bridge/v3/internal/versioner"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	"golang.org/x/exp/slices"
 )
 
 const updateFileVersion = 1

@@ -27,7 +27,7 @@ import (
 	"github.com/ProtonMail/go-proton-api"
 	"github.com/ProtonMail/proton-bridge/v3/internal/events"
 	"github.com/ProtonMail/proton-bridge/v3/internal/logging"
-	"github.com/bradenaw/juniper/xslices"
+	"github.com/ProtonMail/proton-bridge/v3/pkg/utils"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/exp/maps"
 )
@@ -176,7 +176,7 @@ func onLabelUpdated(ctx context.Context, s *Service, event proton.LabelEvent) ([
 			Name:    apiLabel.Name,
 		})
 
-		children := xslices.Filter(wr.GetLabels(), func(other proton.Label) bool {
+		children := utils.Filter(wr.GetLabels(), func(other proton.Label) bool {
 			return other.ParentID == label.ID
 		})
 

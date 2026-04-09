@@ -27,6 +27,7 @@ import (
 	"os"
 	"regexp"
 	"runtime"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -55,7 +56,6 @@ import (
 	"github.com/ProtonMail/proton-bridge/v3/internal/user"
 	"github.com/ProtonMail/proton-bridge/v3/internal/vault"
 	"github.com/ProtonMail/proton-bridge/v3/pkg/keychain"
-	"github.com/bradenaw/juniper/xslices"
 	"github.com/elastic/go-sysinfo/types"
 	"github.com/go-resty/resty/v2"
 	uuid "github.com/google/uuid"
@@ -569,7 +569,7 @@ func (bridge *Bridge) remWatcher(watcher *watcher.Watcher[events.Event]) {
 	bridge.watchersLock.Lock()
 	defer bridge.watchersLock.Unlock()
 
-	idx := xslices.Index(bridge.watchers, watcher)
+	idx := slices.Index(bridge.watchers, watcher)
 
 	if idx < 0 {
 		return

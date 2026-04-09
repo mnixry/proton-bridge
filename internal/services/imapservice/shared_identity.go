@@ -20,10 +20,11 @@ package imapservice
 import (
 	"sync"
 
+	"slices"
+
 	"github.com/ProtonMail/go-proton-api"
 	"github.com/ProtonMail/gopenpgp/v2/crypto"
 	"github.com/ProtonMail/proton-bridge/v3/internal/services/useridentity"
-	"golang.org/x/exp/slices"
 )
 
 type sharedIdentity interface {

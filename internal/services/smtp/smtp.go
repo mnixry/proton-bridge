@@ -31,6 +31,8 @@ import (
 	"strings"
 	"time"
 
+	"slices"
+
 	"github.com/ProtonMail/gluon/async"
 	"github.com/ProtonMail/gluon/rfc5322"
 	"github.com/ProtonMail/gluon/rfc822"
@@ -43,10 +45,10 @@ import (
 	"github.com/ProtonMail/proton-bridge/v3/internal/usertypes"
 	"github.com/ProtonMail/proton-bridge/v3/pkg/message"
 	"github.com/ProtonMail/proton-bridge/v3/pkg/message/parser"
+	"github.com/ProtonMail/proton-bridge/v3/pkg/utils"
 	"github.com/bradenaw/juniper/parallel"
 	"github.com/bradenaw/juniper/xslices"
 	"github.com/sirupsen/logrus"
-	"golang.org/x/exp/slices"
 )
 
 // smtpSendMail sends an email from the given address to the given recipients.
@@ -403,7 +405,7 @@ func (s *Service) createDraft(
 	}
 
 	// Check that the sending address is owned by the user, and if so, sanitize it.
-	if idx := xslices.IndexFunc(emails, func(email string) bool {
+	if idx := slices.IndexFunc(emails, func(email string) bool {
 		return strings.EqualFold(email, usertypes.SanitizeEmail(template.Sender.Address))
 	}); idx < 0 {
 		return proton.Message{}, fmt.Errorf("%w: address %q is not owned by user", ErrSenderAddressNotOwned, template.Sender.Address)
@@ -412,7 +414,7 @@ func (s *Service) createDraft(
 	}
 
 	// Check ToList: ensure that ToList only contains addresses we actually plan to send to.
-	template.ToList = xslices.Filter(template.ToList, func(addr *mail.Address) bool {
+	template.ToList = utils.Filter(template.ToList, func(addr *mail.Address) bool {
 		return slices.Contains(to, addr.Address)
 	})
 
@@ -583,7 +585,7 @@ func getContactSettings(
 		return proton.ContactSettings{}, fmt.Errorf("failed to get contact data: %w", err)
 	}
 
-	idx := xslices.IndexFunc(contacts, func(contact proton.ContactEmail) bool {
+	idx := slices.IndexFunc(contacts, func(contact proton.ContactEmail) bool {
 		return contact.Email == recipient
 	})
 

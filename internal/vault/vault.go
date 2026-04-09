@@ -27,6 +27,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"slices"
 	"sync"
 
 	"github.com/ProtonMail/gluon/async"
@@ -137,7 +138,7 @@ func (vault *Vault) getUsers() ([]*User, error) {
 
 // HasUser returns true if the vault contains a user with the given ID.
 func (vault *Vault) HasUser(userID string) bool {
-	return xslices.IndexFunc(vault.getSafe().Users, func(user UserData) bool {
+	return slices.IndexFunc(vault.getSafe().Users, func(user UserData) bool {
 		return user.UserID == userID
 	}) >= 0
 }
@@ -164,7 +165,7 @@ func (vault *Vault) NewUser(userID string) (*User, error) {
 }
 
 func (vault *Vault) newUserUnsafe(userID string) (*User, error) {
-	if idx := xslices.IndexFunc(vault.getUnsafe().Users, func(user UserData) bool {
+	if idx := slices.IndexFunc(vault.getUnsafe().Users, func(user UserData) bool {
 		return user.UserID == userID
 	}); idx < 0 {
 		return nil, errors.New("no such user")
@@ -212,7 +213,7 @@ func (vault *Vault) addUserUnsafe(userID, username, primaryEmail, authUID, authR
 	var exists bool
 
 	if err := vault.modUnsafe(func(data *Data) {
-		if idx := xslices.IndexFunc(data.Users, func(user UserData) bool {
+		if idx := slices.IndexFunc(data.Users, func(user UserData) bool {
 			return user.UserID == userID
 		}); idx >= 0 {
 			exists = true
@@ -244,7 +245,7 @@ func (vault *Vault) GetOrAddUser(userID, username, primaryEmail, authUID, authRe
 	{
 		users := vault.getUnsafe().Users
 
-		idx := xslices.IndexFunc(users, func(user UserData) bool {
+		idx := slices.IndexFunc(users, func(user UserData) bool {
 			return user.UserID == userID
 		})
 
@@ -280,7 +281,7 @@ func (vault *Vault) DeleteUser(userID string) error {
 	}
 
 	return vault.modUnsafe(func(data *Data) {
-		idx := xslices.IndexFunc(data.Users, func(user UserData) bool {
+		idx := slices.IndexFunc(data.Users, func(user UserData) bool {
 			return user.UserID == userID
 		})
 
@@ -446,7 +447,7 @@ func (vault *Vault) modUnsafe(fn func(data *Data)) error {
 func (vault *Vault) getUser(userID string) UserData {
 	users := vault.getSafe().Users
 
-	idx := xslices.IndexFunc(users, func(user UserData) bool {
+	idx := slices.IndexFunc(users, func(user UserData) bool {
 		return user.UserID == userID
 	})
 
@@ -462,7 +463,7 @@ func (vault *Vault) getUser(userID string) UserData {
 func (vault *Vault) getUserUnsafe(userID string) UserData {
 	users := vault.getUnsafe().Users
 
-	idx := xslices.IndexFunc(users, func(user UserData) bool {
+	idx := slices.IndexFunc(users, func(user UserData) bool {
 		return user.UserID == userID
 	})
 
@@ -482,7 +483,7 @@ func (vault *Vault) modUser(userID string, fn func(userData *UserData)) error {
 
 func (vault *Vault) modUserUnsafe(userID string, fn func(userData *UserData)) error {
 	return vault.modUnsafe(func(data *Data) {
-		idx := xslices.IndexFunc(data.Users, func(user UserData) bool {
+		idx := slices.IndexFunc(data.Users, func(user UserData) bool {
 			return user.UserID == userID
 		})
 

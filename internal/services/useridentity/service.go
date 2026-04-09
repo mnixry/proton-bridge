@@ -18,8 +18,11 @@
 package useridentity
 
 import (
+	"cmp"
 	"context"
 	"fmt"
+
+	"slices"
 
 	"github.com/ProtonMail/go-proton-api"
 	"github.com/ProtonMail/proton-bridge/v3/internal/events"
@@ -30,7 +33,6 @@ import (
 	"github.com/ProtonMail/proton-bridge/v3/pkg/cpc"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/exp/maps"
-	"golang.org/x/exp/slices"
 )
 
 type IdentityProvider interface {
@@ -273,8 +275,8 @@ func (s *Service) unregisterSubscription() {
 }
 
 func sortAddresses(addr []proton.Address) []proton.Address {
-	slices.SortFunc(addr, func(a, b proton.Address) bool {
-		return a.Order < b.Order
+	slices.SortFunc(addr, func(a, b proton.Address) int {
+		return cmp.Compare(a.Order, b.Order)
 	})
 
 	return addr

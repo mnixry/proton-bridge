@@ -21,7 +21,7 @@ import (
 	"strings"
 
 	"github.com/ProtonMail/proton-bridge/v3/internal/constants"
-	"github.com/bradenaw/juniper/xslices"
+	"github.com/ProtonMail/proton-bridge/v3/pkg/utils"
 	"github.com/docker/docker-credential-helpers/credentials"
 	"github.com/godbus/dbus"
 	"github.com/keybase/go-keychain/secretservice"
@@ -78,7 +78,7 @@ func getItems(service *secretservice.SecretService, attributes map[string]string
 	if err != nil {
 		return nil, err
 	}
-	return xslices.Filter(items, func(t dbus.ObjectPath) bool {
+	return utils.Filter(items, func(t dbus.ObjectPath) bool {
 		return strings.HasPrefix(string(t), "/org/freedesktop/secrets")
 	}), err
 }

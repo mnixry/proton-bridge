@@ -29,6 +29,8 @@ import (
 	"testing"
 	"time"
 
+	"slices"
+
 	"github.com/ProtonMail/gluon/async"
 	"github.com/ProtonMail/gluon/rfc822"
 	"github.com/ProtonMail/go-proton-api"
@@ -160,7 +162,7 @@ func test_badMessage_badEvent(userFeedback func(t *testing.T, ctx context.Contex
 						return 0, false
 					}
 
-					if xslices.Index(xslices.Map(messageIDs[0:5], func(messageID string) string {
+					if slices.Index(xslices.Map(messageIDs[0:5], func(messageID string) string {
 						return "/mail/v4/messages/" + messageID
 					}), req.URL.Path) < 0 {
 						return 0, false
@@ -803,7 +805,7 @@ func TestBridge_User_DisableEnableAddress(t *testing.T) {
 				info, err := bridge.QueryUserInfo("user")
 				require.NoError(t, err)
 
-				return xslices.Index(info.Addresses, "alias@"+s.GetDomain()) < 0
+				return slices.Index(info.Addresses, "alias@"+s.GetDomain()) < 0
 			}, 5*time.Second, 100*time.Millisecond)
 		})
 
@@ -818,7 +820,7 @@ func TestBridge_User_DisableEnableAddress(t *testing.T) {
 				info, err := bridge.QueryUserInfo("user")
 				require.NoError(t, err)
 
-				return xslices.Index(info.Addresses, "alias@"+s.GetDomain()) >= 0
+				return slices.Index(info.Addresses, "alias@"+s.GetDomain()) >= 0
 			}, 5*time.Second, 100*time.Millisecond)
 		})
 	})
@@ -877,7 +879,7 @@ func TestBridge_User_HandleParentLabelRename(t *testing.T) {
 
 				// Wait for the parent folder to be created.
 				require.Eventually(t, func() bool {
-					return xslices.IndexFunc(clientList(cli), func(mailbox *imap.MailboxInfo) bool {
+					return slices.IndexFunc(clientList(cli), func(mailbox *imap.MailboxInfo) bool {
 						return mailbox.Name == fmt.Sprintf("Folders/%v", parentName)
 					}) >= 0
 				}, 100*user.EventPeriod, user.EventPeriod)
@@ -894,7 +896,7 @@ func TestBridge_User_HandleParentLabelRename(t *testing.T) {
 
 				// Wait for the parent folder to be created.
 				require.Eventually(t, func() bool {
-					return xslices.IndexFunc(clientList(cli), func(mailbox *imap.MailboxInfo) bool {
+					return slices.IndexFunc(clientList(cli), func(mailbox *imap.MailboxInfo) bool {
 						return mailbox.Name == fmt.Sprintf("Folders/%v/%v", parentName, childName)
 					}) >= 0
 				}, 100*user.EventPeriod, user.EventPeriod)
@@ -909,14 +911,14 @@ func TestBridge_User_HandleParentLabelRename(t *testing.T) {
 
 				// Wait for the parent folder to be renamed.
 				require.Eventually(t, func() bool {
-					return xslices.IndexFunc(clientList(cli), func(mailbox *imap.MailboxInfo) bool {
+					return slices.IndexFunc(clientList(cli), func(mailbox *imap.MailboxInfo) bool {
 						return mailbox.Name == fmt.Sprintf("Folders/%v", newParentName)
 					}) >= 0
 				}, 100*user.EventPeriod, user.EventPeriod)
 
 				// Wait for the child folder to be renamed.
 				require.Eventually(t, func() bool {
-					return xslices.IndexFunc(clientList(cli), func(mailbox *imap.MailboxInfo) bool {
+					return slices.IndexFunc(clientList(cli), func(mailbox *imap.MailboxInfo) bool {
 						return mailbox.Name == fmt.Sprintf("Folders/%v/%v", newParentName, childName)
 					}) >= 0
 				}, 100*user.EventPeriod, user.EventPeriod)
@@ -986,7 +988,7 @@ func userContinueEventProcess(
 
 	// Wait for the label to be created.
 	require.Eventually(t, func() bool {
-		return xslices.IndexFunc(clientList(cli), func(mailbox *imap.MailboxInfo) bool {
+		return slices.IndexFunc(clientList(cli), func(mailbox *imap.MailboxInfo) bool {
 			return mailbox.Name == "Labels/"+randomLabel
 		}) >= 0
 	}, 100*user.EventPeriod, user.EventPeriod)

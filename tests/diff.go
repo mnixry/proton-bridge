@@ -20,8 +20,7 @@ package tests
 import (
 	"encoding/json"
 	"reflect"
-
-	"github.com/bradenaw/juniper/xslices"
+	"slices"
 )
 
 func ToAny(v any) any {
@@ -103,7 +102,7 @@ func isSubSlice(outer, inner []any) bool {
 	}
 
 	for _, v := range inner {
-		if xslices.IndexFunc(outer, func(outer any) bool {
+		if slices.IndexFunc(outer, func(outer any) bool {
 			return IsSub(outer, v)
 		}) < 0 {
 			return false

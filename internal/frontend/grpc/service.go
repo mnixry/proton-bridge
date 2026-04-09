@@ -30,6 +30,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"slices"
 	"sync"
 	"time"
 
@@ -44,7 +45,6 @@ import (
 	"github.com/ProtonMail/proton-bridge/v3/internal/safe"
 	"github.com/ProtonMail/proton-bridge/v3/internal/service"
 	"github.com/ProtonMail/proton-bridge/v3/internal/updater"
-	"github.com/bradenaw/juniper/xslices"
 	"github.com/elastic/go-sysinfo"
 	sysinfotypes "github.com/elastic/go-sysinfo/types"
 	"github.com/google/uuid"
@@ -628,7 +628,7 @@ func (s *Service) monitorParentPID() {
 				continue
 			}
 
-			if !xslices.Any(processes, func(p sysinfotypes.Process) bool { return p != nil && p.PID() == s.parentPID }) {
+			if !slices.ContainsFunc(processes, func(p sysinfotypes.Process) bool { return p != nil && p.PID() == s.parentPID }) {
 				s.log.Info("Parent process does not exist anymore. Initiating shutdown")
 				// quit will write to the parentPIDDoneCh, so we launch a goroutine.
 				go func() {
