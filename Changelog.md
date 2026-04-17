@@ -3,6 +3,33 @@
 Changelog [format](http://keepachangelog.com/en/1.0.0/)
 
 
+## Nescio Bridge 3.24.2
+
+### Changed
+* BRIDGE-535: Use new base golang version based on Debian Bullseye.
+
+
+## Nescio Bridge 3.24.1
+
+### Changed
+* BRIDGE-522: Restored old unlabel endpoint logic under a feature flag.
+
+
+## Nescio Bridge 3.24.0
+
+### Added
+* BRIDGE-464: Add builder option for Gluon to support IMAP connection limiting.
+* BRIDGE-480: Added a new package for mapping errors and error chains into a single error.
+* BRIDGE-426: Added a GODEBUG flag to support RSA keys < 1024 bits.
+* BRIDGE-479: Added a SplitHeaderBody variant with performance improvements.
+
+### Changed
+* BRIDGE-487: Updated go version to 1.26.1 .
+* BRIDGE-498: Updated golangci-lint to v2.11.3.
+* BRIDGE-456: Optimize message building and decrpytion process with buffer pooling and improve RFC822 handling.
+* BRIDGE-482: Updated texts in error messages regarding Hardware Keys authentication flow on Windows.
+
+
 ## Margit Bridge 3.23.1
 
 ### Fixed
