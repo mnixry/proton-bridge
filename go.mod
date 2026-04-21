@@ -2,12 +2,14 @@ module github.com/ProtonMail/proton-bridge/v3
 
 go 1.26.1
 
+toolchain go1.26.2
+
 require (
 	github.com/0xAX/notificator v0.0.0-20220220101646-ee9b8921e557
 	github.com/Masterminds/semver/v3 v3.4.0
-	github.com/ProtonMail/gluon v0.17.1-0.20260423132626-d50b976c72fe
+	github.com/ProtonMail/gluon v0.17.1-0.20260424104313-a9973ea352b6
 	github.com/ProtonMail/go-autostart v0.0.0-20260210134425-40a9013f5ef4
-	github.com/ProtonMail/go-proton-api v0.4.1-0.20260415111905-76509ffbc60c
+	github.com/ProtonMail/go-proton-api v0.4.1-0.20260424103909-24794d804af6
 	github.com/ProtonMail/gopenpgp/v2 v2.10.0-proton
 	github.com/PuerkitoBio/goquery v1.12.0
 	github.com/abiosoft/ishell v2.0.0+incompatible
