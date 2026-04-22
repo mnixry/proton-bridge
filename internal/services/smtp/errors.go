@@ -37,6 +37,7 @@ var (
 	ErrUnsupportedOutgoingMIME     = errors.New("smtp: unsupported outgoing MIME type")
 	ErrInvalidListOfRecipients     = errors.New("smtp: invalid list of recipients draft")
 	ErrMessageTooLarge             = errors.New("smtp: message too large draft")
+	ErrValidationFailed            = errors.New("smtp: validation failed")
 )
 
 const errCodeAddressDoesNotExist proton.Code = 33102
@@ -92,28 +93,4 @@ func (e *ErrCannotSendFromAddress) Address() string {
 		return ""
 	}
 	return e.address
-}
-
-type ErrValidationFailed struct {
-	reason string
-}
-
-func NewErrValidationFailed(reason string) *ErrValidationFailed {
-	return &ErrValidationFailed{reason: reason}
-}
-
-func (e *ErrValidationFailed) Error() string {
-	return fmt.Sprintf("validation failed: %v", e.reason)
-}
-
-func (e *ErrValidationFailed) Is(target error) bool {
-	_, ok := target.(*ErrValidationFailed)
-	return ok
-}
-
-func (e *ErrValidationFailed) Reason() string {
-	if e == nil {
-		return ""
-	}
-	return e.reason
 }

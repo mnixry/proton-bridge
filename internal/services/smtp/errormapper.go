@@ -46,11 +46,6 @@ var errRecipientAddressDoesNotExistTarget = NewErrRecipientAddressDoesNotExist("
 //nolint:gochecknoglobals
 var errCannotSendFromAddress = NewErrCannotSendFromAddress("")
 
-// Sentinel for errors.Is; any *ErrValidationFailed matches via Is().
-//
-// nolint:gochecknoglobals
-var errValidationFailedTarget = NewErrValidationFailed("")
-
 //nolint:gochecknoglobals
 var smtpErrRules = []errmapper.Rule{
 	errmapper.NewRuleWithResultFunc(
@@ -66,27 +61,21 @@ var smtpErrRules = []errmapper.Rule{
 			if target, ok := errors.AsType[*ErrRecipientAddressDoesNotExist](err); ok {
 				//nolint:revive,staticcheck //disable ST1005,
 				return fmt.Errorf(
-					"The address %s does not exist. Remove or correct the recipient and try again.",
+					"No email was sent. The address %s does not exist. Correct the recipient and resend the message.",
 					target.Address(),
 				)
 			}
-			return errors.New("One or more addresses do not exist. Remove or correct the recipients and try again.") //nolint:revive,staticcheck //disable ST1005
+			return errors.New("No email was sent. One or more addresses do not exist. Correct the recipients and resend the message.") //nolint:revive,staticcheck //disable ST1005
 		},
 	),
-	errmapper.NewRuleWithResultFunc(
+	errmapper.NewRule(
 		[]error{
 			ErrSendMessageOperation,
-			errValidationFailedTarget,
+			ErrValidationFailed,
 		},
 		errmapper.MatchAll,
-		func(err error) error {
-			if target, ok := errors.AsType[*ErrValidationFailed](err); ok {
-				//nolint:revive,staticcheck //disable ST1005,
-				return fmt.Errorf("There was a problem with the message you are trying to send. Reason: %s", target.Reason())
-			}
-
-			return errors.New("The message you are trying to send is not valid. Please check the Subject/Recipients/Body.") //nolint:revive,staticcheck //disable ST1005
-		},
+		//nolint:revive,staticcheck //disable ST1005
+		errors.New("This message couldn't be sent because the email client sent a malformed message."),
 	),
 	errmapper.NewRuleWithResultFunc(
 		[]error{
@@ -97,31 +86,33 @@ var smtpErrRules = []errmapper.Rule{
 			if target, ok := errors.AsType[*ErrCannotSendFromAddress](err); ok {
 				//nolint:revive,staticcheck //disable ST1005,
 				return fmt.Errorf(
-					"You cannot send from this address: %s. Check that it is enabled in your email client or Bridge settings.",
+					"You cannot send from this address: %s. Check your email client and Bridge settings.",
 					target.Address(),
 				)
 			}
-			return errors.New("You cannot send from this address. Check that it is enabled in your email client or Bridge settings.") //nolint:revive,staticcheck //disable ST1005,
+
+			//nolint:revive,staticcheck //disable ST1005
+			return errors.New("You cannot send from this address. Check your email client and Bridge settings.")
 		},
 	),
 	errmapper.NewRule(
 		[]error{ErrTooManyErrors},
 		errmapper.MatchAny,
-		errors.New("Too many failed send attempts. Wait a moment, then try again."), //nolint:revive,staticcheck //disable ST1005,
+		errors.New("Too many failed send attempts. Try again later."), //nolint:revive,staticcheck //disable ST1005
 	),
 	errmapper.NewRule(
 		[]error{ErrSenderAddressNotOwned},
 		errmapper.MatchAny,
-		errors.New("The From address is not valid for this account. Choose a different sender address."), //nolint:revive,staticcheck //disable ST1005,
+		errors.New("The sender address is not valid for this account. Check your email client and Proton settings, or choose a different sender address."), //nolint:revive,staticcheck //disable ST1005
 	),
 	errmapper.NewRule(
 		[]error{ErrUnsupportedOutgoingMIME},
 		errmapper.MatchAny,
-		errors.New("This message uses an unsupported format. Try plain text or HTML."), //nolint:revive,staticcheck //disable ST1005,
+		errors.New("This message uses an unsupported message format. Try plain text or HTML."), //nolint:revive,staticcheck //disable ST1005,
 	),
 	errmapper.NewRule(
 		[]error{ErrInvalidRecipient, ErrInvalidReturnPath, ErrNoSuchUser},
 		errmapper.MatchAny,
-		errors.New("The sender or recipient address is not valid. Check To/Cc/Bcc and try again."), //nolint:revive,staticcheck //disable ST1005,
+		errors.New("The sender or recipient address is not valid. Review the addresses and resend the message."), //nolint:revive,staticcheck //disable ST1005,
 	),
 }

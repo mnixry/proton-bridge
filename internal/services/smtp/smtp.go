@@ -244,7 +244,7 @@ func (s *Service) sendWithKey(
 				//nolint:exhaustive // only handle unprocessable entity status codes
 				switch apiErr.Code {
 				case errCodeValidationFailed:
-					return proton.Message{}, NewErrValidationFailed(apiErr.Message)
+					return proton.Message{}, ErrValidationFailed
 				case errCodeMessageTooLarge:
 					return proton.Message{}, ErrMessageTooLarge
 				case errCodeInvalidListOfRecipients:

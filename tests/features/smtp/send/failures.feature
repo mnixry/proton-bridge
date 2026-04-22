@@ -46,4 +46,4 @@ Feature: SMTP wrong messages
       hello
 
       """
-    Then it fails with error "The sender or recipient address is not valid. Check To/Cc/Bcc and try again."
+    Then it fails with error "The sender or recipient address is not valid. Review the addresses and resend the message."
