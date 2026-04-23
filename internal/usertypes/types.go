@@ -28,7 +28,7 @@ import (
 
 	"github.com/ProtonMail/gluon/async"
 	"github.com/ProtonMail/go-proton-api"
-	"golang.org/x/exp/maps"
+	"github.com/ProtonMail/proton-bridge/v3/pkg/utils"
 )
 
 // MapTo converts the slice to the given type.
@@ -74,7 +74,7 @@ func GetAddrID(apiAddrs map[string]proton.Address, email string) (string, error)
 
 // GetAddrIdx returns the address with the given index.
 func GetAddrIdx(apiAddrs map[string]proton.Address, idx int) (proton.Address, error) {
-	sorted := sortSlice(maps.Values(apiAddrs), func(a, b proton.Address) int {
+	sorted := sortSlice(utils.Values(apiAddrs), func(a, b proton.Address) int {
 		return cmp.Compare(a.Order, b.Order)
 	})
 
@@ -86,7 +86,7 @@ func GetAddrIdx(apiAddrs map[string]proton.Address, idx int) (proton.Address, er
 }
 
 func GetPrimaryAddr(apiAddrs map[string]proton.Address) (proton.Address, error) {
-	sorted := sortSlice(maps.Values(apiAddrs), func(a, b proton.Address) int {
+	sorted := sortSlice(utils.Values(apiAddrs), func(a, b proton.Address) int {
 		return cmp.Compare(a.Order, b.Order)
 	})
 

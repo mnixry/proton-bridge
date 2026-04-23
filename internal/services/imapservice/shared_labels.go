@@ -18,13 +18,14 @@
 package imapservice
 
 import (
+	"maps"
 	"sync"
 
 	"github.com/ProtonMail/go-proton-api"
 	"github.com/ProtonMail/proton-bridge/v3/internal/usertypes"
+	"github.com/ProtonMail/proton-bridge/v3/pkg/utils"
 	"github.com/bradenaw/juniper/xslices"
 	"github.com/sirupsen/logrus"
-	"golang.org/x/exp/maps"
 )
 
 type labelMap = map[string]proton.Label
@@ -86,7 +87,7 @@ func (r *rwLabels) getLabelUnsafe(id string) (proton.Label, bool) {
 }
 
 func (r *rwLabels) getLabelsUnsafe() []proton.Label {
-	return maps.Values(r.labels)
+	return utils.Values(r.labels)
 }
 
 func (r *rwLabels) SetLabels(labels []proton.Label) {

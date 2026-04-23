@@ -28,7 +28,6 @@ import (
 	"github.com/ProtonMail/proton-bridge/v3/pkg/message"
 	"github.com/ProtonMail/proton-bridge/v3/pkg/utils"
 	"github.com/sirupsen/logrus"
-	"golang.org/x/exp/maps"
 )
 
 func createSendReq(
@@ -75,7 +74,7 @@ type recipients map[string]proton.SendPreferences
 func (r recipients) scheme(scheme ...proton.EncryptionScheme) recipients {
 	res := make(recipients)
 
-	for _, addr := range utils.Filter(maps.Keys(r), func(addr string) bool {
+	for _, addr := range utils.Filter(utils.Keys(r), func(addr string) bool {
 		return slices.Contains(scheme, r[addr].EncryptionScheme)
 	}) {
 		res[addr] = r[addr]
@@ -87,7 +86,7 @@ func (r recipients) scheme(scheme ...proton.EncryptionScheme) recipients {
 func (r recipients) content(mimeType ...rfc822.MIMEType) recipients {
 	res := make(recipients)
 
-	for _, addr := range utils.Filter(maps.Keys(r), func(addr string) bool {
+	for _, addr := range utils.Filter(utils.Keys(r), func(addr string) bool {
 		return slices.Contains(mimeType, r[addr].MIMEType)
 	}) {
 		res[addr] = r[addr]

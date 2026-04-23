@@ -21,13 +21,14 @@ import (
 	"context"
 	"crypto/subtle"
 	"fmt"
+	"maps"
 	"strings"
 
 	"github.com/ProtonMail/go-proton-api"
 	"github.com/ProtonMail/gopenpgp/v2/crypto"
 	"github.com/ProtonMail/proton-bridge/v3/internal/usertypes"
 	"github.com/ProtonMail/proton-bridge/v3/pkg/algo"
-	"golang.org/x/exp/maps"
+	"github.com/ProtonMail/proton-bridge/v3/pkg/utils"
 )
 
 // State holds all the required user identity state. The idea of this type is that
@@ -48,7 +49,7 @@ func NewState(
 ) *State {
 	addressMap := buildAddressMapFromSlice(addresses)
 	return &State{
-		AddressesSorted: sortAddresses(maps.Values(addressMap)),
+		AddressesSorted: sortAddresses(utils.Values(addressMap)),
 		Addresses:       addressMap,
 		User:            user,
 
@@ -114,7 +115,7 @@ func (s *State) OnRefreshEvent(ctx context.Context) error {
 
 	s.User = user
 	s.Addresses = buildAddressMapFromSlice(addresses)
-	s.AddressesSorted = sortAddresses(maps.Values(s.Addresses))
+	s.AddressesSorted = sortAddresses(utils.Values(s.Addresses))
 
 	return nil
 }
@@ -146,7 +147,7 @@ func (s *State) OnAddressCreated(event proton.AddressEvent) AddressUpdate {
 	}
 
 	s.Addresses[event.Address.ID] = event.Address
-	s.AddressesSorted = sortAddresses(maps.Values(s.Addresses))
+	s.AddressesSorted = sortAddresses(utils.Values(s.Addresses))
 
 	if event.Address.Status != proton.AddressStatusEnabled {
 		return AddressUpdateNoop
@@ -163,7 +164,7 @@ func (s *State) OnAddressUpdated(event proton.AddressEvent) (proton.Address, Add
 	}
 
 	s.Addresses[event.Address.ID] = event.Address
-	s.AddressesSorted = sortAddresses(maps.Values(s.Addresses))
+	s.AddressesSorted = sortAddresses(utils.Values(s.Addresses))
 
 	switch {
 	// If the address was newly enabled:
@@ -187,7 +188,7 @@ func (s *State) OnAddressDeleted(event proton.AddressEvent) (proton.Address, Add
 	}
 
 	delete(s.Addresses, event.ID)
-	s.AddressesSorted = sortAddresses(maps.Values(s.Addresses))
+	s.AddressesSorted = sortAddresses(utils.Values(s.Addresses))
 
 	if addr.Status != proton.AddressStatusEnabled {
 		return proton.Address{}, AddressUpdateNoop

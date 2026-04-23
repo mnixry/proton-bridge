@@ -25,9 +25,9 @@ import (
 	"github.com/ProtonMail/go-proton-api"
 	"github.com/ProtonMail/proton-bridge/v3/internal/services/syncservice"
 	"github.com/ProtonMail/proton-bridge/v3/internal/usertypes"
+	"github.com/ProtonMail/proton-bridge/v3/pkg/utils"
 	"github.com/bradenaw/juniper/xslices"
 	"github.com/sirupsen/logrus"
-	"golang.org/x/exp/maps"
 )
 
 type SyncUpdateApplier struct {
@@ -63,7 +63,7 @@ func (s *SyncUpdateApplier) ApplySyncUpdates(ctx context.Context, updates []sync
 				return nil, fmt.Errorf("unexpected connecto list state")
 			}
 
-			c := maps.Values(connectors)[0]
+			c := utils.Values(connectors)[0]
 
 			update := imap.NewMessagesCreated(true, xslices.Map(updates, func(b syncservice.BuildResult) *imap.MessageCreated {
 				return b.Update
@@ -115,7 +115,7 @@ func (s *SyncUpdateApplier) ApplySyncUpdates(ctx context.Context, updates []sync
 
 func (s *SyncUpdateApplier) SyncLabels(ctx context.Context, labels map[string]proton.Label) error {
 	request := func(ctx context.Context, _ usertypes.AddressMode, connectors map[string]*Connector) ([]imap.Update, error) {
-		return syncLabels(ctx, labels, maps.Values(connectors), s.labelConflictManager)
+		return syncLabels(ctx, labels, utils.Values(connectors), s.labelConflictManager)
 	}
 
 	updates, err := s.sendRequest(ctx, request)

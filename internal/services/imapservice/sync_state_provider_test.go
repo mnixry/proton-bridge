@@ -22,9 +22,9 @@ import (
 	"testing"
 
 	"github.com/ProtonMail/proton-bridge/v3/internal/services/syncservice"
+	"github.com/ProtonMail/proton-bridge/v3/pkg/utils"
 	"github.com/bradenaw/juniper/xmaps"
 	"github.com/stretchr/testify/require"
-	"golang.org/x/exp/maps"
 )
 
 func TestMigrateSyncSettings_AlreadyExists(t *testing.T) {
@@ -60,7 +60,7 @@ func TestMigrateSyncSettings_DoesNotExist(t *testing.T) {
 	require.Zero(t, status.NumSyncedMessages)
 	require.Zero(t, status.TotalMessageCount)
 	require.Empty(t, status.LastSyncedMessageID)
-	require.ElementsMatch(t, failedIDs, maps.Keys(status.FailedMessages))
+	require.ElementsMatch(t, failedIDs, utils.Keys(status.FailedMessages))
 	require.True(t, status.HasLabels)
 	require.True(t, status.HasMessageCount)
 	require.True(t, status.HasMessages)

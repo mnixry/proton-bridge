@@ -20,6 +20,7 @@ package message
 import (
 	"bytes"
 	"fmt"
+	"maps"
 	"mime"
 	"net/mail"
 	"slices"
@@ -36,7 +37,6 @@ import (
 	"github.com/emersion/go-message/textproto"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	"golang.org/x/exp/maps"
 )
 
 var (
@@ -669,7 +669,7 @@ func extractHeaderPartEnd(body []byte) int {
 		}
 	}
 
-	for _, val := range maps.Values(requiredHeaders) {
+	for val := range maps.Values(requiredHeaders) {
 		if !val {
 			return -1
 		}

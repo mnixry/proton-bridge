@@ -25,8 +25,8 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/ProtonMail/proton-bridge/v3/pkg/utils"
 	"github.com/bradenaw/juniper/xslices"
-	"golang.org/x/exp/maps"
 )
 
 const (
@@ -75,7 +75,9 @@ func pruneLogs(logDir string, currentSessionID SessionID, pruningSize int64) (fa
 	}
 
 	// we want total size to include the current session.
-	totalSize := xslices.Reduce(maps.Values(sessionInfoList), int64(0), func(sum int64, info *sessionInfo) int64 { return sum + info.size() })
+	totalSize := xslices.Reduce(utils.Values(sessionInfoList), int64(0), func(sum int64, info *sessionInfo) int64 {
+		return sum + info.size()
+	})
 	if totalSize <= pruningSize {
 		return 0, nil
 	}
@@ -96,7 +98,7 @@ func pruneLogs(logDir string, currentSessionID SessionID, pruningSize int64) (fa
 	}
 
 	// current session size if below max size, so we erase older session starting with the eldest until we go below maxFileSize
-	sortedSessions := maps.Values(sessionInfoList)
+	sortedSessions := utils.Values(sessionInfoList)
 	slices.SortFunc(sortedSessions, func(lhs, rhs *sessionInfo) int {
 		return cmp.Compare(lhs.sessionID, rhs.sessionID)
 	})

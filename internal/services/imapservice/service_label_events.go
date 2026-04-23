@@ -29,7 +29,6 @@ import (
 	"github.com/ProtonMail/proton-bridge/v3/internal/logging"
 	"github.com/ProtonMail/proton-bridge/v3/pkg/utils"
 	"github.com/sirupsen/logrus"
-	"golang.org/x/exp/maps"
 )
 
 func (s *Service) HandleLabelEvents(ctx context.Context, events []proton.LabelEvent) error {
@@ -90,13 +89,13 @@ func onLabelCreated(ctx context.Context, s *Service, event proton.LabelEvent) ([
 
 	wr.SetLabel(event.Label.ID, event.Label, "onLabelCreated")
 
-	labelConflictResolver := s.labelConflictManager.NewConflictResolver(maps.Values(s.connectors))
+	labelConflictResolver := s.labelConflictManager.NewConflictResolver(s.getConnectors())
 	conflictUpdatesGenerator, err := labelConflictResolver.ResolveConflict(ctx, event.Label, make(map[string]bool))
 	if err != nil {
 		return updates, err
 	}
 
-	for _, updateCh := range maps.Values(s.connectors) {
+	for _, updateCh := range s.getConnectors() {
 		conflictUpdates := conflictUpdatesGenerator()
 		updateCh.publishUpdate(ctx, conflictUpdates...)
 		updates = append(updates, conflictUpdates...)
@@ -150,14 +149,14 @@ func onLabelUpdated(ctx context.Context, s *Service, event proton.LabelEvent) ([
 		wr.SetLabel(apiLabel.ID, apiLabel, "onLabelUpdatedApiID")
 
 		// Resolve potential conflicts
-		labelConflictResolver := s.labelConflictManager.NewConflictResolver(maps.Values(s.connectors))
+		labelConflictResolver := s.labelConflictManager.NewConflictResolver(s.getConnectors())
 		conflictUpdatesGenerator, err := labelConflictResolver.ResolveConflict(ctx, apiLabel, make(map[string]bool))
 		if err != nil {
 			return updates, err
 		}
 
 		// Notify the IMAP clients.
-		for _, updateCh := range maps.Values(s.connectors) {
+		for _, updateCh := range s.getConnectors() {
 			conflictUpdates := conflictUpdatesGenerator()
 			updateCh.publishUpdate(ctx, conflictUpdates...)
 			updates = append(updates, conflictUpdates...)
@@ -191,7 +190,7 @@ func onLabelDeleted(ctx context.Context, s *Service, event proton.LabelEvent) []
 
 	s.log.WithField("labelID", event.ID).Info("Handling label deleted event")
 
-	for _, updateCh := range maps.Values(s.connectors) {
+	for _, updateCh := range s.getConnectors() {
 		update := imap.NewMailboxDeleted(imap.MailboxID(event.ID))
 		updateCh.publishUpdate(ctx, update)
 		updates = append(updates, update)

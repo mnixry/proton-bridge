@@ -7,9 +7,9 @@ toolchain go1.26.2
 require (
 	github.com/0xAX/notificator v0.0.0-20220220101646-ee9b8921e557
 	github.com/Masterminds/semver/v3 v3.4.0
-	github.com/ProtonMail/gluon v0.17.1-0.20260424104313-a9973ea352b6
+	github.com/ProtonMail/gluon v0.17.1-0.20260424151019-88c1625c4ad6
 	github.com/ProtonMail/go-autostart v0.0.0-20260210134425-40a9013f5ef4
-	github.com/ProtonMail/go-proton-api v0.4.1-0.20260424103909-24794d804af6
+	github.com/ProtonMail/go-proton-api v0.4.1-0.20260424150947-6bf7f5a61eb8
 	github.com/ProtonMail/gopenpgp/v2 v2.10.0-proton
 	github.com/PuerkitoBio/goquery v1.12.0
 	github.com/abiosoft/ishell v2.0.0+incompatible
@@ -49,7 +49,6 @@ require (
 	github.com/urfave/cli/v2 v2.27.7
 	github.com/vmihailenco/msgpack/v5 v5.4.1
 	go.uber.org/goleak v1.3.0
-	golang.org/x/exp v0.0.0-20260312153236-7ab1446f8b90
 	golang.org/x/net v0.52.0
 	golang.org/x/oauth2 v0.36.0
 	golang.org/x/sys v0.43.0
@@ -145,6 +144,7 @@ require (
 	go.opentelemetry.io/otel/trace v1.43.0 // indirect
 	golang.org/x/arch v0.22.0 // indirect
 	golang.org/x/crypto v0.49.0 // indirect
+	golang.org/x/exp v0.0.0-20260312153236-7ab1446f8b90 // indirect
 	golang.org/x/mod v0.34.0 // indirect
 	golang.org/x/sync v0.20.0 // indirect
 	golang.org/x/tools v0.43.0 // indirect

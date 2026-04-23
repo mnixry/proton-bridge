@@ -21,6 +21,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"maps"
 	"os"
 	"path/filepath"
 
@@ -33,7 +34,6 @@ import (
 	goimap "github.com/emersion/go-imap"
 	goimapclient "github.com/emersion/go-imap/client"
 	"github.com/sirupsen/logrus"
-	"golang.org/x/exp/maps"
 )
 
 type CheckClientStateResult struct {
@@ -55,13 +55,11 @@ func (bridge *Bridge) CheckClientState(ctx context.Context, checkFlags bool, pro
 	bridge.usersLock.RLock()
 	defer bridge.usersLock.RUnlock()
 
-	users := maps.Values(bridge.users)
-
 	result := CheckClientStateResult{
 		MissingMessages: make(map[string]map[string]user.DiagMailboxMessage),
 	}
 
-	for _, usr := range users {
+	for usr := range maps.Values(bridge.users) {
 		if progressCB != nil {
 			progressCB(fmt.Sprintf("Checking state for user %v", usr.Name()))
 		}

@@ -50,7 +50,6 @@ import (
 	"github.com/bradenaw/juniper/xslices"
 	"github.com/go-resty/resty/v2"
 	"github.com/sirupsen/logrus"
-	"golang.org/x/exp/maps"
 )
 
 var (
@@ -517,7 +516,7 @@ func (user *User) GetGluonID(addrID string) (string, bool) {
 
 	// If there is only one address, return its gluon ID.
 	// This can happen if we are in combined mode and the primary address ID has changed.
-	if gluonIDs := maps.Values(user.vault.GetGluonIDs()); len(gluonIDs) == 1 {
+	if gluonIDs := utils.Values(user.vault.GetGluonIDs()); len(gluonIDs) == 1 {
 		if err := user.vault.SetGluonID(addrID, gluonIDs[0]); err != nil {
 			user.log.WithError(err).Error("Failed to set gluon ID for updated primary address")
 		}
@@ -744,7 +743,7 @@ func (user *User) protonAddresses() []proton.Address {
 		return nil
 	}
 
-	addresses := utils.Filter(maps.Values(apiAddrs), func(addr proton.Address) bool {
+	addresses := utils.Filter(utils.Values(apiAddrs), func(addr proton.Address) bool {
 		return addr.Status == proton.AddressStatusEnabled && (addr.IsBYOEAddress() || addr.Type != proton.AddressTypeExternal)
 	})
 

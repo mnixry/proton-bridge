@@ -21,6 +21,7 @@ import (
 	"crypto"
 	"encoding/hex"
 	"encoding/json"
+	"maps"
 	"os"
 	"path/filepath"
 	"sync"
@@ -28,7 +29,6 @@ import (
 
 	"github.com/ProtonMail/go-proton-api"
 	"github.com/sirupsen/logrus"
-	"golang.org/x/exp/maps"
 )
 
 // not-const so we can unit test the functionality.

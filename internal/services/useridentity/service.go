@@ -21,7 +21,7 @@ import (
 	"cmp"
 	"context"
 	"fmt"
-
+	"maps"
 	"slices"
 
 	"github.com/ProtonMail/go-proton-api"
@@ -32,7 +32,6 @@ import (
 	"github.com/ProtonMail/proton-bridge/v3/internal/usertypes"
 	"github.com/ProtonMail/proton-bridge/v3/pkg/cpc"
 	"github.com/sirupsen/logrus"
-	"golang.org/x/exp/maps"
 )
 
 type IdentityProvider interface {

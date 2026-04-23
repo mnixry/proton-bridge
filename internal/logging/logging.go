@@ -29,9 +29,9 @@ import (
 	"slices"
 	"time"
 
+	"github.com/ProtonMail/proton-bridge/v3/pkg/utils"
 	"github.com/bradenaw/juniper/xslices"
 	"github.com/sirupsen/logrus"
-	"golang.org/x/exp/maps"
 )
 
 const (
@@ -142,7 +142,8 @@ func getOrderedLogFileListForBugReport(logsPath string, maxSessionCount int) ([]
 		return nil, err
 	}
 
-	sortedSessions := maps.Values(sessionInfoList)
+	sortedSessions := utils.Values(sessionInfoList)
+
 	slices.SortFunc(sortedSessions, func(lhs, rhs *sessionInfo) int {
 		return cmp.Compare(rhs.sessionID, lhs.sessionID)
 	})

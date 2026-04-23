@@ -21,6 +21,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"maps"
 	"net/http"
 
 	"github.com/ProtonMail/gluon"
@@ -35,7 +36,6 @@ import (
 	"github.com/ProtonMail/proton-bridge/v3/internal/usertypes"
 	bmessage "github.com/ProtonMail/proton-bridge/v3/pkg/message"
 	"github.com/sirupsen/logrus"
-	"golang.org/x/exp/maps"
 )
 
 func (s *Service) HandleMessageEvents(ctx context.Context, events []proton.MessageEvent) error {
@@ -315,7 +315,7 @@ func onMessageDeleted(ctx context.Context, s *Service, event proton.MessageEvent
 
 	updates := make([]imap.Update, 0, len(s.connectors))
 
-	for _, updateCh := range maps.Values(s.connectors) {
+	for updateCh := range maps.Values(s.connectors) {
 		update := imap.NewMessagesDeleted(imap.MessageID(event.ID))
 		updateCh.publishUpdate(ctx, update)
 		updates = append(updates, update)
