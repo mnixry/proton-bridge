@@ -226,11 +226,13 @@ func (b *BuildStage) run(ctx context.Context) {
 
 func chunkSyncBuilderBatch(batch []proton.FullMessage, maxMemory uint64) [][]proton.FullMessage {
 	var expectedMemUsage uint64
-	var chunks [][]proton.FullMessage
-	var lastIndex int
-	var index int
+	chunks := make([][]proton.FullMessage, 0, len(batch)/2)
+	lastIndex := 0
 
-	for _, v := range batch {
+	// The chunking uses consecutive half-open intervals [a0, b0), [b0, b1),..., [bk, n)
+	// If the next message is too large to fit in the memory, we start a new chunk.
+
+	for index, v := range batch {
 		var dataSize uint64
 		for _, a := range v.Attachments {
 			dataSize += uint64(a.Size) //nolint:gosec // disable G115
@@ -243,14 +245,14 @@ func chunkSyncBuilderBatch(batch []proton.FullMessage, maxMemory uint64) [][]pro
 
 		nextMemSize := expectedMemUsage + dataSize
 		if nextMemSize >= maxMemory {
-			chunks = append(chunks, copySlice(batch[lastIndex:index]))
-			lastIndex = index
+			if index > lastIndex {
+				chunks = append(chunks, copySlice(batch[lastIndex:index]))
+				lastIndex = index
+			}
 			expectedMemUsage = dataSize
 		} else {
 			expectedMemUsage = nextMemSize
 		}
-
-		index++
 	}
 
 	if lastIndex < len(batch) {

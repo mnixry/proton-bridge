@@ -161,6 +161,8 @@ func (s *childJob) onError(err error) {
 }
 
 func (s *childJob) chunkDivide(chunks [][]proton.FullMessage) []childJob {
+	//BRIDGE-540: we guarantee that chunks passed to this function are never empty. Thus if there is an empty chunk it will panic, because it is an invalid state. This is expected behaviour.
+
 	numChunks := len(chunks)
 
 	if numChunks == 1 {
@@ -168,8 +170,11 @@ func (s *childJob) chunkDivide(chunks [][]proton.FullMessage) []childJob {
 	}
 
 	result := make([]childJob, numChunks)
-	for i := 0; i < numChunks-1; i++ {
-		result[i] = s.job.newChildJob(chunks[i][len(chunks[i])-1].ID, int64(len(chunks[i])))
+	for i := range numChunks - 1 {
+		chunkLength := len(chunks[i])
+		lastMessage := chunks[i][chunkLength-1]
+		result[i] = s.job.newChildJob(lastMessage.ID, int64(chunkLength))
+
 		collectIDs(&result[i], chunks[i])
 	}
 

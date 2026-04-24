@@ -63,6 +63,162 @@ func TestSyncChunkSyncBuilderBatch(t *testing.T) {
 	require.Equal(t, totalMessagesInChunks, totalMessageCount)
 }
 
+func TestSyncChunkSyncBuilderBatch_WithExpectedChunks(t *testing.T) {
+	type testCase struct {
+		name          string
+		messageCount  int
+		buildMessages func(messageCount int) []proton.FullMessage
+		maxChunkSize  uint64
+		getExpected   func(maxMemory uint64, messageCount int) (maxMessagesInChunk int, expectedChunks int)
+	}
+
+	testCases := []testCase{
+		{
+			name:         "no single message exceeds max memory",
+			messageCount: 20,
+			maxChunkSize: 30 * Megabyte,
+			buildMessages: func(messageCount int) []proton.FullMessage {
+				messages := make([]proton.FullMessage, messageCount)
+				for i := range messages {
+					messages[i] = proton.FullMessage{
+						Message: proton.Message{
+							Attachments: []proton.Attachment{
+								{
+									Size: int64(1 * Megabyte),
+								},
+							},
+						},
+					}
+				}
+				return messages
+			},
+			getExpected: func(maxMemory uint64, messageCount int) (maxMessagesInChunk int, expectedChunks int) {
+				// Body size is 0
+				// each message has 1 attachment of 1MB
+				// initial DataSize is 0 + 1MB * 2 = 2MB
+				// expectedMemSize = nextMemSize = DataSize = 2MB
+				// this grows until nextMemSize >= maxMemory
+				// maxMemory is 30MB
+
+				// so maxMessagesInChunk = maxMemory / DataSize - 1 = 30MB / 2MB - 1 = 14
+				// expectedChunks = messageCount / maxMessagesInChunk = 20 / 14 = 2
+				dataSize := 1 * Megabyte
+				dataSize *= 2
+
+				maxMessagesInChunk = int((maxMemory / dataSize) - 1)
+				t.Logf("maxMessagesInChunk: %d", maxMessagesInChunk)
+				expectedChunks = messageCount / maxMessagesInChunk
+
+				if messageCount%maxMessagesInChunk != 0 {
+					expectedChunks++
+				}
+				return maxMessagesInChunk, expectedChunks
+			},
+		},
+		{
+			name:         "one message exceeds max memory",
+			messageCount: 20,
+			maxChunkSize: 30 * Megabyte,
+			buildMessages: func(messageCount int) []proton.FullMessage {
+				messages := make([]proton.FullMessage, messageCount)
+				for i := range messages {
+					if i == 19 {
+						messages[i] = proton.FullMessage{
+							Message: proton.Message{
+								Attachments: []proton.Attachment{
+									{
+										Size: int64(31 * Megabyte),
+									},
+								},
+							},
+						}
+						continue
+					}
+
+					messages[i] = proton.FullMessage{
+						Message: proton.Message{
+							Attachments: []proton.Attachment{
+								{
+									Size: int64(1 * Megabyte),
+								},
+							},
+						},
+					}
+				}
+				return messages
+			},
+			getExpected: func(maxMemory uint64, messageCount int) (maxMessagesInChunk int, expectedChunks int) {
+				// Body size is 0
+				// each message has 1 attachment of 1MB
+				// initial DataSize is 0 + 1MB * 2 = 2MB
+				// expectedMemSize = nextMemSize = DataSize = 2MB
+				// this grows until nextMemSize >= maxMemory
+				// maxMemory is 30MB
+				// so maxMessagesInChunk = maxMemory / DataSize - 1 = 30MB / 2MB - 1 = 14
+				// expectedChunks = messageCount / maxMessagesInChunk = 20 / 14 = 2 + 1 because we know one message exceeds max memory
+
+				dataSize := 1 * Megabyte
+				dataSize *= 2
+				maxMessagesInChunk = int((maxMemory / dataSize) - 1)
+				expectedChunks = messageCount / maxMessagesInChunk
+				if messageCount%maxMessagesInChunk != 0 {
+					expectedChunks++
+				}
+				return maxMessagesInChunk, expectedChunks + 1 // +1 for the message that exceeds max memory
+			},
+		},
+		{
+			name:         "all messages exceed max memory",
+			messageCount: 20,
+			maxChunkSize: 30 * Megabyte,
+			buildMessages: func(messageCount int) []proton.FullMessage {
+				messages := make([]proton.FullMessage, messageCount)
+
+				for i := range messages {
+					messages[i] = proton.FullMessage{
+						Message: proton.Message{
+							Attachments: []proton.Attachment{
+								{
+									Size: int64(31 * Megabyte),
+								},
+							},
+						},
+					}
+				}
+				return messages
+			},
+			getExpected: func(_ uint64, _ int) (maxMessagesInChunk int, expectedChunks int) {
+				// Body size is 0
+				// each message has 1 attachment of 31MB
+				// initial DataSize is 0 + 31MB * 2 = 62MB
+				// expectedMemSize = nextMemSize = DataSize = 62MB
+				// on each iteration, expectedMemSize >= maxMemory
+				// so maxMessagesInChunk = 1
+				// expectedChunks = messageCount = 20
+				return 1, 20
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			messages := tc.buildMessages(tc.messageCount)
+
+			chunks := chunkSyncBuilderBatch(messages, tc.maxChunkSize)
+			maxMessagesInChunk, expectedChunks := tc.getExpected(tc.maxChunkSize, tc.messageCount)
+
+			require.Equal(t, expectedChunks, len(chunks))
+
+			totalMessagesInChunks := 0
+			for _, chunk := range chunks {
+				require.LessOrEqual(t, len(chunk), maxMessagesInChunk)
+				totalMessagesInChunks += len(chunk)
+			}
+			require.Equal(t, tc.messageCount, totalMessagesInChunks)
+		})
+	}
+}
+
 func TestBuildStage_SuccessRemovesFailedMessage(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 
