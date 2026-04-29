@@ -26,10 +26,11 @@ lint-bug-report-preview:
   script:
     - which go && go version
     - which gcc && gcc --version
-    - make test
+    - make test-with-retry
   artifacts:
     paths:
       - coverage/**
+      - test-*.xml
 
 test-linux:
   extends:
