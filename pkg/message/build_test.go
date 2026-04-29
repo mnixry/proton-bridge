@@ -29,7 +29,6 @@ import (
 	"github.com/ProtonMail/gopenpgp/v2/crypto"
 	"github.com/ProtonMail/proton-bridge/v3/utils"
 	"github.com/golang/mock/gomock"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -993,7 +992,7 @@ func TestBuildIncludeMessageIDReference(t *testing.T) {
 	section(t, resRef).expectHeader(`References`, is(`<myreference@domain.com> <messageID@protonmail.internalid>`))
 }
 
-func TestBuildMessageIsDeterministic(t *testing.T) {
+func TestBuildMessageStructuralEquivalence(t *testing.T) {
 	m := gomock.NewController(t)
 	defer m.Finish()
 
@@ -1008,7 +1007,14 @@ func TestBuildMessageIsDeterministic(t *testing.T) {
 	res2, err := DecryptAndBuildRFC822(kr, msg, [][]byte{inl, att}, JobOptions{})
 	require.NoError(t, err)
 
-	assert.Equal(t, res1, res2)
+	// Boundaries are random so raw bytes differ; verify structural equivalence instead.
+	// Structure: multipart/mixed > multipart/related(text/plain + inline image) + attachment
+	for _, res := range [][]byte{res1, res2} {
+		section(t, res, 1).expectContentType(is(`multipart/related`))
+		section(t, res, 1, 1).expectContentType(is(`text/plain`)).expectBody(is(`body`))
+		section(t, res, 1, 2).expectContentType(is(`image/png`)).expectBody(is(`inline`))
+		section(t, res, 2).expectContentType(is(`image/png`)).expectBody(is(`attachment`))
+	}
 }
 
 func TestBuildUndecryptableMessage(t *testing.T) {

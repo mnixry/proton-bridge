@@ -19,6 +19,8 @@ package message
 
 import (
 	"bytes"
+	crand "crypto/rand"
+	"encoding/hex"
 	"fmt"
 	"maps"
 	"mime"
@@ -32,7 +34,6 @@ import (
 	"github.com/ProtonMail/gluon/rfc822"
 	"github.com/ProtonMail/go-proton-api"
 	"github.com/ProtonMail/gopenpgp/v2/crypto"
-	"github.com/ProtonMail/proton-bridge/v3/pkg/algo"
 	"github.com/emersion/go-message"
 	"github.com/emersion/go-message/textproto"
 	"github.com/pkg/errors"
@@ -42,6 +43,7 @@ import (
 var (
 	ErrDecryptionFailed = errors.New("message could not be decrypted")
 	ErrNoSuchKeyRing    = errors.New("the keyring to decrypt this message could not be found")
+	ErrRNGUnavailable   = errors.New("OS RNG unavailable: cannot generate secure MIME boundary")
 )
 
 // InternalIDDomain is used as a placeholder for reference/message ID headers to improve compatibility with various clients.
@@ -94,11 +96,14 @@ func buildMultipartRFC822(
 	opts JobOptions,
 	buf *bytes.Buffer,
 ) error {
-	boundary := newBoundary(decrypted.Msg.ID)
-
 	hdr := getMessageHeader(decrypted.Msg, opts)
 
-	hdr.SetContentType("multipart/mixed", map[string]string{"boundary": boundary.gen()})
+	boundary, err := newBoundary()
+	if err != nil {
+		return err
+	}
+
+	hdr.SetContentType("multipart/mixed", map[string]string{"boundary": boundary})
 
 	w, err := message.CreateWriter(buf, hdr)
 	if err != nil {
@@ -123,7 +128,7 @@ func buildMultipartRFC822(
 	}
 
 	if len(inlineAtts) > 0 {
-		if err := writeRelatedParts(w, boundary, decrypted, inlineAtts, inlineData, opts); err != nil {
+		if err := writeRelatedParts(w, decrypted, inlineAtts, inlineData, opts); err != nil {
 			return err
 		}
 	} else if err := writeTextPart(w, decrypted, opts); err != nil {
@@ -184,7 +189,6 @@ func writeAttachmentPart(
 
 func writeRelatedParts(
 	w *message.Writer,
-	boundary *boundary,
 	decrypted *DecryptedMessage,
 	atts []proton.Attachment,
 	attData []DecryptedAttachment,
@@ -192,7 +196,12 @@ func writeRelatedParts(
 ) error {
 	hdr := message.Header{}
 
-	hdr.SetContentType("multipart/related", map[string]string{"boundary": boundary.gen()})
+	boundary, err := newBoundary()
+	if err != nil {
+		return err
+	}
+
+	hdr.SetContentType("multipart/related", map[string]string{"boundary": boundary})
 
 	return createPart(w, hdr, func(rel *message.Writer) error {
 		if err := writeTextPart(rel, decrypted, opts); err != nil {
@@ -235,8 +244,13 @@ func buildPGPRFC822(kr *crypto.KeyRing, decrypted *DecryptedMessage, opts JobOpt
 func buildPGPMIMEFallbackRFC822(decrypted *DecryptedMessage, opts JobOptions, buf *bytes.Buffer) error {
 	hdr := getMessageHeader(decrypted.Msg, opts)
 
+	boundary, err := newBoundary()
+	if err != nil {
+		return err
+	}
+
 	hdr.SetContentType("multipart/encrypted", map[string]string{
-		"boundary": newBoundary(decrypted.Msg.ID).gen(),
+		"boundary": boundary,
 		"protocol": "application/pgp-encrypted",
 	})
 
@@ -268,7 +282,10 @@ func buildPGPMIMEFallbackRFC822(decrypted *DecryptedMessage, opts JobOptions, bu
 }
 
 func writeMultipartSignedRFC822(header message.Header, body []byte, sig proton.Signature, buf *bytes.Buffer) error {
-	boundary := newBoundary("").gen()
+	boundary, err := newBoundary()
+	if err != nil {
+		return err
+	}
 
 	header.SetContentType("multipart/signed", map[string]string{
 		"micalg":   sig.Hash,
@@ -577,17 +594,13 @@ func writePart(w *message.Writer, hdr message.Header, body []byte) error {
 	})
 }
 
-type boundary struct {
-	val string
-}
-
-func newBoundary(seed string) *boundary {
-	return &boundary{val: seed}
-}
-
-func (bw *boundary) gen() string {
-	bw.val = algo.HashHexSHA256(bw.val)
-	return bw.val
+// newBoundary generates a random 64-char hex MIME boundary.
+func newBoundary() (string, error) {
+	b := make([]byte, 32)
+	if _, err := crand.Read(b); err != nil {
+		return "", fmt.Errorf("%w: %w", ErrRNGUnavailable, err)
+	}
+	return hex.EncodeToString(b), nil
 }
 
 func mboxFrom() []byte {

@@ -27,10 +27,13 @@ import (
 
 	"github.com/ProtonMail/gluon/async"
 	"github.com/ProtonMail/gluon/logging"
+	"github.com/ProtonMail/gluon/reporter"
 	"github.com/ProtonMail/go-proton-api"
 	"github.com/ProtonMail/gopenpgp/v2/crypto"
 	"github.com/ProtonMail/proton-bridge/v3/internal/services/observability"
 	obsMetrics "github.com/ProtonMail/proton-bridge/v3/internal/services/syncservice/observabilitymetrics"
+	"github.com/ProtonMail/proton-bridge/v3/internal/unleash"
+	"github.com/ProtonMail/proton-bridge/v3/pkg/message"
 	"github.com/ProtonMail/proton-bridge/v3/pkg/utils"
 	"github.com/bradenaw/juniper/parallel"
 	"github.com/bradenaw/juniper/xslices"
@@ -62,9 +65,13 @@ type BuildStage struct {
 
 	panicHandler async.PanicHandler
 	log          *logrus.Entry
+	reporter     reporter.Reporter
 
 	// Observability
 	observabilitySender observability.Sender
+
+	// Feature Flags
+	featureFlagProvider unleash.FeatureFlagValueProvider
 }
 
 func NewBuildStage(
@@ -73,6 +80,8 @@ func NewBuildStage(
 	maxBuildMem uint64,
 	panicHandler async.PanicHandler,
 	observabilitySender observability.Sender,
+	reporter reporter.Reporter,
+	featureFlagProvider unleash.FeatureFlagValueProvider,
 ) *BuildStage {
 	return &BuildStage{
 		input:               input,
@@ -81,6 +90,8 @@ func NewBuildStage(
 		log:                 logrus.WithField("sync-stage", "build"),
 		panicHandler:        panicHandler,
 		observabilitySender: observabilitySender,
+		reporter:            reporter,
+		featureFlagProvider: featureFlagProvider,
 	}
 }
 
@@ -173,6 +184,13 @@ func (b *BuildStage) run(ctx context.Context) {
 					buildBufferPool.Put(buf)
 
 					if err != nil {
+						if errors.Is(err, message.ErrRNGUnavailable) && !b.featureFlagProvider.GetFlagValue(unleash.RNGServiceNotAvailableSentryCallDisabled) {
+							if sentryErr := b.reporter.ReportMessageWithContext("OS RNG unavailable during sync: MIME boundary generation failed",
+								reporter.Context{"err": err.Error(), "msgID": msg.ID}); sentryErr != nil {
+								b.log.WithError(sentryErr).Error("Failed to report RNG unavailable error to Sentry")
+							}
+						}
+
 						req.job.log.WithError(err).WithField("msgID", msg.ID).Error("Failed to build message (sync)")
 
 						if err := req.job.state.AddFailedMessageID(req.getContext(), msg.ID); err != nil {

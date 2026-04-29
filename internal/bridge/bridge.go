@@ -318,7 +318,7 @@ func newBridge(
 		lastVersion: lastVersion,
 
 		tasks:       tasks,
-		syncService: syncservice.NewService(panicHandler, obsService),
+		syncService: syncservice.NewService(panicHandler, obsService, reporter, unleashService),
 
 		unleashService: unleashService,
 

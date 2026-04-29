@@ -57,6 +57,7 @@ const (
 	SplitMessageHeaderBodyV2Disabled                     = "InboxBridgeMessageHeaderBodySplitOptimizationDisabled"
 	AfterUpdateTemporaryFolderRemovalDisabled            = "InboxBridgePostUpdateTempFolderDeletionDisabled"
 	FolderUnlabelCallDisabled                            = "InboxBridgeUnlabelCallOnFoldersDisabled"
+	RNGServiceNotAvailableSentryCallDisabled             = "InboxBridgeRNGServiceNotAvailableSentryCallDisabled"
 )
 
 type FeatureFlagValueProvider interface {

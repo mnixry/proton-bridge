@@ -27,8 +27,10 @@ import (
 	"github.com/ProtonMail/go-proton-api"
 	"github.com/ProtonMail/gopenpgp/v2/crypto"
 	"github.com/ProtonMail/proton-bridge/v3/internal/bridge/mocks"
+	"github.com/ProtonMail/proton-bridge/v3/internal/sentry"
 	"github.com/ProtonMail/proton-bridge/v3/internal/services/observability"
 	obsMetrics "github.com/ProtonMail/proton-bridge/v3/internal/services/syncservice/observabilitymetrics"
+	"github.com/ProtonMail/proton-bridge/v3/internal/unleash"
 	"github.com/bradenaw/juniper/xslices"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
@@ -264,7 +266,7 @@ func TestBuildStage_SuccessRemovesFailedMessage(t *testing.T) {
 	observabilityService := mocks.NewMockObservabilitySender(mockCtrl)
 	observabilityService.EXPECT().AddMetrics(obsMetrics.GenerateMessageBuiltSuccessMetric())
 
-	stage := NewBuildStage(input, output, 1024, &async.NoopPanicHandler{}, observabilityService)
+	stage := NewBuildStage(input, output, 1024, &async.NoopPanicHandler{}, observabilityService, sentry.NullSentryReporter{}, unleash.NewNullUnleashService())
 
 	go func() {
 		stage.run(ctx)
@@ -320,7 +322,7 @@ func TestBuildStage_BuildFailureIsReportedButDoesNotCancelJob(t *testing.T) {
 
 	mockObservabilityService.EXPECT().AddDistinctMetrics(observability.SyncError, obsMetrics.GenerateNoUnlockedKeyringMetric())
 
-	stage := NewBuildStage(input, output, 1024, &async.NoopPanicHandler{}, mockObservabilityService)
+	stage := NewBuildStage(input, output, 1024, &async.NoopPanicHandler{}, mockObservabilityService, sentry.NullSentryReporter{}, unleash.NewNullUnleashService())
 
 	go func() {
 		stage.run(ctx)
@@ -370,7 +372,7 @@ func TestBuildStage_FailedToLocateKeyRingIsReportedButDoesNotFailBuild(t *testin
 	observabilitySender := mocks.NewMockObservabilitySender(mockCtrl)
 	observabilitySender.EXPECT().AddDistinctMetrics(observability.SyncError)
 
-	stage := NewBuildStage(input, output, 1024, &async.NoopPanicHandler{}, observabilitySender)
+	stage := NewBuildStage(input, output, 1024, &async.NoopPanicHandler{}, observabilitySender, sentry.NullSentryReporter{}, unleash.NewNullUnleashService())
 
 	go func() {
 		stage.run(ctx)
@@ -414,7 +416,7 @@ func TestBuildStage_OtherErrorsFailJob(t *testing.T) {
 	childJob := tj.job.newChildJob("f", 10)
 	tj.job.end()
 
-	stage := NewBuildStage(input, output, 1024, &async.NoopPanicHandler{}, mocks.NewMockObservabilitySender(mockCtrl))
+	stage := NewBuildStage(input, output, 1024, &async.NoopPanicHandler{}, mocks.NewMockObservabilitySender(mockCtrl), sentry.NullSentryReporter{}, unleash.NewNullUnleashService())
 
 	go func() {
 		stage.run(ctx)
@@ -446,7 +448,7 @@ func TestBuildStage_CancelledJobIsDiscarded(t *testing.T) {
 		},
 	}
 
-	stage := NewBuildStage(input, output, 1024, &async.NoopPanicHandler{}, mocks.NewMockObservabilitySender(mockCtrl))
+	stage := NewBuildStage(input, output, 1024, &async.NoopPanicHandler{}, mocks.NewMockObservabilitySender(mockCtrl), sentry.NullSentryReporter{}, unleash.NewNullUnleashService())
 
 	ctx, cancel := context.WithCancel(context.Background())
 
@@ -491,7 +493,7 @@ func TestTask_EmptyInputDoesNotCrash(t *testing.T) {
 	childJob := tj.job.newChildJob("f", 10)
 	tj.job.end()
 
-	stage := NewBuildStage(input, output, 1024, &async.NoopPanicHandler{}, mocks.NewMockObservabilitySender(mockCtrl))
+	stage := NewBuildStage(input, output, 1024, &async.NoopPanicHandler{}, mocks.NewMockObservabilitySender(mockCtrl), sentry.NullSentryReporter{}, unleash.NewNullUnleashService())
 
 	go func() {
 		stage.run(ctx)
