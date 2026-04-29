@@ -386,6 +386,10 @@ lint-bug-report:
 lint-bug-report-preview:
 	python3 utils/validate_bug_report_file.py --file "internal/frontend/bridge-gui/bridge-gui/qml/Resources/bug_report_flow.json" --preview
 
+.PHONY: gofix
+gofix: check-has-go gofiles
+	./utils/gofix-run.sh
+
 updates: install-go-mod-outdated
 	# Uncomment the "-ci" to fail the job if something can be updated.
 	go list -u -m -json all | go-mod-outdated -update -direct #-ci

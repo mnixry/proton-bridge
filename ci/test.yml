@@ -32,6 +32,17 @@ lint-bug-report-preview:
       - coverage/**
       - test-*.xml
 
+.script-gofix:
+  stage: test
+  extends:
+    - .rules-gofix
+  script:
+    - ./utils/gofix-ci.sh
+  artifacts:
+    when: always
+    paths:
+      - gofix-*.log
+
 test-linux:
   extends:
     - .image-linux-test
@@ -177,3 +188,23 @@ go-vuln-check:
     when: always
     paths:
       - vulns*
+
+gofix:windows:
+  stage: report
+  extends:
+    - .env-windows
+    - .script-gofix
+
+gofix:darwin:
+  stage: report
+  extends:
+    - .env-darwin
+    - .script-gofix
+
+gofix:linux:
+  stage: report
+  extends:
+    - .image-linux-test
+    - .script-gofix
+  tags:
+    - shared-medium
