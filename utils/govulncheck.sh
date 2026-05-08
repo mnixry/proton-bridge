@@ -30,9 +30,13 @@ main(){
     GOTOOLCHAIN=auto go run golang.org/x/vuln/cmd/govulncheck@latest -json ./... > vulns.json
 
     jq -r '.finding | select( (.osv != null) and (.trace[0].function != null) ) | .osv ' < vulns.json > vulns_osv_ids.txt
-    
-    
-  has_vulns
+   
+    ignore GO-2026-4918 "BRIDGE-554 net/http & /x/net/http2 infinite loop while processing HTTP/2 setting frames" 
+    ignore GO-2026-4971 "BRIDGE-554 net Dial and LookupPort panics on Windows when receiving input with NUL (0)"
+    ignore GO-2026-4980 "BRIDGE-554 html/template escape data passed to <script> block"
+    ignore GO-2026-4982 "BRIDGE-554 html/template XSS vector if url contains ASCII whitespace"
+
+    has_vulns
 
     echo
     echo "No new vulnerabilities found."
