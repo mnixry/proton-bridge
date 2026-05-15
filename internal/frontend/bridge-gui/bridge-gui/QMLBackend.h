@@ -191,6 +191,7 @@ public slots: // slot for signals received from QML -> To be forwarded to Bridge
     void toggleIsTelemetryDisabled(bool isDisabled); ///< Slot for toggling telemetry on/off.
     void changeColorScheme(QString const &scheme); ///< Slot for the change of the theme.
     void setDiskCachePath(QUrl const &path) const; ///< Slot for the change of the disk cache path.
+    QUrl selectDiskCacheFolder() const; ///< Slot for the opening of the native dialog for disk cache path.
     void login(QString const &username, QString const &password) const; ///< Slot for the login button (initial login).
     void loginHv(QString const &username, QString const &password) const; ///< Slot for the login button (after HV challenge completed).
     void login2FA(QString const &username, QString const &code) const; ///< Slot for the login button (2FA login).

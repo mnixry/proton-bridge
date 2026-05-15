@@ -14,13 +14,12 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
 import QtQuick.Controls.impl
-import QtQuick.Dialogs
 import Proton
 
 SettingsView {
     id: root
 
-    property url diskCachePath: pathDialog.shortcuts.home
+    property url diskCachePath: Backend.diskCachePath
     property var notifications
 
     function refresh() {
@@ -69,16 +68,9 @@ SettingsView {
         type: SettingsItem.Button
 
         onClicked: {
-            pathDialog.open();
-        }
-
-        FolderDialog {
-            id: pathDialog
-            currentFolder: root.diskCachePath
-            title: qsTr("Select cache location")
-
-            onAccepted: {
-                root.diskCachePath = pathDialog.selectedFolder;
+            const selected = Backend.selectDiskCacheFolder();
+            if (selected && selected.toString().length > 0) {
+                root.diskCachePath = selected;
                 root.refresh();
             }
         }

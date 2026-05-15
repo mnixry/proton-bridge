@@ -32,6 +32,7 @@
     catch (...)  { emit fatalError(Exception("An unknown exception occurred", QString(), __func__)); }
 #define HANDLE_EXCEPTION_RETURN_BOOL(x) HANDLE_EXCEPTION(x) return false;
 #define HANDLE_EXCEPTION_RETURN_QSTRING(x) HANDLE_EXCEPTION(x) return QString();
+#define HANDLE_EXCEPTION_RETURN_QURL(x) HANDLE_EXCEPTION(x) return QUrl();
 #define HANDLE_EXCEPTION_RETURN_ZERO(x) HANDLE_EXCEPTION(x) return 0;
 
 
@@ -1051,6 +1052,24 @@ void QMLBackend::exportTLSCertificates() const {
         if (!folderPath.isEmpty()) {
             app().grpc().exportTLSCertificates(folderPath);
         }
+    )
+}
+
+
+//****************************************************************************************************************************************************
+//
+//****************************************************************************************************************************************************
+QUrl QMLBackend::selectDiskCacheFolder() const {
+    HANDLE_EXCEPTION_RETURN_QURL(
+        QUrl const initial = this->diskCachePath();
+        QString const startPath = initial.isLocalFile()
+            ? initial.toLocalFile()
+            : QStandardPaths::writableLocation(QStandardPaths::HomeLocation);
+        QString const folderPath = QFileDialog::getExistingDirectory(nullptr, QObject::tr("Select cache location"), startPath);
+        if (folderPath.isEmpty()) {
+            return QUrl();
+        }
+        return QUrl::fromLocalFile(folderPath);
     )
 }
 
