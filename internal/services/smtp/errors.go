@@ -28,6 +28,7 @@ var (
 	ErrInvalidRecipient            = errors.New("invalid recipient")
 	ErrInvalidReturnPath           = errors.New("invalid return path")
 	ErrNoSuchUser                  = errors.New("no such user")
+	ErrSMTPAuthFailed              = errors.New("the account did not pass the smtp authentication check")
 	ErrTooManyErrors               = errors.New("too many failed requests, please try again later")
 	ErrSendMessageOperation        = errors.New("smtp: send message")
 	ErrGetRecipientsOperation      = errors.New("smtp: get recipients")

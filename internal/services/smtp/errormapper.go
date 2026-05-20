@@ -61,11 +61,11 @@ var smtpErrRules = []errmapper.Rule{
 			if target, ok := errors.AsType[*ErrRecipientAddressDoesNotExist](err); ok {
 				//nolint:revive,staticcheck //disable ST1005,
 				return fmt.Errorf(
-					"No email was sent. The address %s does not exist. Correct the recipient and resend the message.",
+					"No email was sent. The address %s does not exist. Correct the recipient and resend the message",
 					target.Address(),
 				)
 			}
-			return errors.New("No email was sent. One or more addresses do not exist. Correct the recipients and resend the message.") //nolint:revive,staticcheck //disable ST1005
+			return errors.New("No email was sent. One or more addresses do not exist. Correct the recipients and resend the message") //nolint:revive,staticcheck //disable ST1005
 		},
 	),
 	errmapper.NewRule(
@@ -75,7 +75,7 @@ var smtpErrRules = []errmapper.Rule{
 		},
 		errmapper.MatchAll,
 		//nolint:revive,staticcheck //disable ST1005
-		errors.New("This message couldn't be sent because the email client sent a malformed message."),
+		errors.New("This message couldn't be sent because the email client sent a malformed message"),
 	),
 	errmapper.NewRuleWithResultFunc(
 		[]error{
@@ -86,33 +86,43 @@ var smtpErrRules = []errmapper.Rule{
 			if target, ok := errors.AsType[*ErrCannotSendFromAddress](err); ok {
 				//nolint:revive,staticcheck //disable ST1005,
 				return fmt.Errorf(
-					"You cannot send from this address: %s. Check your email client and Bridge settings.",
+					"You cannot send from this address: %s. Check your email client and Bridge settings",
 					target.Address(),
 				)
 			}
 
 			//nolint:revive,staticcheck //disable ST1005
-			return errors.New("You cannot send from this address. Check your email client and Bridge settings.")
+			return errors.New("You cannot send from this address. Check your email client and Bridge settings")
 		},
 	),
 	errmapper.NewRule(
 		[]error{ErrTooManyErrors},
 		errmapper.MatchAny,
-		errors.New("Too many failed send attempts. Try again later."), //nolint:revive,staticcheck //disable ST1005
+		errors.New("Too many failed send attempts. Try again later"), //nolint:revive,staticcheck //disable ST1005
 	),
 	errmapper.NewRule(
 		[]error{ErrSenderAddressNotOwned},
 		errmapper.MatchAny,
-		errors.New("The sender address is not valid for this account. Check your email client and Proton settings, or choose a different sender address."), //nolint:revive,staticcheck //disable ST1005
+		errors.New("The sender address is not valid for this account. Check your email client and Proton settings, or choose a different sender address"), //nolint:revive,staticcheck //disable ST1005
 	),
 	errmapper.NewRule(
 		[]error{ErrUnsupportedOutgoingMIME},
 		errmapper.MatchAny,
-		errors.New("This message uses an unsupported message format. Try plain text or HTML."), //nolint:revive,staticcheck //disable ST1005,
+		errors.New("This message uses an unsupported message format. Try plain text or HTML"), //nolint:revive,staticcheck //disable ST1005
 	),
 	errmapper.NewRule(
-		[]error{ErrInvalidRecipient, ErrInvalidReturnPath, ErrNoSuchUser},
+		[]error{ErrSMTPAuthFailed},
 		errmapper.MatchAny,
-		errors.New("The sender or recipient address is not valid. Review the addresses and resend the message."), //nolint:revive,staticcheck //disable ST1005,
+		errors.New("User Authentication failed. Please check the outgoing server configuration in your mail client and try again"), //nolint:revive,staticcheck //disable ST1005
+	),
+	errmapper.NewRule(
+		[]error{ErrNoSuchUser},
+		errmapper.MatchAll,
+		errors.New("The account is not available in Bridge. Verify the outgoing server settings in your mail client and try again"), //nolint:revive,staticcheck //disable ST1005
+	),
+	errmapper.NewRule(
+		[]error{ErrInvalidRecipient, ErrInvalidReturnPath},
+		errmapper.MatchAny,
+		errors.New("The sender or recipient address is not valid. Review the addresses and resend the message"), //nolint:revive,staticcheck //disable ST1005,
 	),
 }

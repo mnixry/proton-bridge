@@ -69,7 +69,7 @@ func (s *Accounts) CheckAuth(user string, password []byte) (string, string, erro
 		return id, addrID, nil
 	}
 
-	return "", "", ErrNoSuchUser
+	return "", "", ErrSMTPAuthFailed
 }
 
 func (s *Accounts) SendMail(ctx context.Context, userID, addrID, from string, to []string, r io.Reader) error {
