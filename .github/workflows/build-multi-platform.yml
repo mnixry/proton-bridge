@@ -1,5 +1,4 @@
 name: Build on multiple platforms
-
 on:
   push:
     branches:
@@ -7,35 +6,37 @@ on:
   schedule:
     - cron: "0 0 * * *"
   workflow_dispatch:
-
 jobs:
   build:
     runs-on: ${{ matrix.os }}
-
     permissions:
       id-token: write
       attestations: write
-
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest, macos-15-intel]
-
     steps:
+      - name: Free Windows runner disk space
+        if: startsWith( matrix.os, 'windows' )
+        shell: powershell
+        run: |
+          Get-PSDrive C
+          Remove-Item -Recurse -Force "C:\Android" -ErrorAction SilentlyContinue
+          Remove-Item -Recurse -Force "C:\hostedtoolcache\windows" -ErrorAction SilentlyContinue
+          Remove-Item -Recurse -Force "$env:TEMP\*" -ErrorAction SilentlyContinue
+          Get-PSDrive C
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
           submodules: recursive
-
       - uses: jurplel/install-qt-action@v4
         with:
           version: 6.8.2
           cache: true
-
       - uses: actions/setup-go@v5
         with:
           go-version: "^1.24.0"
-
       - name: Install Linux dependencies
         if: startsWith( matrix.os, 'ubuntu' )
         run: |
@@ -46,17 +47,18 @@ jobs:
             linux-libc-dev \
             libfido2-dev \
             libcbor-dev \
+            autoconf \
+            autoconf-archive \
+            automake \
+            libtool \
             pkg-config
-
       - name: Install Windows dependencies
         if: startsWith( matrix.os, 'windows' )
         shell: powershell
         run: choco install -y zip ninja
-
       - name: Install macOS dependencies
         if: startsWith( matrix.os, 'macos' )
         run: brew install zip ninja libfido2 libcbor
-
       - name: Retrieve vcpkg commit hash
         id: cache_info
         shell: bash
@@ -65,7 +67,6 @@ jobs:
           echo "vcpkg_commit=$(git -C ./extern/vcpkg rev-parse HEAD)" >> $GITHUB_OUTPUT
           echo "vcpkg_cache_dir=$(realpath .cache)" >> $GITHUB_OUTPUT
           echo "timestamp=$(date +%s)" >> $GITHUB_OUTPUT
-
       - uses: actions/cache@v4
         with:
           path: |
@@ -77,7 +78,6 @@ jobs:
           restore-keys: |
             vcpkg-${{ matrix.os }}-
             vcpkg-${{ matrix.os }}-${{ steps.cache_info.outputs.vcpkg_commit }}-
-
       - name: Build
         id: build
         env:
@@ -85,7 +85,6 @@ jobs:
           VCPKG_DEFAULT_BINARY_CACHE: ${{ steps.cache_info.outputs.vcpkg_cache_dir }}
           VCPKG_BUILD_TYPE: Release
         run: make build
-
       - name: Report build failure
         if: failure()
         shell: bash
@@ -95,11 +94,9 @@ jobs:
           else
             echo "::error:: Build failed without any error message"
           fi
-
       - uses: actions/attest-build-provenance@v2
         with:
           subject-path: "bridge*.tgz"
-
       - uses: actions/upload-artifact@v4
         with:
           path: "bridge*.tgz"
