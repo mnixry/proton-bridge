@@ -15,8 +15,6 @@ package hv
 
 import (
 	"errors"
-	"fmt"
-	"strings"
 
 	"github.com/ProtonMail/go-proton-api"
 )
@@ -58,10 +56,4 @@ func IsHvRequest(err error) bool {
 	}
 
 	return false
-}
-
-func FormatHvURL(details *proton.APIHVDetails) string {
-	return fmt.Sprintf("https://verify.proton.me/?methods=%v&token=%v",
-		strings.Join(details.Methods, ","),
-		details.Token)
 }

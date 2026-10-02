@@ -180,7 +180,7 @@ func (s *Service) UserID() string {
 	return s.userID
 }
 
-func (s *Service) HandleRefreshEvent(ctx context.Context, _ proton.RefreshFlag) error {
+func (s *Service) HandleRefreshEvent(ctx context.Context, _ proton.RefreshFlag, _ string) error {
 	s.log.Debug("Handling refresh event")
 	return s.identityState.OnRefreshEvent(ctx)
 }

@@ -43,7 +43,7 @@ type EventHandler struct {
 
 func (e EventHandler) OnEvent(ctx context.Context, event proton.Event) error {
 	if event.Refresh&proton.RefreshMail != 0 && e.RefreshHandler != nil {
-		return e.RefreshHandler.HandleRefreshEvent(ctx, event.Refresh)
+		return e.RefreshHandler.HandleRefreshEvent(ctx, event.Refresh, event.EventID)
 	}
 
 	// Start with user settings because of telemetry.
@@ -98,7 +98,7 @@ func (e EventHandler) OnEvent(ctx context.Context, event proton.Event) error {
 }
 
 type RefreshEventHandler interface {
-	HandleRefreshEvent(ctx context.Context, flag proton.RefreshFlag) error
+	HandleRefreshEvent(ctx context.Context, flag proton.RefreshFlag, eventID string) error
 }
 type UserEventHandler interface {
 	HandleUserEvent(ctx context.Context, user *proton.User) error

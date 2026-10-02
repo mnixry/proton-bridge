@@ -24,9 +24,9 @@ import (
 	"github.com/ProtonMail/gluon/imap"
 	"github.com/ProtonMail/go-proton-api"
 	"github.com/ProtonMail/proton-bridge/v3/internal/services/imapservice/mocks"
-	"github.com/golang/mock/gomock"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 )
 
 func TestFixGODT3003Labels(t *testing.T) {

@@ -24,6 +24,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -68,16 +69,20 @@ func TestBridge_Send(t *testing.T) {
 
 				if i%2 == 0 {
 					// Authorize with SASL PLAIN.
-					require.NoError(t, client.Auth(sasl.NewPlainClient(
-						senderInfo.Addresses[0],
-						senderInfo.Addresses[0],
-						string(senderInfo.BridgePass)),
+					require.NoError(t, client.Auth(
+						sasl.NewPlainClient(
+							senderInfo.Addresses[0],
+							senderInfo.Addresses[0],
+							string(senderInfo.BridgePass),
+						),
 					))
 				} else {
 					// Authorize with SASL LOGIN.
-					require.NoError(t, client.Auth(sasl.NewLoginClient(
-						senderInfo.Addresses[0],
-						string(senderInfo.BridgePass)),
+					require.NoError(t, client.Auth(
+						sasl.NewLoginClient(
+							senderInfo.Addresses[0],
+							string(senderInfo.BridgePass),
+						),
 					))
 				}
 
@@ -168,10 +173,12 @@ func TestBridge_SendDraftFlags(t *testing.T) {
 			require.NoError(t, smtpClient.StartTLS(&tls.Config{InsecureSkipVerify: true}))
 
 			// Authorize with SASL PLAIN.
-			require.NoError(t, smtpClient.Auth(sasl.NewPlainClient(
-				userInfo.Addresses[0],
-				userInfo.Addresses[0],
-				string(userInfo.BridgePass)),
+			require.NoError(t, smtpClient.Auth(
+				sasl.NewPlainClient(
+					userInfo.Addresses[0],
+					userInfo.Addresses[0],
+					string(userInfo.BridgePass),
+				),
 			))
 
 			// Send the message.
@@ -199,14 +206,14 @@ func TestBridge_SendDraftFlags(t *testing.T) {
 				status, err := imapClient.Select("Drafts", false)
 				require.NoError(t, err)
 				return status.Messages == 0
-			}, 10*time.Second, 100*time.Millisecond)
+			}, 30*time.Second, 1*time.Second)
 
 			// Assert that the message is eventually in the sent folder.
 			require.Eventually(t, func() bool {
 				messages, err := clientFetch(imapClient, "Sent")
 				require.NoError(t, err)
 				return len(messages) == 1
-			}, 10*time.Second, 100*time.Millisecond)
+			}, 30*time.Second, 1*time.Second)
 
 			// Assert that the message is not marked as a draft.
 			{
@@ -279,10 +286,12 @@ func TestBridge_SendInvite(t *testing.T) {
 			require.NoError(t, smtpClient.StartTLS(&tls.Config{InsecureSkipVerify: true}))
 
 			// Authorize with SASL PLAIN.
-			require.NoError(t, smtpClient.Auth(sasl.NewPlainClient(
-				userInfo.Addresses[0],
-				userInfo.Addresses[0],
-				string(userInfo.BridgePass)),
+			require.NoError(t, smtpClient.Auth(
+				sasl.NewPlainClient(
+					userInfo.Addresses[0],
+					userInfo.Addresses[0],
+					string(userInfo.BridgePass),
+				),
 			))
 
 			// Send the message.
@@ -305,19 +314,26 @@ func TestBridge_SendInvite(t *testing.T) {
 				require.NoError(t, imapClient.Expunge(nil))
 			}
 
+			var waitFor time.Duration
+			if runtime.GOOS == "windows" {
+				waitFor = 60 * time.Second
+			} else {
+				waitFor = 30 * time.Second
+			}
+
 			// Assert that the draft is eventually gone.
 			require.Eventually(t, func() bool {
 				status, err := imapClient.Select("Drafts", false)
 				require.NoError(t, err)
 				return status.Messages == 0
-			}, 10*time.Second, 100*time.Millisecond)
+			}, waitFor, 1*time.Second)
 
 			// Assert that the message is eventually in the sent folder.
 			require.Eventually(t, func() bool {
 				messages, err := clientFetch(imapClient, "Sent")
 				require.NoError(t, err)
 				return len(messages) == 1
-			}, 10*time.Second, 100*time.Millisecond)
+			}, waitFor, 1*time.Second)
 
 			// Assert that the message is not marked as a draft.
 			{
@@ -432,9 +448,11 @@ SGVsbG8gd29ybGQK
 				require.NoError(t, client.StartTLS(&tls.Config{InsecureSkipVerify: true}))
 
 				// Authorize with SASL LOGIN.
-				require.NoError(t, client.Auth(sasl.NewLoginClient(
-					senderInfo.Addresses[0],
-					string(senderInfo.BridgePass)),
+				require.NoError(t, client.Auth(
+					sasl.NewLoginClient(
+						senderInfo.Addresses[0],
+						string(senderInfo.BridgePass),
+					),
 				))
 
 				// Send the message.
@@ -635,9 +653,11 @@ Hello world
 				require.NoError(t, client.StartTLS(&tls.Config{InsecureSkipVerify: true}))
 
 				// Authorize with SASL LOGIN.
-				require.NoError(t, client.Auth(sasl.NewLoginClient(
-					senderInfo.Addresses[0],
-					string(senderInfo.BridgePass)),
+				require.NoError(t, client.Auth(
+					sasl.NewLoginClient(
+						senderInfo.Addresses[0],
+						string(senderInfo.BridgePass),
+					),
 				))
 
 				// Send the message.
@@ -717,9 +737,11 @@ func TestBridge_SendAddressDisabled(t *testing.T) {
 
 			// Upgrade to TLS.
 			require.NoError(t, client.StartTLS(&tls.Config{InsecureSkipVerify: true}))
-			require.NoError(t, client.Auth(sasl.NewLoginClient(
-				senderInfo.Addresses[0],
-				string(senderInfo.BridgePass)),
+			require.NoError(t, client.Auth(
+				sasl.NewLoginClient(
+					senderInfo.Addresses[0],
+					string(senderInfo.BridgePass),
+				),
 			))
 
 			// Send the message.

@@ -193,7 +193,7 @@ func (s *Service) HandleAddressEvents(ctx context.Context, addressEvents []proto
 	return nil
 }
 
-func (s *Service) HandleRefreshEvent(ctx context.Context, _ proton.RefreshFlag) error {
+func (s *Service) HandleRefreshEvent(ctx context.Context, _ proton.RefreshFlag, _ string) error {
 	s.log.Info("Handling refresh event")
 
 	if err := s.identity.OnRefreshEvent(ctx); err != nil {

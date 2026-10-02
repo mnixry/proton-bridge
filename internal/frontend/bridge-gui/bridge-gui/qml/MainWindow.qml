@@ -80,6 +80,11 @@ ApplicationWindow {
         layoutForUserCount(Backend.users.count);
     }
 
+    Shortcut {
+        sequence: "Ctrl+W" // adds the meta+W shortcut to close the window
+        onActivated: root.close()
+    }
+
     // show Setup Guide on every new user
     Connections {
         function onRowsAboutToBeRemoved(parent, first, last) {

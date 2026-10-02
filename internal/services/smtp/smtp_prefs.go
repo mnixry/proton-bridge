@@ -298,12 +298,29 @@ func (b *sendPrefsBuilder) setPGPSettings(
 	// Sending external but with keys supplied by WKD.
 	// Treated pretty much same as internal.
 	if len(apiKeys) > 0 {
-		return b.setExternalPGPSettingsWithWKDKeys(vCardData, apiKeys)
+		if usableWKDKeys := filterUsableWKDKeys(apiKeys); len(usableWKDKeys) > 0 {
+			return b.setExternalPGPSettingsWithWKDKeys(vCardData, usableWKDKeys)
+		}
 	}
 
 	// Sending external without any WKD keys.
 	// If we have a contact saved, we can use its settings.
 	return b.setExternalPGPSettingsWithoutWKDKeys(vCardData)
+}
+
+// filterUsableWKDKeys removes WKD keys that are not importable by the crypto library.
+// WKD keys are retrieved from external sources and may have incompatible formats.
+func filterUsableWKDKeys(rawAPIKeys []proton.PublicKey) []proton.PublicKey {
+	usableKeys := make([]proton.PublicKey, 0, len(rawAPIKeys))
+	for _, key := range rawAPIKeys {
+		if _, err := crypto.NewKeyFromArmored(key.PublicKey); err != nil {
+			logrus.WithFields(logrus.Fields{"service": "smtp"}).WithError(err).
+				Warn("Ignoring WKD key since it is not importable")
+			continue
+		}
+		usableKeys = append(usableKeys, key)
+	}
+	return usableKeys
 }
 
 // setInternalPGPSettings returns SendPreferences for internal messages.

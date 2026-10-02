@@ -135,7 +135,7 @@ func (s *Service) run(ctx context.Context) {
 	}
 }
 
-func (s *Service) HandleRefreshEvent(ctx context.Context, _ proton.RefreshFlag) error {
+func (s *Service) HandleRefreshEvent(ctx context.Context, _ proton.RefreshFlag, _ string) error {
 	s.initialise(ctx)
 	return nil
 }

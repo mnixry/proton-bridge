@@ -22,6 +22,8 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"io/fs"
+	"os"
 	"path"
 	"runtime"
 
@@ -73,6 +75,7 @@ func newVault(reporter *sentry.Reporter, locations *locations.Locations, keychai
 	}
 
 	logrus.WithField("vaultDir", vaultDir).Debug("Loading vault from directory")
+	insecureVaultDir := path.Join(vaultDir, "insecure")
 
 	var (
 		vaultKey       []byte
@@ -102,7 +105,7 @@ func newVault(reporter *sentry.Reporter, locations *locations.Locations, keychai
 		insecure = true
 
 		// We store the insecure vault in a separate directory
-		vaultDir = path.Join(vaultDir, "insecure")
+		vaultDir = insecureVaultDir
 
 		// Schedule the relevant observability metric for sending.
 		obsSender.AddMetrics(observabilitymetrics.GenerateVaultKeyFetchGenericErrorMetric())
@@ -136,6 +139,27 @@ func newVault(reporter *sentry.Reporter, locations *locations.Locations, keychai
 		if err := vault.ResetFailedKeychainAttemptCount(vaultDir); err != nil {
 			logrus.WithError(err).Error("Could not reset and save failed keychain attempt count")
 		}
+	}
+
+	if featureFlags.GetFlagValue(unleash.OrphanedInsecureVaultsDeletionDisabled) {
+		return userVault, insecure, corrupt, nil
+	}
+
+	// Remove Orphaned Insecure Vaults.
+	if !insecure {
+		_, err := os.Stat(insecureVaultDir)
+		if errors.Is(err, fs.ErrNotExist) {
+			logrus.Info("No orphaned insecure vaults found")
+			return userVault, insecure, corrupt, nil
+		}
+
+		err = os.RemoveAll(insecureVaultDir) // RemoveAll returns only a *PathError, if the path doesn't exist, err == nil, thats why we check beforehand.
+		if err != nil {
+			logrus.WithError(err).Error("Could not remove orphaned insecure vault")
+			return userVault, insecure, corrupt, nil
+		}
+
+		logrus.Info("Removed orphaned insecure vaults")
 	}
 
 	return userVault, insecure, corrupt, nil

@@ -25,8 +25,8 @@ import (
 	"github.com/ProtonMail/proton-bridge/v3/internal/plan"
 	"github.com/ProtonMail/proton-bridge/v3/internal/telemetry"
 	"github.com/ProtonMail/proton-bridge/v3/internal/telemetry/mocks"
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 )
 
 func TestHeartbeat_default_heartbeat(t *testing.T) {

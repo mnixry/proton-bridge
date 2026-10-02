@@ -58,8 +58,9 @@ func (event UserLoadSuccess) String() string {
 type UserLoadFail struct {
 	eventBase
 
-	UserID string
-	Error  error
+	UserID  string
+	AuthUID string
+	Error   error
 }
 
 func (event UserLoadFail) String() string {

@@ -5,7 +5,7 @@ import (
 
 	"github.com/ProtonMail/go-proton-api"
 	"github.com/ProtonMail/proton-bridge/v3/internal/services/observability"
-	"github.com/golang/mock/gomock"
+	"go.uber.org/mock/gomock"
 )
 
 type MockObservabilitySender struct {

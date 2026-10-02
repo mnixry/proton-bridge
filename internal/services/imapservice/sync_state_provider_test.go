@@ -21,6 +21,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/ProtonMail/proton-bridge/v3/internal/sentry"
 	"github.com/ProtonMail/proton-bridge/v3/internal/services/syncservice"
 	"github.com/ProtonMail/proton-bridge/v3/pkg/utils"
 	"github.com/bradenaw/juniper/xmaps"
@@ -38,7 +39,7 @@ func TestMigrateSyncSettings_AlreadyExists(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, migrated)
 
-	state, err := NewSyncState(testFile)
+	state, err := NewSyncState(testFile, sentry.NullSentryReporter{})
 	require.NoError(t, err)
 	status, err := state.GetSyncStatus(context.Background())
 	require.NoError(t, err)
@@ -53,7 +54,7 @@ func TestMigrateSyncSettings_DoesNotExist(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, migrated)
 
-	state, err := NewSyncState(GetSyncConfigPath(tmpDir, "test"))
+	state, err := NewSyncState(GetSyncConfigPath(tmpDir, "test"), sentry.NullSentryReporter{})
 	require.NoError(t, err)
 	status, err := state.GetSyncStatus(context.Background())
 	require.NoError(t, err)
@@ -77,4 +78,51 @@ func generateTestState(path string) (syncservice.Status, error) {
 	status.HasMessages = true
 
 	return status, storeImpl(&status, path)
+}
+
+func TestSyncState_StartSyncEventID(t *testing.T) {
+	tmpDir := t.TempDir()
+	testFile := GetSyncConfigPath(tmpDir, "test")
+
+	state, err := NewSyncState(testFile, sentry.NullSentryReporter{})
+	require.NoError(t, err)
+
+	ctx := context.Background()
+	const eventID = "EVENT_START"
+
+	status, err := state.GetSyncStatus(ctx)
+	require.NoError(t, err)
+	require.Empty(t, status.StartSyncEventID)
+
+	require.NoError(t, state.SetStartSyncEventID(ctx, eventID))
+
+	status, err = state.GetSyncStatus(ctx)
+	require.NoError(t, err)
+	require.Equal(t, eventID, status.StartSyncEventID)
+
+	reloaded, err := NewSyncState(testFile, sentry.NullSentryReporter{})
+	require.NoError(t, err)
+
+	status, err = reloaded.GetSyncStatus(ctx)
+	require.NoError(t, err)
+	require.Equal(t, eventID, status.StartSyncEventID)
+}
+
+func TestSyncState_ClearSyncStatusClearsStartSyncEventID(t *testing.T) {
+	tmpDir := t.TempDir()
+	testFile := GetSyncConfigPath(tmpDir, "test")
+
+	state, err := NewSyncState(testFile, sentry.NullSentryReporter{})
+	require.NoError(t, err)
+
+	ctx := context.Background()
+	require.NoError(t, state.SetHasLabels(ctx, true))
+	require.NoError(t, state.SetStartSyncEventID(ctx, "EVENT_START"))
+
+	require.NoError(t, state.ClearSyncStatus(ctx))
+
+	status, err := state.GetSyncStatus(ctx)
+	require.NoError(t, err)
+	require.Empty(t, status.StartSyncEventID)
+	require.False(t, status.HasLabels)
 }

@@ -44,6 +44,6 @@ func TestNewFailedMessageLiteral(t *testing.T) {
 	parsed, err := imap.NewParsedMessage(literal)
 	require.NoError(t, err)
 	require.Equal(t, `("29 Nov 73 21:33 UTC" "Message failed to build" NIL NIL NIL NIL NIL NIL NIL NIL)`, parsed.Envelope)
-	require.Equal(t, `("text" "plain" () NIL NIL "base64" 114 2)`, parsed.Body)
-	require.Equal(t, `("text" "plain" () NIL NIL "base64" 114 2 NIL NIL NIL NIL)`, parsed.Structure)
+	require.Equal(t, `("text" "plain" NIL NIL NIL "base64" 114 2)`, parsed.Body)
+	require.Equal(t, `("text" "plain" NIL NIL NIL "base64" 114 2 NIL NIL NIL NIL)`, parsed.Structure)
 }

@@ -88,9 +88,11 @@ type Service struct {
 	syncStateProvider  *SyncState
 	syncReporter       *syncReporter
 
-	syncConfigPath     string
+	syncConfigPath string
+	isSyncing      atomic.Bool
+
+	// lastHandledEventID keeps track of the last processed event both during sync and after.
 	lastHandledEventID string
-	isSyncing          atomic.Bool
 
 	observabilitySender  observability.Sender
 	labelConflictManager *LabelConflictManager
@@ -180,14 +182,13 @@ func (s *Service) Start(
 	lastEventID string,
 ) error {
 	s.lastHandledEventID = lastEventID
-	{
-		syncStateProvider, err := NewSyncState(s.syncConfigPath)
-		if err != nil {
-			return fmt.Errorf("failed to load sync state: %w", err)
-		}
 
-		s.syncStateProvider = syncStateProvider
+	syncStateProvider, err := NewSyncState(s.syncConfigPath, s.reporter)
+	if err != nil {
+		return fmt.Errorf("failed to load sync state: %w", err)
 	}
+
+	s.syncStateProvider = syncStateProvider
 
 	s.syncHandler = syncservice.NewHandler(
 		syncRegulator,
@@ -219,7 +220,9 @@ func (s *Service) Start(
 		return err
 	}
 
-	group.Go(ctx, s.identityState.identity.User.ID, "imap-service", s.run)
+	group.Go(ctx, s.identityState.identity.User.ID, "imap-service", func(ctx context.Context) {
+		s.run(ctx, s.lastHandledEventID)
+	})
 	return nil
 }
 
@@ -273,6 +276,10 @@ func (s *Service) GetSyncFailedMessageIDs(ctx context.Context) ([]string, error)
 	return cpc.SendTyped[[]string](ctx, s.cpc, &getSyncFailedMessagesReq{})
 }
 
+func (s *Service) GetSyncStatus(ctx context.Context) (syncservice.Status, error) {
+	return cpc.SendTyped[syncservice.Status](ctx, s.cpc, &getSyncStatusReq{})
+}
+
 func (s *Service) Close() {
 	for _, c := range s.connectors {
 		c.StateClose()
@@ -281,7 +288,7 @@ func (s *Service) Close() {
 	s.connectors = make(map[string]*Connector)
 }
 
-func (s *Service) HandleRefreshEvent(ctx context.Context, _ proton.RefreshFlag) error {
+func (s *Service) HandleRefreshEvent(ctx context.Context, _ proton.RefreshFlag, eventID string) error {
 	s.log.Debug("handling refresh event")
 
 	if err := s.identityState.Write(func(identity *useridentity.State) error {
@@ -309,7 +316,11 @@ func (s *Service) HandleRefreshEvent(ctx context.Context, _ proton.RefreshFlag) 
 		return err
 	}
 
-	s.startSyncing()
+	s.lastHandledEventID = eventID
+
+	if err := s.startSyncing(ctx, eventID); err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -324,7 +335,7 @@ func (s *Service) HandleUserEvent(_ context.Context, user *proton.User) error {
 	})
 }
 
-func (s *Service) run(ctx context.Context) { //nolint gocyclo
+func (s *Service) run(ctx context.Context, lastEventID string) { //nolint gocyclo
 	s.log.Info("Starting IMAP Service")
 	defer s.log.Info("Exiting IMAP Service")
 
@@ -332,7 +343,16 @@ func (s *Service) run(ctx context.Context) { //nolint gocyclo
 	defer s.eventSubscription.Remove(s.eventWatcher)
 	defer s.syncHandler.Close()
 
-	s.startSyncing()
+	if err := s.startSyncing(ctx, lastEventID); err != nil {
+		s.log.WithError(err).Error("Failed to start syncing on IMAP service start.")
+		s.eventPublisher.PublishEvent(ctx, events.UserBadEvent{
+			UserID:     s.identityState.UserID(),
+			OldEventID: "",
+			NewEventID: "",
+			EventInfo:  "Failed to start syncing on IMAP service start.",
+			Error:      fmt.Errorf("failed to start syncing on IMAP service start: %w", err),
+		})
+	}
 
 	eventHandler := userevents.EventHandler{
 		UserHandler:    s,
@@ -359,12 +379,13 @@ func (s *Service) run(ctx context.Context) { //nolint gocyclo
 			switch r := req.Value().(type) {
 			case *setAddressModeReq:
 				s.log.Debug("Set Address Mode Request")
-				err := s.setAddressMode(ctx, r.mode)
+				err := s.setAddressMode(ctx, r.mode, s.lastHandledEventID)
 				req.Reply(ctx, nil, err)
 
 			case *resyncReq:
 				s.log.Info("Received resync request, handling as refresh event")
-				err := s.HandleRefreshEvent(ctx, 0)
+
+				err := s.HandleRefreshEvent(ctx, 0, s.lastHandledEventID)
 				req.Reply(ctx, nil, err)
 				s.log.Info("Resync reply sent, handling as refresh event")
 
@@ -414,6 +435,16 @@ func (s *Service) run(ctx context.Context) { //nolint gocyclo
 
 				req.Reply(ctx, utils.Keys(status.FailedMessages), nil)
 
+			case *getSyncStatusReq:
+				s.log.Debug("Get sync status Request")
+				status, err := s.syncStateProvider.GetSyncStatus(ctx)
+				if err != nil {
+					req.Reply(ctx, syncservice.Status{}, fmt.Errorf("failed to get sync status: %w", err))
+					continue
+				}
+
+				req.Reply(ctx, status, nil)
+
 			default:
 				s.log.Error("Received unknown request")
 			}
@@ -439,7 +470,38 @@ func (s *Service) run(ctx context.Context) { //nolint gocyclo
 						return
 					}
 
-					if err := s.eventProvider.RewindEventID(ctx, s.lastHandledEventID); err != nil {
+					status, err := s.syncStateProvider.GetSyncStatus(ctx)
+					if err != nil {
+						s.log.WithError(err).Error("Failed to load sync state for rewind")
+						s.isSyncing.Store(false)
+						return
+					}
+					rewindTo := status.StartSyncEventID
+					if rewindTo == "" {
+						// No point to rewind to
+						// lastEventID == ""
+						err := s.reporter.ReportExceptionWithContext(
+							"No eventID to rewind event loop back to.",
+							reporter.Context{
+								"startSyncEventID":   status.StartSyncEventID,
+								"lastHandledEventID": s.lastHandledEventID,
+							},
+						)
+						if err != nil {
+							s.log.WithError(err).Error("Failed to report empty rewindTo sentry exception")
+						}
+
+						s.log.WithFields(logrus.Fields{
+							"startSyncEventID":   rewindTo,
+							"lastHandledEventID": s.lastHandledEventID,
+						}).Error("No rewind event found.")
+
+						s.isSyncing.Store(false)
+
+						return
+					}
+
+					if err := s.eventProvider.RewindEventID(ctx, rewindTo); err != nil {
 						if errors.Is(err, context.Canceled) {
 							return
 						}
@@ -454,6 +516,10 @@ func (s *Service) run(ctx context.Context) { //nolint gocyclo
 						})
 					}
 
+					// Clear the startSyncEventID; the sync has been completed.
+					if err := s.syncStateProvider.SetStartSyncEventID(ctx, ""); err != nil {
+						s.log.WithError(err).Error("Failed to clear start sync event id")
+					}
 					s.isSyncing.Store(false)
 				}()
 			}
@@ -482,11 +548,7 @@ func (s *Service) run(ctx context.Context) { //nolint gocyclo
 						return err
 					}
 
-					// We need to reset the sync if we receive a refresh event during a sync and update
-					// the last event id to avoid problems.
-					if event.Refresh&proton.RefreshMail != 0 {
-						s.lastHandledEventID = event.EventID
-					}
+					s.lastHandledEventID = event.EventID
 
 					return nil
 				}
@@ -514,7 +576,16 @@ func (s *Service) run(ctx context.Context) { //nolint gocyclo
 				s.log.Info("Connection Restored Resuming Sync (if any)")
 				// Cancel previous run, if any, just in case.
 				s.cancelSync()
-				s.startSyncing()
+				if err := s.startSyncing(ctx, s.lastHandledEventID); err != nil {
+					s.log.WithError(err).Error("Failed to start syncing after connection restored")
+					s.eventPublisher.PublishEvent(ctx, events.UserBadEvent{
+						UserID:     s.identityState.UserID(),
+						OldEventID: "",
+						NewEventID: "",
+						EventInfo:  "Failed to start syncing after connection restored.",
+						Error:      fmt.Errorf("failed to start syncing after connection restored: %w", err),
+					})
+				}
 
 			case events.ConnStatusDown:
 				s.log.Info("Connection Lost cancelling sync")
@@ -628,7 +699,7 @@ func (s *Service) removeConnectorsFromServer(ctx context.Context, connectors map
 	return nil
 }
 
-func (s *Service) setAddressMode(ctx context.Context, mode usertypes.AddressMode) error {
+func (s *Service) setAddressMode(ctx context.Context, mode usertypes.AddressMode, lastEventID string) error {
 	if s.addressMode == mode {
 		return nil
 	}
@@ -658,7 +729,10 @@ func (s *Service) setAddressMode(ctx context.Context, mode usertypes.AddressMode
 		return err
 	}
 
-	s.startSyncing()
+	if err := s.startSyncing(ctx, lastEventID); err != nil {
+		s.log.WithError(err).Error("Failed to start syncing.")
+		return err
+	}
 
 	return nil
 }
@@ -675,9 +749,30 @@ func (s *Service) setShowAllMail(v bool) {
 	}
 }
 
-func (s *Service) startSyncing() {
+func (s *Service) beforeStartSyncing(ctx context.Context, lastHandledEventID string) error {
+	status, err := s.syncStateProvider.GetSyncStatus(ctx)
+	if err != nil {
+		return err
+	}
+
+	// lastHandledEventID is set from user events when starting imapservice
+	// We have a startSyncEventID, so we can return early, this means we are already syncing.
+	if status.StartSyncEventID != "" {
+		return nil
+	}
+
+	// Store the current event id as the start sync
+	// event id so we can rewind to it when the sync is complete.
+	return s.syncStateProvider.SetStartSyncEventID(ctx, lastHandledEventID)
+}
+
+func (s *Service) startSyncing(ctx context.Context, lastHandledEventID string) error {
+	if err := s.beforeStartSyncing(ctx, lastHandledEventID); err != nil {
+		return err
+	}
 	s.isSyncing.Store(true)
 	s.syncHandler.Execute(s.syncReporter, s.labels.GetLabelMap(), s.syncUpdateApplier, s.syncMessageBuilder, syncservice.DefaultRetryCoolDown, s.LabelConflictChecker)
+	return nil
 }
 
 func (s *Service) cancelSync() {
@@ -708,6 +803,8 @@ type setAddressModeReq struct {
 }
 
 type getSyncFailedMessagesReq struct{}
+
+type getSyncStatusReq struct{}
 
 func GetSyncConfigPath(path string, userID string) string {
 	return filepath.Join(path, fmt.Sprintf("sync-%v", userID))

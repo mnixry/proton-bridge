@@ -30,9 +30,6 @@ var smtpSharedErrMapper = errmapper.New(smtpErrRules)
 // mapError uses the shared error mapper to resolve a given error chain to a single error.
 // Ideally called only from the SMTP server boundary so that lower layers can log the full error chain.
 func mapError(err error) error {
-	if err == nil {
-		return nil
-	}
 	return smtpSharedErrMapper.Resolve(err)
 }
 

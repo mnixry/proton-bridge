@@ -32,8 +32,8 @@ import (
 	obsMetrics "github.com/ProtonMail/proton-bridge/v3/internal/services/syncservice/observabilitymetrics"
 	"github.com/ProtonMail/proton-bridge/v3/internal/unleash"
 	"github.com/bradenaw/juniper/xslices"
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 )
 
 func TestSyncChunkSyncBuilderBatch(t *testing.T) {

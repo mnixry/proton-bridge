@@ -36,6 +36,7 @@ import (
 	"github.com/ProtonMail/gopenpgp/v2/constants"
 	"github.com/ProtonMail/gopenpgp/v2/crypto"
 	imapservice "github.com/ProtonMail/proton-bridge/v3/internal/services/imapservice"
+	"github.com/ProtonMail/proton-bridge/v3/internal/services/syncservice"
 	"github.com/ProtonMail/proton-bridge/v3/internal/usertypes"
 	"github.com/ProtonMail/proton-bridge/v3/internal/vault"
 	bmessage "github.com/ProtonMail/proton-bridge/v3/pkg/message"
@@ -167,6 +168,10 @@ func (user *User) GetDiagnosticMetadata(ctx context.Context) (DiagnosticMetadata
 		Metadata:         meta,
 		FailedMessageIDs: xmaps.SetFromSlice(failedMessages),
 	}, nil
+}
+
+func (user *User) IMAPSyncStatus(ctx context.Context) (syncservice.Status, error) {
+	return user.imapService.GetSyncStatus(ctx)
 }
 
 func (user *User) DebugDownloadMessages(

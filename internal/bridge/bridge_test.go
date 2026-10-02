@@ -275,9 +275,11 @@ func TestBridge_UserAgentFromSMTPClient(t *testing.T) {
 
 			// Upgrade to TLS.
 			require.NoError(t, client.StartTLS(&tls.Config{InsecureSkipVerify: true}))
-			require.NoError(t, client.Auth(sasl.NewLoginClient(
-				info.Addresses[0],
-				string(info.BridgePass)),
+			require.NoError(t, client.Auth(
+				sasl.NewLoginClient(
+					info.Addresses[0],
+					string(info.BridgePass),
+				),
 			))
 
 			require.Eventually(t, func() bool {
@@ -1021,11 +1023,13 @@ func TestBridge_GetUpdatedCachePath(t *testing.T) {
 			gluonDBPath:    "/Users/test/",
 			gluonCachePath: "/Users/test/gluon",
 			shouldChange:   false,
-		}, {
+		},
+		{
 			gluonDBPath:    "/Users/test/",
 			gluonCachePath: "/Users/tester/gluon",
 			shouldChange:   true,
-		}, {
+		},
+		{
 			gluonDBPath:    "/Users/testing/",
 			gluonCachePath: "/Users/test/gluon",
 			shouldChange:   true,

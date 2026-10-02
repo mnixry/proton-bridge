@@ -23,9 +23,9 @@ import (
 
 	"github.com/ProtonMail/gluon/reporter"
 	"github.com/ProtonMail/proton-bridge/v3/pkg/utils"
-	"github.com/golang/mock/gomock"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/mock/gomock"
 )
 
 type reportRecord struct {
@@ -56,7 +56,7 @@ func (r *reportRecorder) skipAsserts() {
 	r.skipAssert = true
 }
 
-func (r *reportRecorder) add(isException bool, message string, context reporter.Context) {
+func (r *reportRecorder) add(isException bool, message string, context reporter.Context, tags *reporter.Tags) {
 	r.lock.Lock()
 	defer r.lock.Unlock()
 
@@ -64,6 +64,7 @@ func (r *reportRecorder) add(isException bool, message string, context reporter.
 		"isException": isException,
 		"message":     message,
 		"context":     context,
+		"tags":        tags,
 		"pkg":         "test/reportRecorder",
 	})
 
@@ -132,22 +133,27 @@ func (r *reportRecorder) removeMatchingRecords(isException, message, context gom
 }
 
 func (r *reportRecorder) ReportException(data any) error {
-	r.add(true, "exception", reporter.Context{"data": data})
+	r.add(true, "exception", reporter.Context{"data": data}, nil)
 	return nil
 }
 
 func (r *reportRecorder) ReportMessage(message string) error {
-	r.add(false, message, reporter.Context{})
+	r.add(false, message, reporter.Context{}, nil)
 	return nil
 }
 
 func (r *reportRecorder) ReportMessageWithContext(message string, context reporter.Context) error {
-	r.add(false, message, context)
+	r.add(false, message, context, nil)
 	return nil
 }
 
 func (r *reportRecorder) ReportWarningWithContext(message string, context reporter.Context) error {
-	r.add(false, message, context)
+	r.add(false, message, context, nil)
+	return nil
+}
+
+func (r *reportRecorder) ReportMessageWithContextAndTags(message string, context reporter.Context, tags reporter.Tags) error {
+	r.add(false, message, context, &tags)
 	return nil
 }
 
@@ -158,7 +164,7 @@ func (r *reportRecorder) ReportExceptionWithContext(data any, context reporter.C
 
 	context["data"] = data
 
-	r.add(true, "exception", context)
+	r.add(true, "exception", context, nil)
 
 	return nil
 }

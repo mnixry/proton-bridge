@@ -3,6 +3,61 @@
 Changelog [format](http://keepachangelog.com/en/1.0.0/)
 
 
+## Queshuachaca Bridge 3.27.1
+
+### Fixed
+* BRIDGE-644: Recover from corrupted sync state file; force file sync during write.
+
+## Queshuachaca Bridge 3.27.0
+
+### Added
+* Added the expected mock for properly reported errors from Gluon.
+* BRIDGE-616: Maximum MIME structure depth added.
+
+### Changed
+* BRIDGE-622: Patch vulnerabilities August 2026.
+* BRIDGE-619: Gluon's apply sentry reporting is gated behind a feature-flag.
+* Separate context with timeout used in session.done() handler.
+* External WKD keys are not used if they cant be imported.
+* BRIDGE-621: Silence Vulnerabilities August 2026.
+
+### Fixed
+* BRIDGE-627: Return RFC3501 compliant response for body-fld-enc & body-fld-param.
+* Fixed an E2E test case; expect human verification when signing in with wrong credentials.
+* BRIDGE-614: Read onDiskLiteral in applyMessageUpdated before any DB transactions.
+* Fixed a deadlock contention in collector_test.
+* BRIDGE-618: UpdateRemoteMessageID used the correct SQL table.
+* BRIDGE-615: RemoveMessagesFromMailbox uses proper chunked ids.
+
+## Pamban Bridge 3.26.0
+
+### Added
+* BRIDGE-576: Added logging to current auth session ID.
+* BRIDGE-568: Added meta+W shortcut to close the main window.
+* BRIDGE-571: Added a marker for the initial eventID during sync.
+
+### Changed
+* BRIDGE-601: Calendar Event doesn't mutate a copy in go-proton-api.
+* BRIDGE-602: Remove unused worker-pool implementation in go-proton-api.
+* BRIDGE-603: Removed unused futures implementation in go-proton-api.
+* BRIDGE-611: HV requests resolve to correct API environment.
+* BRIDGE-587: Vulnerabilities Patched July 2026.
+* BRIDGE-581: Replaced FILENAME_VARIABLE with OUTPUT_SCRIPT for bridge-gui.
+* BRIDGE-574: Go Toolchain bump to 1.26.4.
+* BRIDGE-577: Replaced gomock with uber-go/mock.
+* BRIDGE-555: Go Toolchain bump to 1.26.3 & Vulnerabilities patched for June 2026.
+* BRIDGE-582: Empty address list now returns nil instead of empty list per RFC 3501.
+* BRIDGE-610: Literals are now structurally compared if byte-for-byte comparison fails.
+* BRIDGE-558: Orphaned unencrypted vaults are now deleted once keychain access is gained.
+
+### Fixed
+* BRIDGE-612: Fixed a crash on macOS 27.
+* BRIDGE-608: Fixed an issue with sync_test that doesn't panic. Proper event resolution for SyncFinished event in UserRefreshEvent test.
+* BRIDGE-608: Fixed wait time for TestBridge_SendInvite test.
+* BRIDGE-561: Fixed an issue where in-flight cancelled request caused a connection-down status.
+* BRIDGE-563: Fixed an issue where cpu and memory where unbounded in the rfcparser for Gluon.
+
+
 ## Oberbaum Bridge 3.25.0
 
 ### Added

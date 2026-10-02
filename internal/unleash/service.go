@@ -58,6 +58,7 @@ const (
 	AfterUpdateTemporaryFolderRemovalDisabled            = "InboxBridgePostUpdateTempFolderDeletionDisabled"
 	FolderUnlabelCallDisabled                            = "InboxBridgeUnlabelCallOnFoldersDisabled"
 	RNGServiceNotAvailableSentryCallDisabled             = "InboxBridgeRNGServiceNotAvailableSentryCallDisabled"
+	OrphanedInsecureVaultsDeletionDisabled               = "InboxBridgeDeleteOrphanedInsecureVaultsDisabled"
 )
 
 type FeatureFlagValueProvider interface {

@@ -24,10 +24,10 @@ import (
 	"testing"
 
 	"github.com/ProtonMail/gluon/async"
-	"github.com/golang/mock/gomock"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/goleak"
+	"go.uber.org/mock/gomock"
 )
 
 func setupGoLeak() goleak.Option {

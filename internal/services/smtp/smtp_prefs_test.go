@@ -274,6 +274,50 @@ func TestPreferencesBuilder(t *testing.T) {
 		},
 
 		{
+			name: "wkd-external with unusable WKD key falls back to external without WKD keys",
+
+			contactMeta:  &contactSettings{EncryptUntrusted: true},
+			receivedKeys: []proton.PublicKey{{PublicKey: testUnusablePublicKey}},
+			isInternal:   false,
+			mailSettings: proton.MailSettings{PGPScheme: proton.PGPMIMEScheme, DraftMIMEType: "text/html"},
+
+			wantEncrypt:  false,
+			wantSign:     proton.NoSignature,
+			wantScheme:   proton.ClearScheme,
+			wantMIMEType: "text/html",
+		},
+
+		{
+			name: "wkd-external with unusable WKD key falls back to pinned contact key settings",
+
+			contactMeta:  &contactSettings{Keys: []string{testContactKey}, Encrypt: true, Sign: true, SignIsSet: true, EncryptUntrusted: true},
+			receivedKeys: []proton.PublicKey{{PublicKey: testUnusablePublicKey}},
+			isInternal:   false,
+			mailSettings: proton.MailSettings{PGPScheme: proton.PGPMIMEScheme, DraftMIMEType: "text/html"},
+
+			wantEncrypt:   true,
+			wantSign:      proton.DetachedSignature,
+			wantScheme:    proton.PGPMIMEScheme,
+			wantMIMEType:  "multipart/mixed",
+			wantPublicKey: testPublicKey,
+		},
+
+		{
+			name: "wkd-external with unusable WKD key alongside a usable one still uses WKD",
+
+			contactMeta:  &contactSettings{EncryptUntrusted: true},
+			receivedKeys: []proton.PublicKey{{PublicKey: testUnusablePublicKey}, {PublicKey: testPublicKey}},
+			isInternal:   false,
+			mailSettings: proton.MailSettings{PGPScheme: proton.PGPMIMEScheme, DraftMIMEType: "text/html"},
+
+			wantEncrypt:   true,
+			wantSign:      proton.DetachedSignature,
+			wantScheme:    proton.PGPMIMEScheme,
+			wantMIMEType:  "multipart/mixed",
+			wantPublicKey: testPublicKey,
+		},
+
+		{
 			name: "external",
 
 			contactMeta:  &contactSettings{},
@@ -419,7 +463,9 @@ func TestPreferencesBuilder(t *testing.T) {
 			assert.Equal(t, test.wantScheme, prefs.EncryptionScheme)
 			assert.Equal(t, test.wantMIMEType, prefs.MIMEType)
 
-			if prefs.PubKey != nil {
+			if test.wantPublicKey == "" {
+				assert.Nil(t, prefs.PubKey)
+			} else if prefs.PubKey != nil {
 				wantKey, err := crypto.NewKeyFromArmored(test.wantPublicKey)
 				require.NoError(t, err)
 
@@ -468,6 +514,12 @@ YLlRpud6smuGyDSsotUYyumiqP6680ZIeWVQ+a1TThNs878mAJy1FhvQFdTmA8XI
 C616hDFpamQKPlpoO1a0wZnQhrPwT77HDYEEa+hqY4Jr/a7ui40S+7xYRHKL/7ZA
 S4/grWllhU3dbNrwSzrOKwrA/U0/9t738Ap6JL71YymDeaL4sutcoaahda1pTrMW
 ePtrCltz6uySwbZs7GXoEzjX3EAH+6qhkUJtzMaE3YEFEoQMGzcDTUEfXCJ3zJw=
+=yT9U
+-----END PGP PUBLIC KEY BLOCK-----`
+
+const testUnusablePublicKey = `-----BEGIN PGP PUBLIC KEY BLOCK-----
+
+xsBNBFRJbc0BCAC0mMLZPDBbtSCWvxwmOfXfJkE2+ssM3ux21LhD/bPiWefEWSHl
 =yT9U
 -----END PGP PUBLIC KEY BLOCK-----`
 

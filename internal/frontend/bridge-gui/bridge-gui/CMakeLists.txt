@@ -106,6 +106,10 @@ else()
     set(DOCK_ICON_SRC_FILE MacOS/DockIcon.cpp)
 endif()
 
+if (APPLE) # macOS 27+ Qt tray-icon NSEvent crash workaround
+    set(TRAY_ICON_SRC_FILE MacOS/TrayIconFix.mm)
+endif()
+
 if(UNIX)
     list(APPEND CMAKE_INSTALL_RPATH "$ORIGIN/lib" )
 endif(UNIX)
@@ -127,6 +131,7 @@ add_executable(bridge-gui
     Settings.cpp Settings.h
     ClipboardProxy.cpp ClipboardProxy.h
     ${DOCK_ICON_SRC_FILE} MacOS/DockIcon.h
+    ${TRAY_ICON_SRC_FILE} MacOS/TrayIconFix.h
     )
 
 if (APPLE)
@@ -184,7 +189,7 @@ install(TARGETS bridge-gui
 
 qt_generate_deploy_app_script(
         TARGET bridge-gui
-        FILENAME_VARIABLE deploy_script
+        OUTPUT_SCRIPT deploy_script
         NO_UNSUPPORTED_PLATFORM_ERROR)
 
 if(UNIX AND NOT APPLE)

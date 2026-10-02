@@ -46,6 +46,7 @@ type Status struct {
 	LastSyncedMessageID string
 	NumSyncedMessages   int64
 	TotalMessageCount   int64
+	StartSyncEventID    string
 }
 
 func DefaultStatus() Status {

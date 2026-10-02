@@ -37,9 +37,9 @@ import (
 	"github.com/ProtonMail/proton-bridge/v3/internal/unleash"
 	"github.com/ProtonMail/proton-bridge/v3/internal/vault"
 	"github.com/ProtonMail/proton-bridge/v3/tests"
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/goleak"
+	"go.uber.org/mock/gomock"
 )
 
 func init() {

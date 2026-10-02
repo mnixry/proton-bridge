@@ -40,9 +40,6 @@ func New(rules []Rule) Service {
 }
 
 func (em *errorMapper) Resolve(err error) error {
-	if err == nil {
-		return nil
-	}
 	for _, rule := range em.rules {
 		if em.match(err, rule) {
 			result := rule.ResultFn(err)

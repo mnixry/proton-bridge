@@ -32,6 +32,7 @@ import (
 	"github.com/ProtonMail/proton-bridge/v3/internal/logging"
 	"github.com/ProtonMail/proton-bridge/v3/internal/safe"
 	"github.com/ProtonMail/proton-bridge/v3/internal/services/imapservice"
+	"github.com/ProtonMail/proton-bridge/v3/internal/services/syncservice"
 	"github.com/ProtonMail/proton-bridge/v3/internal/try"
 	"github.com/ProtonMail/proton-bridge/v3/internal/user"
 	"github.com/ProtonMail/proton-bridge/v3/internal/vault"
@@ -110,6 +111,18 @@ func (bridge *Bridge) GetUserInfo(userID string) (UserInfo, error) {
 	}, bridge.usersLock)
 }
 
+// IMAPSyncStatus returns the live in-memory IMAP sync status for a connected user.
+func (bridge *Bridge) IMAPSyncStatus(ctx context.Context, userID string) (syncservice.Status, error) {
+	return safe.RLockRetErr(func() (syncservice.Status, error) {
+		user, ok := bridge.users[userID]
+		if !ok {
+			return syncservice.Status{}, ErrNoSuchUser
+		}
+
+		return user.IMAPSyncStatus(ctx)
+	}, bridge.usersLock)
+}
+
 // QueryUserInfo queries the user info by username or address.
 func (bridge *Bridge) QueryUserInfo(query string) (UserInfo, error) {
 	return safe.RLockRetErr(func() (UserInfo, error) {
@@ -133,8 +146,10 @@ func (bridge *Bridge) LoginAuth(ctx context.Context, username string, password [
 	client, auth, err := bridge.api.NewClientWithLoginWithHVToken(ctx, username, password, hvDetails)
 	if err != nil {
 		if hv.IsHvRequest(err) {
-			logUser.WithFields(logrus.Fields{"username": logging.Sensitive(username),
-				"loginError": err.Error()}).Info("Human Verification requested for login")
+			logUser.WithFields(logrus.Fields{
+				"username":   logging.Sensitive(username),
+				"loginError": err.Error(),
+			}).Info("Human Verification requested for login")
 			return nil, proton.Auth{}, err
 		}
 
@@ -169,7 +184,6 @@ func (bridge *Bridge) LoginUser(
 			return bridge.loginUser(ctx, client, auth.UID, auth.RefreshToken, keyPass, hvDetails)
 		},
 	)
-
 	if err != nil {
 		// Failure to unlock will allow retries, so we do not delete auth.
 		if !errors.Is(err, ErrFailedToUnlock) {
@@ -322,7 +336,7 @@ func (bridge *Bridge) SetAddressMode(ctx context.Context, userID string, mode va
 			AddressMode: mode,
 		})
 
-		var splitMode = false
+		splitMode := false
 		for _, user := range bridge.users {
 			if user.GetAddressMode() == vault.SplitMode {
 				splitMode = true
@@ -425,8 +439,9 @@ func (bridge *Bridge) loadUsers(ctx context.Context) error {
 			log.WithError(err).Error("Failed to load connected user")
 
 			bridge.publish(events.UserLoadFail{
-				UserID: user.UserID(),
-				Error:  err,
+				UserID:  user.UserID(),
+				AuthUID: user.AuthUID(),
+				Error:   err,
 			})
 		} else {
 			log.Info("Successfully loaded connected user")

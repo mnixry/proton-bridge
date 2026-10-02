@@ -17,7 +17,10 @@ namespace ProtonMailBridge.UI.Tests.Results
         private AutomationElement[] TextFields => Window.FindAllDescendants(cf => cf.ByControlType(ControlType.Text));
         private TextBox SynchronizingField => TextFields[4].AsTextBox();
         private TextBox AccountDisabledErrorText => Window.FindAllDescendants(cf => cf.ByControlType(ControlType.Text)).FirstOrDefault(e =>!string.IsNullOrEmpty(e.Name) && e.Name.IndexOf("This account has been suspended due to a potential policy violation.", StringComparison.OrdinalIgnoreCase) >= 0)?.AsTextBox();
-        private TextBox IncorrectLoginCredentialsErrorText => Window.FindFirstDescendant(cf => cf.ByControlType(ControlType.Text).And(cf.ByName("Incorrect login credentials"))).AsTextBox();
+        private const string HumanVerificationLinkPrefix = "https://verify.";
+        private const string HumanVerificationMethod = "captcha";
+        private AutomationElement? HumanVerificationTitle => Window.FindFirstDescendant(cf => cf.ByControlType(ControlType.Text).And(cf.ByName("Human verification")));
+        private AutomationElement? HumanVerificationLink => Window.FindAllDescendants().FirstOrDefault(e => !string.IsNullOrEmpty(e.Name) && e.Name.StartsWith(HumanVerificationLinkPrefix, StringComparison.OrdinalIgnoreCase) && e.Name.Contains(HumanVerificationMethod, StringComparison.OrdinalIgnoreCase));
         private TextBox EnterEmailOrUsernameErrorText => Window.FindFirstDescendant(cf => cf.ByControlType(ControlType.Text).And(cf.ByName("Enter email or username"))).AsTextBox();
         private TextBox EnterPasswordErrorText => Window.FindFirstDescendant(cf => cf.ByControlType(ControlType.Text).And(cf.ByName("Enter password"))).AsTextBox();
         private TextBox ConnectedStateText => Window.FindFirstDescendant(cf => cf.ByControlType(ControlType.Text).And(cf.ByName("Connected"))).AsTextBox();
@@ -62,9 +65,13 @@ namespace ProtonMailBridge.UI.Tests.Results
             return this;
         }
 
-        public HomeResult CheckIfIncorrectCredentialsErrorIsDisplayed()
+        public HomeResult CheckIfHumanVerificationIsDisplayed()
         {
-            Assert.That(IncorrectLoginCredentialsErrorText.IsAvailable, Is.True);
+            RetryHelper.EventuallyAction(() =>
+            {
+                Assert.That(HumanVerificationTitle, Is.Not.Null, "The Human verification screen was not displayed.");
+                Assert.That(HumanVerificationLink, Is.Not.Null, $"No verification link starting with '{HumanVerificationLinkPrefix}' and containing '{HumanVerificationMethod}' was displayed.");
+            });
             return this;
         }
 

@@ -28,8 +28,8 @@ import (
 	"github.com/ProtonMail/proton-bridge/v3/internal/constants"
 	"github.com/ProtonMail/proton-bridge/v3/internal/events"
 	"github.com/bradenaw/juniper/iterator"
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 )
 
 func TestBridge_Refresh(t *testing.T) {

@@ -28,8 +28,8 @@ import (
 	"github.com/ProtonMail/go-proton-api"
 	"github.com/ProtonMail/proton-bridge/v3/internal/network"
 	"github.com/bradenaw/juniper/xslices"
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 )
 
 func TestDownloadMessage_NotInCache(t *testing.T) {

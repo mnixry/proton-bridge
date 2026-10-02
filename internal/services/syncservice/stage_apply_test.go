@@ -24,8 +24,8 @@ import (
 
 	"github.com/ProtonMail/gluon/imap"
 	"github.com/ProtonMail/go-proton-api"
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 )
 
 func TestApplyStage_CancelledJobIsDiscarded(t *testing.T) {

@@ -49,11 +49,11 @@ func AuthWithHardwareKeyGUI(client *proton.Client, auth proton.Auth, onCLI bool)
 
 	var credentialDescriptors []webauthntypes.PublicKeyCredentialDescriptor
 	for _, cred := range fidoAuthData.AllowCredentials {
-		credMap, ok := cred.(map[string]interface{})
+		credMap, ok := cred.(map[string]any)
 		if !ok {
 			continue
 		}
-		idArray, ok := credMap["id"].([]interface{})
+		idArray, ok := credMap["id"].([]any)
 		if !ok {
 			continue
 		}

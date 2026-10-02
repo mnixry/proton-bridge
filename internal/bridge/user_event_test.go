@@ -23,13 +23,11 @@ import (
 	"net"
 	"net/http"
 	"net/mail"
-	"runtime"
+	"slices"
 	"strings"
 	"sync/atomic"
 	"testing"
 	"time"
-
-	"slices"
 
 	"github.com/ProtonMail/gluon/async"
 	"github.com/ProtonMail/gluon/rfc822"
@@ -39,15 +37,14 @@ import (
 	"github.com/ProtonMail/proton-bridge/v3/internal/bridge"
 	"github.com/ProtonMail/proton-bridge/v3/internal/constants"
 	"github.com/ProtonMail/proton-bridge/v3/internal/events"
-	"github.com/ProtonMail/proton-bridge/v3/internal/platform"
 	"github.com/ProtonMail/proton-bridge/v3/internal/user"
 	"github.com/bradenaw/juniper/stream"
 	"github.com/bradenaw/juniper/xslices"
 	"github.com/emersion/go-imap"
 	"github.com/emersion/go-imap/client"
-	"github.com/golang/mock/gomock"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 )
 
 func TestBridge_User_RefreshEvent(t *testing.T) {
@@ -80,10 +77,20 @@ func TestBridge_User_RefreshEvent(t *testing.T) {
 		withBridge(ctx, t, s.GetHostURL(), netCtl, locator, storeKey, func(bridge *bridge.Bridge, _ *bridge.Mocks) {
 			syncCh, closeCh := chToType[events.Event, events.SyncFinished](bridge.GetEvents(events.SyncFinished{}))
 
-			if runtime.GOOS != platform.WINDOWS {
-				require.Equal(t, userID, (<-syncCh).UserID)
+			// There are is a possibility of 2 SyncFinished events, one which is fired when
+			// IMAP service starts and in addition to the one by mail refresh. The 1st one triggered
+			// by the IMAP service could race with GetEvents subscription, the refresh always arrives after it.
+			select {
+			case evt := <-syncCh:
+				require.Equal(t, userID, evt.UserID)
+			case <-time.After(30 * time.Second):
+				t.Fatal("timeout waiting for SyncFinished event after mail refresh")
 			}
-			require.Equal(t, userID, (<-syncCh).UserID)
+			select {
+			case evt := <-syncCh:
+				require.Equal(t, userID, evt.UserID)
+			case <-time.After(10 * time.Second):
+			}
 			closeCh()
 
 			userContinueEventProcess(ctx, t, s, bridge)
@@ -995,7 +1002,7 @@ func userContinueEventProcess(
 }
 
 func eventuallyDial(addr string) (cli *client.Client, err error) {
-	var sleep = 1 * time.Second
+	sleep := 1 * time.Second
 	for range 5 {
 		cli, err := client.Dial(addr)
 		if err == nil {

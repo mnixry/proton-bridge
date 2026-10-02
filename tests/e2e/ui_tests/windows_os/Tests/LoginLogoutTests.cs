@@ -90,7 +90,7 @@ namespace ProtonMailBridge.UI.Tests.Tests
         public void AddAccountWithWrongCredentials()
         {
             _loginWindow.SignIn(TestUserData.GetIncorrectCredentialsUser());
-            _homeResult.CheckIfIncorrectCredentialsErrorIsDisplayed();
+            _homeResult.CheckIfHumanVerificationIsDisplayed();
             _loginWindow.ClickCancelToSignIn();
             removeAccount = false;
         }

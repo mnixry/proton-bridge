@@ -30,8 +30,8 @@ import (
 	"github.com/ProtonMail/proton-bridge/v3/internal/sentry"
 	"github.com/ProtonMail/proton-bridge/v3/internal/services/orderedtasks"
 	"github.com/ProtonMail/proton-bridge/v3/internal/services/userevents/mocks"
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 )
 
 func TestService_EventIDLoadStore(t *testing.T) {

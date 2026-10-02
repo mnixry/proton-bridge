@@ -35,7 +35,7 @@ import (
 	"github.com/ProtonMail/proton-bridge/v3/internal/updater"
 	"github.com/ProtonMail/proton-bridge/v3/internal/vault"
 	"github.com/cucumber/godog"
-	"github.com/golang/mock/gomock"
+	"go.uber.org/mock/gomock"
 )
 
 func (s *scenario) bridgeStarts() error {

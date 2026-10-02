@@ -12,7 +12,7 @@ import (
 	"github.com/Masterminds/semver/v3"
 	"github.com/ProtonMail/proton-bridge/v3/internal/bridge/mocks"
 	"github.com/ProtonMail/proton-bridge/v3/internal/updater"
-	"github.com/golang/mock/gomock"
+	"go.uber.org/mock/gomock"
 )
 
 type Mocks struct {

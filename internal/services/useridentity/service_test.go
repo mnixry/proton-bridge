@@ -26,8 +26,8 @@ import (
 	mocks2 "github.com/ProtonMail/proton-bridge/v3/internal/events/mocks"
 	"github.com/ProtonMail/proton-bridge/v3/internal/services/userevents"
 	"github.com/ProtonMail/proton-bridge/v3/internal/services/useridentity/mocks"
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 )
 
 const TestUserID = "MyUserID"
@@ -73,7 +73,7 @@ func TestService_OnRefreshEvent(t *testing.T) {
 	}
 
 	// Original value, no changes.
-	require.NoError(t, service.HandleRefreshEvent(context.Background(), 0))
+	require.NoError(t, service.HandleRefreshEvent(context.Background(), 0, ""))
 
 	require.Equal(t, *newUser, service.identity.User)
 	require.Equal(t, newAddresses, service.identity.AddressesSorted)

@@ -35,6 +35,7 @@
 #ifdef Q_OS_MACOS
 
 #include "MacOS/SecondInstance.h"
+#include "MacOS/TrayIconFix.h"
 
 #endif
 
@@ -300,6 +301,7 @@ int main(int argc, char *argv[]) {
         }
 
 #ifdef Q_OS_MACOS
+        installMacOsGoldenGateTrayIconFix();
         registerSecondInstanceHandler();
         setDockIconVisibleState(!cliOptions.noWindow);
 #endif

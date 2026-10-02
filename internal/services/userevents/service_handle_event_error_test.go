@@ -31,8 +31,8 @@ import (
 	"github.com/ProtonMail/proton-bridge/v3/internal/events"
 	"github.com/ProtonMail/proton-bridge/v3/internal/events/mocks"
 	"github.com/ProtonMail/proton-bridge/v3/internal/sentry"
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 )
 
 func TestServiceHandleEventError_SubscriberEventUnwrapping(t *testing.T) {

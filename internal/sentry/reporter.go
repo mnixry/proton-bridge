@@ -176,6 +176,21 @@ func (r *Reporter) ReportMessageWithContext(msg string, context map[string]any) 
 	})
 }
 
+func (r *Reporter) ReportMessageWithContextAndTags(msg string, context map[string]any, tags map[string]string) error {
+	SkipDuringUnwind()
+	return r.scopedReport(context, func(scope *sentry.Scope) {
+		scope.SetTags(tags)
+		SkipDuringUnwind()
+		if eventID := sentry.CaptureMessage(msg); eventID != nil {
+			logrus.WithFields(logrus.Fields{
+				"message":  msg,
+				"reportID": *eventID,
+				"tags":     tags,
+			}).Warn("Captured message")
+		}
+	})
+}
+
 func (r *Reporter) ReportWarningWithContext(msg string, context map[string]any) error {
 	SkipDuringUnwind()
 	return r.scopedReport(context, func(scope *sentry.Scope) {
@@ -308,6 +323,10 @@ func (n NullSentryReporter) ReportMessageWithContext(string, reporter.Context) e
 }
 
 func (n NullSentryReporter) ReportWarningWithContext(string, reporter.Context) error {
+	return nil
+}
+
+func (n NullSentryReporter) ReportMessageWithContextAndTags(string, reporter.Context, reporter.Tags) error {
 	return nil
 }
 
